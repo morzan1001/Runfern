@@ -1,6 +1,48 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "“%@” was changed during the sync." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "„%@“ wurde während des Abgleichs geändert."
+          }
+        }
+      }
+    },
+    "%@ – %lld GB, %lld CPUs" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "%1$@ – %2$lld GB, %3$lld CPUs"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ – %2$lld GB, %3$lld CPUs"
+          }
+        }
+      }
+    },
+    "%@ · %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "%1$@ · %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ · %2$@"
+          }
+        }
+      }
+    },
     "%@ Copy" : {
       "localizations" : {
         "de" : {
@@ -63,38 +105,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ ist noch nicht zum Laden verfügbar."
-          }
-        }
-      }
-    },
-    "%@ · %@" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "%1$@ · %2$@"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ · %2$@"
-          }
-        }
-      }
-    },
-    "%@ – %lld GB, %lld CPUs" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "%1$@ – %2$lld GB, %3$lld CPUs"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ – %2$lld GB, %3$lld CPUs"
           }
         }
       }
@@ -469,22 +479,22 @@
         }
       }
     },
-    "A Linux base needs about %@ once, plus the tools of each project." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Eine Linux-Basis belegt einmalig etwa %@, dazu kommen die Werkzeuge jedes Projekts."
-          }
-        }
-      }
-    },
     "A base is counted only once, even if several projects use it." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Eine Basis wird nur einmal gezählt, auch wenn mehrere Projekte sie verwenden."
+          }
+        }
+      }
+    },
+    "A Linux base needs about %@ once, plus the tools of each project." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine Linux-Basis belegt einmalig etwa %@, dazu kommen die Werkzeuge jedes Projekts."
           }
         }
       }
@@ -549,6 +559,23 @@
         }
       }
     },
+    "action.archive" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Archivieren"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Archive"
+          }
+        }
+      }
+    },
     "Active" : {
       "localizations" : {
         "de" : {
@@ -579,6 +606,16 @@
         }
       }
     },
+    "Add a token to clone and push private repositories." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Füge ein Token hinzu, um private Repositorys zu klonen und zu pushen."
+          }
+        }
+      }
+    },
     "Add Credential" : {
       "localizations" : {
         "de" : {
@@ -605,16 +642,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sprache hinzufügen …"
-          }
-        }
-      }
-    },
-    "Add a token to clone and push private repositories." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Füge ein Token hinzu, um private Repositorys zu klonen und zu pushen."
           }
         }
       }
@@ -679,22 +706,22 @@
         }
       }
     },
-    "Back to Overview" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zurück zur Übersicht"
-          }
-        }
-      }
-    },
     "Back to “%@”" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Zurück zu „%@“"
+          }
+        }
+      }
+    },
+    "Back to Overview" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zurück zur Übersicht"
           }
         }
       }
@@ -849,6 +876,36 @@
         }
       }
     },
+    "Choose a folder to create the project." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wähle einen Ordner, um das Projekt zu erstellen."
+          }
+        }
+      }
+    },
+    "Choose a port between 1024 and 65535 other than the IDE port 8080." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Wähle einen Port zwischen 1024 und 65535, aber nicht den IDE-Port 8080."
+          }
+        }
+      }
+    },
+    "Choose a Runfern project package (.zip)." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Wähle ein Runfern-Projektpaket (.zip) aus."
+          }
+        }
+      }
+    },
     "Choose Another Folder…" : {
       "localizations" : {
         "de" : {
@@ -875,36 +932,6 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Paket auswählen …"
-          }
-        }
-      }
-    },
-    "Choose a Runfern project package (.zip)." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Wähle ein Runfern-Projektpaket (.zip) aus."
-          }
-        }
-      }
-    },
-    "Choose a folder to create the project." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wähle einen Ordner, um das Projekt zu erstellen."
-          }
-        }
-      }
-    },
-    "Choose a port between 1024 and 65535 other than the IDE port 8080." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Wähle einen Port zwischen 1024 und 65535, aber nicht den IDE-Port 8080."
           }
         }
       }
@@ -1039,6 +1066,16 @@
         }
       }
     },
+    "Create a project or import one." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erstelle ein Projekt oder importiere eines."
+          }
+        }
+      }
+    },
     "Create Archive" : {
       "localizations" : {
         "de" : {
@@ -1079,32 +1116,22 @@
         }
       }
     },
-    "Create Your Own Project" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Eigenes Projekt erstellen"
-          }
-        }
-      }
-    },
-    "Create a project or import one." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Erstelle ein Projekt oder importiere eines."
-          }
-        }
-      }
-    },
     "Create system disk" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Systemdatenträger erstellen"
+          }
+        }
+      }
+    },
+    "Create Your Own Project" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Eigenes Projekt erstellen"
           }
         }
       }
@@ -1129,6 +1156,16 @@
         }
       }
     },
+    "Delete “%@”" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "„%@“ löschen"
+          }
+        }
+      }
+    },
     "Delete File?" : {
       "localizations" : {
         "de" : {
@@ -1145,16 +1182,6 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Diese Daten trotzdem löschen"
-          }
-        }
-      }
-    },
-    "Delete “%@”" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "„%@“ löschen"
           }
         }
       }
@@ -1259,6 +1286,16 @@
         }
       }
     },
+    "done" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "erledigt"
+          }
+        }
+      }
+    },
     "Done" : {
       "localizations" : {
         "de" : {
@@ -1299,6 +1336,16 @@
         }
       }
     },
+    "Downloading (%@)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Wird geladen (%@)"
+          }
+        }
+      }
+    },
     "Downloading %@" : {
       "localizations" : {
         "de" : {
@@ -1309,12 +1356,12 @@
         }
       }
     },
-    "Downloading (%@)" : {
+    "dropped" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "machine_translated",
-            "value" : "Wird geladen (%@)"
+            "value" : "abgelegt"
           }
         }
       }
@@ -1665,16 +1712,6 @@
         }
       }
     },
-    "Folder Not Reachable" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Ordner nicht erreichbar"
-          }
-        }
-      }
-    },
     "Folder and file with the same name" : {
       "localizations" : {
         "de" : {
@@ -1715,6 +1752,16 @@
         }
       }
     },
+    "Folder Not Reachable" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Ordner nicht erreichbar"
+          }
+        }
+      }
+    },
     "Forwarded Ports" : {
       "localizations" : {
         "de" : {
@@ -1731,6 +1778,16 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Frei auf dem iPad"
+          }
+        }
+      }
+    },
+    "from Files" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "aus Dateien"
           }
         }
       }
@@ -1815,6 +1872,16 @@
         }
       }
     },
+    "Import a pairing file to use JIT." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importiere eine Pairing-Datei, um JIT zu nutzen."
+          }
+        }
+      }
+    },
     "Import Pairing File…" : {
       "localizations" : {
         "de" : {
@@ -1841,16 +1908,6 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Projekt importieren …"
-          }
-        }
-      }
-    },
-    "Import a pairing file to use JIT." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Importiere eine Pairing-Datei, um JIT zu nutzen."
           }
         }
       }
@@ -1905,16 +1962,6 @@
         }
       }
     },
-    "Installed Software" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Installierte Software"
-          }
-        }
-      }
-    },
     "Installed from Open VSX during setup." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1932,6 +1979,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Installierte Pakete und Systemänderungen gehen verloren. Projektdateien bleiben erhalten."
+          }
+        }
+      }
+    },
+    "Installed Software" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installierte Software"
           }
         }
       }
@@ -1972,6 +2029,16 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Unterbrochene Downloads"
+          }
+        }
+      }
+    },
+    "iPadOS did not provide the extension interface the JIT helper needs." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPadOS hat die Schnittstelle für den JIT-Helfer nicht bereitgestellt."
           }
         }
       }
@@ -2076,31 +2143,21 @@
         }
       }
     },
-    "Linux Base" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Linux-Basis"
-          }
-        }
-      }
-    },
-    "Linux Bases" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Linux-Basen"
-          }
-        }
-      }
-    },
     "Linux base" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Linux-Basis"
+          }
+        }
+      }
+    },
+    "Linux Base" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
             "value" : "Linux-Basis"
           }
         }
@@ -2112,6 +2169,16 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Linux-Basis %@"
+          }
+        }
+      }
+    },
+    "Linux Bases" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Linux-Basen"
           }
         }
       }
@@ -2278,22 +2345,22 @@
         }
       }
     },
-    "New Token" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Neues Token"
-          }
-        }
-      }
-    },
     "New projects can start with the same tools, extensions, and VS Code settings." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Neue Projekte können mit denselben Werkzeugen, Erweiterungen und VS-Code-Einstellungen starten."
+          }
+        }
+      }
+    },
+    "New Token" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Neues Token"
           }
         }
       }
@@ -2328,12 +2395,42 @@
         }
       }
     },
+    "No events recorded." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Keine Ereignisse aufgezeichnet."
+          }
+        }
+      }
+    },
     "No File Open" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Keine Datei geöffnet"
+          }
+        }
+      }
+    },
+    "No longer available in the catalog: %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Im Katalog nicht mehr verfügbar: %@"
+          }
+        }
+      }
+    },
+    "No longer available: %@." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Nicht mehr verfügbar: %@."
           }
         }
       }
@@ -2378,36 +2475,6 @@
         }
       }
     },
-    "No events recorded." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Keine Ereignisse aufgezeichnet."
-          }
-        }
-      }
-    },
-    "No longer available in the catalog: %@" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Im Katalog nicht mehr verfügbar: %@"
-          }
-        }
-      }
-    },
-    "No longer available: %@." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Nicht mehr verfügbar: %@."
-          }
-        }
-      }
-    },
     "None" : {
       "localizations" : {
         "de" : {
@@ -2418,52 +2485,22 @@
         }
       }
     },
-    "Not Available" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Nicht verfügbar"
-          }
-        }
-      }
-    },
-    "Not Reachable" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Nicht erreichbar"
-          }
-        }
-      }
-    },
-    "Not Set Up" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nicht eingerichtet"
-          }
-        }
-      }
-    },
-    "Not Synced (%lld)" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Nicht abgeglichen (%lld)"
-          }
-        }
-      }
-    },
     "Not a Text File" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Keine Textdatei"
+          }
+        }
+      }
+    },
+    "Not Available" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Nicht verfügbar"
           }
         }
       }
@@ -2524,12 +2561,42 @@
         }
       }
     },
+    "Not Reachable" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Nicht erreichbar"
+          }
+        }
+      }
+    },
     "Not saved: %@" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Nicht gesichert: %@"
+          }
+        }
+      }
+    },
+    "Not Set Up" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht eingerichtet"
+          }
+        }
+      }
+    },
+    "Not Synced (%lld)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Nicht abgeglichen (%lld)"
           }
         }
       }
@@ -2544,16 +2611,6 @@
         }
       }
     },
-    "Not yet" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Noch nicht"
-          }
-        }
-      }
-    },
     "Off" : {
       "localizations" : {
         "de" : {
@@ -2564,22 +2621,22 @@
         }
       }
     },
-    "Offline setup possible with: %@" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Offline einrichtbar mit: %@"
-          }
-        }
-      }
-    },
     "Offline – local projects, terminal, and commits remain available." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Offline – lokale Projekte, Terminal und Commits bleiben verfügbar."
+          }
+        }
+      }
+    },
+    "Offline setup possible with: %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Offline einrichtbar mit: %@"
           }
         }
       }
@@ -2614,26 +2671,6 @@
         }
       }
     },
-    "Open Preview" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Vorschau öffnen"
-          }
-        }
-      }
-    },
-    "Open VSX Not Reachable" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open VSX nicht erreichbar"
-          }
-        }
-      }
-    },
     "Open in New Window" : {
       "localizations" : {
         "de" : {
@@ -2650,6 +2687,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "In VS Code öffnen"
+          }
+        }
+      }
+    },
+    "Open Preview" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Vorschau öffnen"
+          }
+        }
+      }
+    },
+    "Open VSX Not Reachable" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open VSX nicht erreichbar"
           }
         }
       }
@@ -2700,6 +2757,16 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Pfad, z. B. src/app.py"
+          }
+        }
+      }
+    },
+    "pending" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "offen"
           }
         }
       }
@@ -2854,26 +2921,6 @@
         }
       }
     },
-    "Project Folder" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Projektordner"
-          }
-        }
-      }
-    },
-    "Project Not Found" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Projekt nicht gefunden"
-          }
-        }
-      }
-    },
     "Project and Environment" : {
       "localizations" : {
         "de" : {
@@ -2904,12 +2951,32 @@
         }
       }
     },
+    "Project Folder" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Projektordner"
+          }
+        }
+      }
+    },
     "Project folder “%@” in Files" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Projektordner „%@“ in „Dateien“"
+          }
+        }
+      }
+    },
+    "Project Not Found" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Projekt nicht gefunden"
           }
         }
       }
@@ -3014,6 +3081,16 @@
         }
       }
     },
+    "Remove “%@”" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "„%@“ entfernen"
+          }
+        }
+      }
+    },
     "Remove Pairing File" : {
       "localizations" : {
         "de" : {
@@ -3034,12 +3111,12 @@
         }
       }
     },
-    "Remove “%@”" : {
+    "Remove…" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "machine_translated",
-            "value" : "„%@“ entfernen"
+            "value" : "Entfernen …"
           }
         }
       }
@@ -3054,22 +3131,22 @@
         }
       }
     },
-    "Remove…" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Entfernen …"
-          }
-        }
-      }
-    },
     "Replace Token" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Token ersetzen"
+          }
+        }
+      }
+    },
+    "Reset and Set Up Again" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Zurücksetzen und neu einrichten"
           }
         }
       }
@@ -3100,16 +3177,6 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Linux-Umgebung zurücksetzen?"
-          }
-        }
-      }
-    },
-    "Reset and Set Up Again" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Zurücksetzen und neu einrichten"
           }
         }
       }
@@ -3204,26 +3271,6 @@
         }
       }
     },
-    "Runfern Total" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Runfern gesamt"
-          }
-        }
-      }
-    },
-    "Runfern Version" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Version aus Runfern"
-          }
-        }
-      }
-    },
     "Runfern does not transmit source code, project files, or diagnostic data." : {
       "localizations" : {
         "de" : {
@@ -3264,6 +3311,26 @@
         }
       }
     },
+    "Runfern Total" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Runfern gesamt"
+          }
+        }
+      }
+    },
+    "Runfern Version" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Version aus Runfern"
+          }
+        }
+      }
+    },
     "Running" : {
       "localizations" : {
         "de" : {
@@ -3284,16 +3351,6 @@
         }
       }
     },
-    "Save My Version" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Meine Version sichern"
-          }
-        }
-      }
-    },
     "Save as Preset" : {
       "localizations" : {
         "de" : {
@@ -3310,6 +3367,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Als Vorlage sichern …"
+          }
+        }
+      }
+    },
+    "Save My Version" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Meine Version sichern"
           }
         }
       }
@@ -3494,22 +3561,22 @@
         }
       }
     },
-    "Setup Paused" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Einrichtung pausiert"
-          }
-        }
-      }
-    },
     "Setup has not finished yet." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Die Einrichtung ist noch nicht abgeschlossen."
+          }
+        }
+      }
+    },
+    "Setup Paused" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einrichtung pausiert"
           }
         }
       }
@@ -3544,22 +3611,22 @@
         }
       }
     },
-    "Shared Linux base images" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Gemeinsam genutzte Linux-Basisabbilder"
-          }
-        }
-      }
-    },
     "Shared by all projects." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Von allen Projekten gemeinsam genutzt."
+          }
+        }
+      }
+    },
+    "Shared Linux base images" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Gemeinsam genutzte Linux-Basisabbilder"
           }
         }
       }
@@ -3644,6 +3711,16 @@
         }
       }
     },
+    "Start and Open" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Starten und öffnen"
+          }
+        }
+      }
+    },
     "Start Failed" : {
       "localizations" : {
         "de" : {
@@ -3660,16 +3737,6 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Einrichtung starten"
-          }
-        }
-      }
-    },
-    "Start and Open" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Starten und öffnen"
           }
         }
       }
@@ -3990,167 +4057,6 @@
         }
       }
     },
-    "The JIT helper did not start." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Der JIT-Helfer wurde nicht gestartet."
-          }
-        }
-      }
-    },
-    "The JIT helper finished without an answer." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Der JIT-Helfer hat ohne Antwort beendet."
-          }
-        }
-      }
-    },
-    "The JIT helper is missing from this installation." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Der JIT-Helfer fehlt in dieser Installation."
-          }
-        }
-      }
-    },
-    "The JIT helper stopped: %@" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Der JIT-Helfer wurde beendet: %@"
-          }
-        }
-      }
-    },
-    "The Linux base cannot be referenced from the environment." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Die Linux-Basis kann von der Umgebung nicht eingebunden werden."
-          }
-        }
-      }
-    },
-    "The Linux base is incomplete." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Die Linux-Basis ist unvollständig."
-          }
-        }
-      }
-    },
-    "The Linux base is not a valid disk image." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Die Linux-Basis ist kein gültiges Festplattenabbild."
-          }
-        }
-      }
-    },
-    "The Linux base of this environment was replaced. Reset the environment to set it up on the new base." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Die Linux-Basis dieser Umgebung wurde ersetzt. Setze die Umgebung zurück, um sie auf der neuen Basis einzurichten."
-          }
-        }
-      }
-    },
-    "The Linux environment did not respond in time (%@)." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Die Linux-Umgebung hat nicht rechtzeitig geantwortet (%@)."
-          }
-        }
-      }
-    },
-    "The Linux environment reported an error: %@" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Die Linux-Umgebung hat einen Fehler gemeldet: %@"
-          }
-        }
-      }
-    },
-    "The Linux environment sent an oversized message." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Die Linux-Umgebung hat eine zu große Nachricht gesendet."
-          }
-        }
-      }
-    },
-    "The Linux environment uses an incompatible agent (protocol %lld)." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Die Linux-Umgebung verwendet einen inkompatiblen Agenten (Protokoll %lld)."
-          }
-        }
-      }
-    },
-    "The Linux runtime could not be loaded: %@" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Die Linux-Laufzeit konnte nicht geladen werden: %@"
-          }
-        }
-      }
-    },
-    "The Linux runtime is not included in this build." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Die Linux-Laufzeit ist in diesem Build nicht enthalten."
-          }
-        }
-      }
-    },
-    "The Runfern VPN did not connect." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Das Runfern-VPN hat sich nicht verbunden."
-          }
-        }
-      }
-    },
-    "The VS Code settings must be a JSON object, for example {\"editor.fontSize\": 16}." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Die VS-Code-Einstellungen müssen ein JSON-Objekt sein, zum Beispiel {\"editor.fontSize\": 16}."
-          }
-        }
-      }
-    },
     "The archive contains an unsafe path: %@" : {
       "localizations" : {
         "de" : {
@@ -4261,22 +4167,22 @@
         }
       }
     },
-    "The connection to the Linux environment was lost." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Die Verbindung zur Linux-Umgebung wurde unterbrochen."
-          }
-        }
-      }
-    },
     "The connection to the environment could not be restored. You can restart it." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Die Verbindung zur Umgebung konnte nicht wiederhergestellt werden. Die Umgebung kann neu gestartet werden."
+          }
+        }
+      }
+    },
+    "The connection to the Linux environment was lost." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Die Verbindung zur Linux-Umgebung wurde unterbrochen."
           }
         }
       }
@@ -4422,12 +4328,153 @@
         }
       }
     },
+    "The JIT helper did not start." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der JIT-Helfer wurde nicht gestartet."
+          }
+        }
+      }
+    },
+    "The JIT helper finished without an answer." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der JIT-Helfer hat ohne Antwort beendet."
+          }
+        }
+      }
+    },
+    "The JIT helper is missing from this installation." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der JIT-Helfer fehlt in dieser Installation."
+          }
+        }
+      }
+    },
+    "The JIT helper stopped: %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der JIT-Helfer wurde beendet: %@"
+          }
+        }
+      }
+    },
     "The keychain reported an error (%lld)." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Der Schlüsselbund hat einen Fehler gemeldet (%lld)."
+          }
+        }
+      }
+    },
+    "The Linux base cannot be referenced from the environment." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Linux-Basis kann von der Umgebung nicht eingebunden werden."
+          }
+        }
+      }
+    },
+    "The Linux base is incomplete." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Linux-Basis ist unvollständig."
+          }
+        }
+      }
+    },
+    "The Linux base is not a valid disk image." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Linux-Basis ist kein gültiges Festplattenabbild."
+          }
+        }
+      }
+    },
+    "The Linux base of this environment was replaced. Reset the environment to set it up on the new base." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Linux-Basis dieser Umgebung wurde ersetzt. Setze die Umgebung zurück, um sie auf der neuen Basis einzurichten."
+          }
+        }
+      }
+    },
+    "The Linux environment did not respond in time (%@)." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Die Linux-Umgebung hat nicht rechtzeitig geantwortet (%@)."
+          }
+        }
+      }
+    },
+    "The Linux environment reported an error: %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Die Linux-Umgebung hat einen Fehler gemeldet: %@"
+          }
+        }
+      }
+    },
+    "The Linux environment sent an oversized message." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Die Linux-Umgebung hat eine zu große Nachricht gesendet."
+          }
+        }
+      }
+    },
+    "The Linux environment uses an incompatible agent (protocol %lld)." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Die Linux-Umgebung verwendet einen inkompatiblen Agenten (Protokoll %lld)."
+          }
+        }
+      }
+    },
+    "The Linux runtime could not be loaded: %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Linux-Laufzeit konnte nicht geladen werden: %@"
+          }
+        }
+      }
+    },
+    "The Linux runtime is not included in this build." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Linux-Laufzeit ist in diesem Build nicht enthalten."
           }
         }
       }
@@ -4508,6 +4555,16 @@
         }
       }
     },
+    "The Runfern VPN did not connect." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Runfern-VPN hat sich nicht verbunden."
+          }
+        }
+      }
+    },
     "The saved project inventory could not be read and was backed up as %@." : {
       "localizations" : {
         "de" : {
@@ -4528,22 +4585,12 @@
         }
       }
     },
-    "This Linux base does not support extensions and VS Code settings yet. Create a new project with the current base." : {
+    "The VS Code settings must be a JSON object, for example {\"editor.fontSize\": 16}." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Diese Linux-Basis unterstützt noch keine Erweiterungen und VS-Code-Einstellungen. Lege ein neues Projekt mit der aktuellen Basis an."
-          }
-        }
-      }
-    },
-    "This Linux base requires a newer version of Runfern." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Diese Linux-Basis erfordert eine neuere Version von Runfern."
+            "value" : "Die VS-Code-Einstellungen müssen ein JSON-Objekt sein, zum Beispiel {\"editor.fontSize\": 16}."
           }
         }
       }
@@ -4614,6 +4661,26 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Dieses iPad"
+          }
+        }
+      }
+    },
+    "This Linux base does not support extensions and VS Code settings yet. Create a new project with the current base." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Linux-Basis unterstützt noch keine Erweiterungen und VS-Code-Einstellungen. Lege ein neues Projekt mit der aktuellen Basis an."
+          }
+        }
+      }
+    },
+    "This Linux base requires a newer version of Runfern." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Linux-Basis erfordert eine neuere Version von Runfern."
           }
         }
       }
@@ -4738,56 +4805,6 @@
         }
       }
     },
-    "VS Code Extensions" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "VS-Code-Erweiterungen"
-          }
-        }
-      }
-    },
-    "VS Code Settings" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "VS-Code-Einstellungen"
-          }
-        }
-      }
-    },
-    "VS Code inside Linux" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "VS Code in Linux"
-          }
-        }
-      }
-    },
-    "VS Code settings" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "VS-Code-Einstellungen"
-          }
-        }
-      }
-    },
-    "VS Code, Linux, and your programs run on this iPad. No account required." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "VS Code, Linux und deine Programme laufen auf diesem iPad. Ein Account ist nicht nötig."
-          }
-        }
-      }
-    },
     "Various free licenses" : {
       "localizations" : {
         "de" : {
@@ -4844,6 +4861,56 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Darstellungsoptionen"
+          }
+        }
+      }
+    },
+    "VS Code Extensions" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VS-Code-Erweiterungen"
+          }
+        }
+      }
+    },
+    "VS Code inside Linux" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VS Code in Linux"
+          }
+        }
+      }
+    },
+    "VS Code settings" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VS-Code-Einstellungen"
+          }
+        }
+      }
+    },
+    "VS Code Settings" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VS-Code-Einstellungen"
+          }
+        }
+      }
+    },
+    "VS Code, Linux, and your programs run on this iPad. No account required." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VS Code, Linux und deine Programme laufen auf diesem iPad. Ein Account ist nicht nötig."
           }
         }
       }
@@ -4928,99 +4995,13 @@
         }
       }
     },
-    "Works Offline" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Offline nutzbar"
-          }
-        }
-      }
-    },
     "Yes" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ja"
-          }
-        }
-      }
-    },
-    "action.archive" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Archivieren"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Archive"
-          }
-        }
-      }
-    },
-    "done" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "erledigt"
-          }
-        }
-      }
-    },
-    "dropped" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "abgelegt"
-          }
-        }
-      }
-    },
-    "from Files" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "aus Dateien"
-          }
-        }
-      }
-    },
-    "iPadOS did not provide the extension interface the JIT helper needs." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "iPadOS hat die Schnittstelle für den JIT-Helfer nicht bereitgestellt."
-          }
-        }
-      }
-    },
-    "pending" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "offen"
-          }
-        }
-      }
-    },
-    "“%@” was changed during the sync." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "„%@“ wurde während des Abgleichs geändert."
           }
         }
       }

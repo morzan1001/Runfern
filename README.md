@@ -57,6 +57,9 @@ Gradle); `Tools/Catalog/resolve_toolchains.py` pins new releases.
 
 ## Licenses
 
+The language logos in the software picker come from devicon (MIT) and are trademarks of their
+respective projects, used only to identify the languages.
+
 Runfern's own code is under the MIT License (`LICENSE`). Builds embed third-party components
 that are not part of this repository and keep their licenses: QEMU (GPLv2, including UTM's
 patches), its libraries, and, in JIT builds, StikJIT (MPL-2.0). Distributing the app requires
