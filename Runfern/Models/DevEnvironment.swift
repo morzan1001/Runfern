@@ -124,9 +124,17 @@ nonisolated struct SoftwareSelection: Codable, Hashable, Sendable {
         Set(toolchainIds) == Set(other.toolchainIds) && extensions == other.extensions
     }
 
+    /// Selects or deselects a tool. Selecting a version replaces another version of the same
+    /// language, since only one can provide its commands.
     mutating func setTool(_ id: String, selected: Bool) {
-        toolchainIds.removeAll { $0 == id }
+        let family = Catalog.toolchain(id: id)?.family
+        toolchainIds.removeAll { $0 == id || (selected && family != nil && Catalog.toolchain(id: $0)?.family == family) }
         if selected { toolchainIds.append(id) }
+    }
+
+    /// The selected version of `family`, if any.
+    func selectedTool(in family: ToolchainFamily) -> String? {
+        family.versions.first { toolchainIds.contains($0.id) }?.id
     }
 
     mutating func setExtension(_ id: String, selected: Bool) {

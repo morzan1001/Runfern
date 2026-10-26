@@ -86,9 +86,7 @@ struct NewProjectView: View {
                         LabeledContent("Distribution", value: baseImage.displayName)
                         LabeledContent("Software", value: software.summary)
                     } else {
-                        Picker("Distribution", selection: $baseImageId) {
-                            ForEach(Catalog.baseImages) { Text($0.displayName).tag($0.id) }
-                        }
+                        BaseImagePicker(selection: $baseImageId)
                         SoftwareLink(base: baseImage, selection: $software)
                     }
                     LabeledContent("Image", value: images.status(of: baseImage).title)

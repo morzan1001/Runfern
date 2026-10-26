@@ -21,6 +21,31 @@ nonisolated enum Catalog {
         toolchains.filter { image.supportedToolchains.contains($0.id) }
     }
 
+    /// Distributions with their releases, in catalog order.
+    static var baseImageFamilies: [BaseImageFamily] {
+        grouped(baseImages, by: \.distribution).map { BaseImageFamily(distribution: $0.key, releases: $0.items) }
+    }
+
+    /// Languages and tools a base offers, each with its versions in catalog order.
+    static func toolchainFamilies(for image: BaseImage) -> [ToolchainFamily] {
+        grouped(toolchains(for: image), by: \.family).map {
+            ToolchainFamily(id: $0.key, name: $0.items[0].familyName, versions: $0.items)
+        }
+    }
+
+    /// Groups `items` by `key`, keeping the order of first appearance.
+    private static func grouped<Item>(_ items: [Item], by key: (Item) -> String) -> [(key: String, items: [Item])] {
+        var groups: [(key: String, items: [Item])] = []
+        for item in items {
+            if let index = groups.firstIndex(where: { $0.key == key(item) }) {
+                groups[index].items.append(item)
+            } else {
+                groups.append((key(item), [item]))
+            }
+        }
+        return groups
+    }
+
     static func recipe(for environment: DevEnvironment) -> EnvironmentRecipe? {
         guard let image = baseImage(id: environment.baseImageId) else { return nil }
         return EnvironmentRecipe(

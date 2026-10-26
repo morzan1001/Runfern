@@ -24,9 +24,7 @@ struct PresetEditorView: View {
                 }
 
                 Section("Environment") {
-                    Picker("Distribution", selection: $preset.baseImageId) {
-                        ForEach(Catalog.baseImages) { Text($0.displayName).tag($0.id) }
-                    }
+                    BaseImagePicker(selection: $preset.baseImageId)
                     SoftwareLink(base: base, selection: $preset.software)
                     Picker("Resources", selection: $preset.resources) {
                         ForEach(ResourceProfile.allCases, id: \.self) { profile in

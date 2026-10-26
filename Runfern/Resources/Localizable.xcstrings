@@ -589,6 +589,26 @@
         }
       }
     },
+    "Add Language" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sprache hinzufügen"
+          }
+        }
+      }
+    },
+    "Add Language…" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sprache hinzufügen …"
+          }
+        }
+      }
+    },
     "Add a token to clone and push private repositories." : {
       "localizations" : {
         "de" : {
@@ -3370,6 +3390,16 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Umfang"
+          }
+        }
+      }
+    },
+    "Search Languages" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sprachen durchsuchen"
           }
         }
       }

@@ -85,13 +85,23 @@ import Testing
         #expect(selection.excludedExtensions == ["ms-python.python"])
 
         selection.setExtension("redhat.vscode-yaml", selected: true)
-        selection.setTool("nodejs-22", selected: true)
-        #expect(selection.extensions == ["dbaeumer.vscode-eslint", "redhat.vscode-yaml"])
+        selection.setTool("go", selected: true)
+        #expect(selection.extensions == ["golang.go", "redhat.vscode-yaml"])
 
         selection.setTool("python-3", selected: false)
         selection.setExtension("redhat.vscode-yaml", selected: false)
-        #expect(selection.toolchainIds == ["nodejs-22"])
-        #expect(selection.extensions == ["dbaeumer.vscode-eslint"])
+        #expect(selection.toolchainIds == ["go"])
+        #expect(selection.extensions == ["golang.go"])
+    }
+
+    /// Only one version per language provides `node`, `java`, and so on.
+    @Test func choosingAVersionReplacesTheOtherOne() {
+        var selection = SoftwareSelection(toolchainIds: ["nodejs-24", "python-3"])
+        selection.setTool("nodejs-26", selected: true)
+        #expect(selection.toolchainIds == ["python-3", "nodejs-26"])
+        selection.setTool("java-21", selected: true)
+        selection.setTool("java-27", selected: true)
+        #expect(selection.toolchainIds == ["python-3", "nodejs-26", "java-27"])
     }
 
     @Test func changingSoftwareRepeatsOnlyInstallAndHealthCheck() throws {
@@ -103,11 +113,11 @@ import Testing
         for step in ProvisioningStep.allCases { store.markCompleted(step, for: project.environmentId) }
         store.setInstalledSoftware(toolchains: ["python-3"], extensions: ["ms-python.python"], for: project.environmentId)
 
-        store.setSoftware(SoftwareSelection(toolchainIds: ["nodejs-22"], excludedExtensions: ["dbaeumer.vscode-eslint"]),
+        store.setSoftware(SoftwareSelection(toolchainIds: ["nodejs-24"], excludedExtensions: ["dbaeumer.vscode-eslint"]),
                           for: project)
 
         let env = try #require(store.environment(for: project))
-        #expect(env.toolchainIds == ["nodejs-22"])
+        #expect(env.toolchainIds == ["nodejs-24"])
         #expect(env.software.extensions.isEmpty)
         #expect(env.installedToolchainIds == ["python-3"])
         #expect(env.hasCompleted(.createSystemDisk))

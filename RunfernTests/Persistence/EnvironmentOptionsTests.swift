@@ -20,11 +20,11 @@ import Testing
         let (store, project) = try makeProject()
 
         var software = try #require(store.environment(for: project)?.software)
-        software.setTool("nodejs-22", selected: true)
+        software.setTool("nodejs-24", selected: true)
         store.setSoftware(software, for: project)
 
         let env = try #require(store.environment(for: project))
-        #expect(env.toolchainIds == ["python-3", "nodejs-22"])
+        #expect(env.toolchainIds == ["python-3", "nodejs-24"])
         #expect(env.hasCompleted(.prepareWorkspace))
         #expect(env.hasCompleted(.createSystemDisk))
         #expect(!env.hasCompleted(.installToolchains))
@@ -49,9 +49,24 @@ import Testing
         #expect(env.effectiveResources == .standard)
     }
 
-    @Test func bundledCatalogOffersAllProfilesForEveryBase() {
+    /// Every base offers the portable toolchains; Swift only where swift.org has a matching build.
+    @Test func bundledCatalogOffersTheToolchainsOfEveryBase() {
+        let portable: Set = ["python-3", "nodejs-24", "nodejs-26", "java-21", "java-25", "java-27", "go", "rust",
+                             "dotnet", "bun", "deno", "zig"]
         for image in Catalog.baseImages {
-            #expect(Set(Catalog.toolchains(for: image).map(\.id)) == ["python-3", "nodejs-22", "java-21"])
+            let offered = Set(Catalog.toolchains(for: image).map(\.id))
+            #expect(offered.isSuperset(of: portable), "\(image.id)")
+            #expect(offered.subtracting(portable).allSatisfy { $0.hasPrefix("swift-") }, "\(image.id)")
+            #expect(offered.filter { $0.hasPrefix("swift-") }.count <= 1, "\(image.id)")
         }
+    }
+
+    @Test func familiesGroupVersionsAndDistributionsGroupReleases() throws {
+        let debian = try #require(Catalog.baseImage(id: "debian-13-arm64"))
+        let families = Catalog.toolchainFamilies(for: debian)
+        #expect(families.first { $0.id == "nodejs" }?.versions.map(\.version) == ["24", "26"])
+        #expect(families.first { $0.id == "java" }?.versions.map(\.version) == ["21", "25", "27"])
+        #expect(Set(families.map(\.id)).count == families.count)
+        #expect(Catalog.baseImageFamilies.first { $0.distribution == "Ubuntu" }?.releases.map(\.release) == ["24.04", "26.04"])
     }
 }
