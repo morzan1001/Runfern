@@ -1,0 +1,37 @@
+{
+  "name": "runfern",
+  "displayName": "Runfern",
+  "description": "Connects VS Code with the Runfern app on iPad.",
+  "version": "0.1.0",
+  "publisher": "runfern",
+  "license": "UNLICENSED",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "extensionKind": [
+    "workspace"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "runfern.overview",
+        "title": "Back to Project Overview",
+        "category": "Runfern",
+        "icon": "$(arrow-left)"
+      },
+      {
+        "command": "runfern.preview",
+        "title": "Open Development Server Preview",
+        "category": "Runfern",
+        "icon": "$(globe)"
+      }
+    ]
+  }
+}

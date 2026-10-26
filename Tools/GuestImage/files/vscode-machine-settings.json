@@ -1,0 +1,25 @@
+{
+  "telemetry.telemetryLevel": "off",
+  "update.mode": "none",
+  "extensions.autoUpdate": false,
+  "extensions.autoCheckUpdates": false,
+  "extensions.ignoreRecommendations": true,
+  "workbench.enableExperiments": false,
+  "workbench.startupEditor": "none",
+  "workbench.tips.enabled": false,
+  "git.autorefresh": false,
+  "git.autofetch": false,
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/node_modules/**": true,
+    "**/.venv/**": true,
+    "**/__pycache__/**": true,
+    "**/build/**": true
+  },
+  "search.followSymlinks": false,
+  "python.analysis.indexing": false,
+  "typescript.disableAutomaticTypeAcquisition": true,
+  "npm.fetchOnlinePackageInfo": false,
+  "editor.minimap.enabled": false
+}

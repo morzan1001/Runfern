@@ -1,0 +1,12 @@
+[Unit]
+Description=Runfern GuestAgent
+After=local-fs.target network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=/usr/bin/python3 /usr/lib/runfern/runfern-agent.py
+Restart=always
+RestartSec=1
+
+[Install]
+WantedBy=multi-user.target
