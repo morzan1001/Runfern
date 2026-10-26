@@ -97,38 +97,35 @@ struct ToolchainCatalogView: View {
     }
 }
 
-/// A language's badge: a short label on its color. The catalog carries no logos, and SF Symbols
-/// has one only for Swift.
+/// A language's logo (bundled vector assets named `lang-<family>`, from devicon, MIT). A family
+/// without a bundled logo falls back to its initials on a color derived from its name.
 struct ToolchainIcon: View {
     let family: String
     let name: String
 
-    /// Colors and labels of the catalog's languages; others get a color from their name.
-    private static let styles: [String: (Color, String)] = [
-        "python": (.blue, "Py"), "nodejs": (.green, "JS"), "java": (.orange, "Ja"), "go": (.cyan, "Go"),
-        "rust": (.brown, "Rs"), "dotnet": (.purple, ".N"), "bun": (.pink, "Bn"), "deno": (.indigo, "De"),
-        "zig": (.yellow, "Zg"), "swift": (.orange, ""),
-    ]
+    private static let bundled: Set = ["python", "nodejs", "java", "go", "rust", "dotnet", "bun", "deno", "zig", "swift"]
 
-    private var style: (Color, String) {
-        if let known = Self.styles[family] { return known }
+    private var fallback: (Color, String) {
         let palette: [Color] = [.blue, .green, .orange, .pink, .purple, .teal, .indigo, .red, .mint, .brown]
         let hash = family.unicodeScalars.reduce(0) { ($0 &* 31 &+ Int($1.value)) & 0xFFFF }
         return (palette[hash % palette.count], String(name.filter(\.isLetter).prefix(2)))
     }
 
     var body: some View {
-        RoundedRectangle(cornerRadius: 8)
-            .fill(style.0.gradient)
-            .frame(width: 32, height: 32)
-            .overlay {
-                if family == "swift" {
-                    Image(systemName: "swift").foregroundStyle(.white)
-                } else {
-                    Text(style.1).font(.footnote.weight(.semibold)).foregroundStyle(.white)
-                }
+        Group {
+            if Self.bundled.contains(family) {
+                Image("lang-\(family)")
+                    .resizable()
+                    .scaledToFit()
+                    .padding(2)
+            } else {
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(fallback.0.gradient)
+                    .overlay { Text(fallback.1).font(.footnote.weight(.semibold)).foregroundStyle(.white) }
             }
-            .accessibilityHidden(true)
+        }
+        .frame(width: 32, height: 32)
+        .accessibilityHidden(true)
     }
 }
 

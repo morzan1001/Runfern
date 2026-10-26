@@ -240,7 +240,6 @@ struct ProjectDetailView: View {
 
     private func informationSection(_ env: DevEnvironment) -> some View {
         let image = Catalog.baseImage(id: env.baseImageId)
-        let imageReady = image.map { images.status(of: $0) == .available || (runtime.isSimulated && $0.source == nil) } ?? false
         return Section("Information") {
             if let image {
                 LabeledContent("Linux Base", value: image.displayName)
@@ -254,14 +253,6 @@ struct ProjectDetailView: View {
                     Text((usage.environment + usage.workspace).formattedBytes)
                 } else {
                     ProgressView().controlSize(.small)
-                }
-            }
-            LabeledContent("Works Offline") {
-                let ready = imageReady && env.hasCompleted(.installToolchains) && env.hasCompleted(.prepareWorkspace)
-                HStack(spacing: 6) {
-                    Image(systemName: ready ? "checkmark.circle.fill" : "circle.dashed")
-                        .foregroundStyle(ready ? .green : .secondary)
-                    Text(ready ? String(localized: "Yes") : String(localized: "Not yet"))
                 }
             }
         }
