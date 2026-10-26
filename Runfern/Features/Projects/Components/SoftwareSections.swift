@@ -12,8 +12,10 @@ struct SoftwareSections: View {
     var softwareLocked = false
 
     @State private var browsing = false
+    @State private var addingLanguage = false
 
     private var tools: [ToolchainProfile] { base.map(Catalog.toolchains(for:)) ?? [] }
+    private var families: [ToolchainFamily] { base.map(Catalog.toolchainFamilies(for:)) ?? [] }
 
     var body: some View {
         Section {
@@ -25,17 +27,16 @@ struct SoftwareSections: View {
         }
 
         Section("Tools") {
-            ForEach(tools) { tool in
-                Toggle(isOn: Binding(get: { selection.toolchainIds.contains(tool.id) },
-                                     set: { selection.setTool(tool.id, selected: $0) })) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(tool.name)
-                        Text("\(tool.summary) · \(tool.estimatedSizeBytes.formattedBytes)")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                    }
-                }
+            ForEach(selection.toolchains) { tool in
+                toolRow(tool)
             }
+            .onDelete { offsets in
+                for tool in offsets.map({ selection.toolchains[$0] }) { selection.setTool(tool.id, selected: false) }
+            }
+            Button("Add Language…", systemImage: "plus") { addingLanguage = true }
+                .sheet(isPresented: $addingLanguage) {
+                    ToolchainCatalogView(base: base, selection: $selection)
+                }
         }
         .disabled(softwareLocked)
 
@@ -58,6 +59,31 @@ struct SoftwareSections: View {
             Text("From Open VSX.")
         }
         .disabled(softwareLocked)
+    }
+
+    /// A chosen language: its version can be changed in place; swiping removes it.
+    @ViewBuilder
+    private func toolRow(_ tool: ToolchainProfile) -> some View {
+        let family = families.first { $0.id == tool.family }
+        HStack(spacing: 12) {
+            ToolchainIcon(family: tool.family, name: tool.familyName)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(tool.familyName)
+                Text("\(tool.summary) · \(tool.estimatedSizeBytes.formattedBytes)")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer()
+            if let family, family.versions.count > 1 {
+                Picker("Version", selection: Binding(get: { tool.id }, set: { selection.setTool($0, selected: true) })) {
+                    ForEach(family.versions) { Text($0.version).tag($0.id) }
+                }
+                .labelsHidden()
+                .fixedSize()
+            } else {
+                Text(tool.version).foregroundStyle(.secondary)
+            }
+        }
     }
 
     private func extensionToggle(_ id: String, source: String?) -> some View {

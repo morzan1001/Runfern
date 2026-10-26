@@ -1,19 +1,52 @@
 {
   "format": 1,
-  "catalogVersion": 3,
-  "publishedAt": "2026-10-25T12:00:00Z",
+  "catalogVersion": 1,
+  "publishedAt": "2026-10-26T09:55:17Z",
   "baseImages": [
     {
       "id": "debian-12-arm64",
       "distribution": "Debian",
       "release": "12",
       "architecture": "arm64",
-      "catalogVersion": 4,
-      "downloadSizeBytes": 650000000,
+      "catalogVersion": 1,
+      "downloadSizeBytes": 1200000000,
       "supportedToolchains": [
         "python-3",
-        "nodejs-22",
-        "java-21"
+        "nodejs-24",
+        "nodejs-26",
+        "java-21",
+        "java-25",
+        "java-27",
+        "go",
+        "rust",
+        "dotnet",
+        "bun",
+        "deno",
+        "zig",
+        "swift-debian-12"
+      ]
+    },
+    {
+      "id": "debian-13-arm64",
+      "distribution": "Debian",
+      "release": "13",
+      "architecture": "arm64",
+      "catalogVersion": 1,
+      "downloadSizeBytes": 1200000000,
+      "supportedToolchains": [
+        "python-3",
+        "nodejs-24",
+        "nodejs-26",
+        "java-21",
+        "java-25",
+        "java-27",
+        "go",
+        "rust",
+        "dotnet",
+        "bun",
+        "deno",
+        "zig",
+        "swift-debian-13"
       ]
     },
     {
@@ -22,33 +55,88 @@
       "release": "24.04",
       "architecture": "arm64",
       "catalogVersion": 1,
-      "downloadSizeBytes": 780000000,
+      "downloadSizeBytes": 1200000000,
       "supportedToolchains": [
         "python-3",
-        "nodejs-22",
-        "java-21"
+        "nodejs-24",
+        "nodejs-26",
+        "java-21",
+        "java-25",
+        "java-27",
+        "go",
+        "rust",
+        "dotnet",
+        "bun",
+        "deno",
+        "zig",
+        "swift-ubuntu-24.04"
+      ]
+    },
+    {
+      "id": "ubuntu-26.04-arm64",
+      "distribution": "Ubuntu",
+      "release": "26.04",
+      "architecture": "arm64",
+      "catalogVersion": 1,
+      "downloadSizeBytes": 1200000000,
+      "supportedToolchains": [
+        "python-3",
+        "nodejs-24",
+        "nodejs-26",
+        "java-21",
+        "java-25",
+        "java-27",
+        "go",
+        "rust",
+        "dotnet",
+        "bun",
+        "deno",
+        "zig",
+        "swift-ubuntu-26.04"
+      ]
+    },
+    {
+      "id": "fedora-44-arm64",
+      "distribution": "Fedora",
+      "release": "44",
+      "architecture": "arm64",
+      "catalogVersion": 1,
+      "downloadSizeBytes": 1200000000,
+      "supportedToolchains": [
+        "python-3",
+        "nodejs-24",
+        "nodejs-26",
+        "java-21",
+        "java-25",
+        "java-27",
+        "go",
+        "rust",
+        "dotnet",
+        "bun",
+        "deno",
+        "zig",
+        "swift-fedora-44"
       ]
     }
   ],
   "toolchains": [
     {
       "id": "python-3",
-      "name": "Python 3",
+      "family": "python",
+      "familyName": "Python",
+      "version": "3.15",
       "revision": 1,
       "summaries": {
         "en": "Runtime, pip, and editor support",
         "de": "Laufzeit, pip und Editorunterstützung"
       },
-      "estimatedSizeBytes": 87596133,
-      "extensions": [
-        "ms-python.python"
-      ],
+      "estimatedSizeBytes": 95108991,
       "packages": [
         {
-          "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20261021/cpython-3.12.15%2B20261021-aarch64-unknown-linux-gnu-install_only_stripped.tar.gz",
-          "sha256": "b4567aa5a11f51b540c4dfd9e082ebf23e554f8ac17b85caa6cea23e83693394",
+          "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20261021/cpython-3.15.1%2B20261021-aarch64-unknown-linux-gnu-install_only_stripped.tar.gz",
+          "sha256": "6efe65c43ae0bdebebeab4607f91a0053dd36d5e51cfd69a791d544e9b122be7",
           "format": "tar.gz",
-          "sizeBytes": 29198711,
+          "sizeBytes": 31702997,
           "installRoot": "/opt/runfern/python-3",
           "stripComponents": 1
         }
@@ -59,50 +147,82 @@
         "pip": "/opt/runfern/python-3/bin/pip3",
         "pip3": "/opt/runfern/python-3/bin/pip3"
       },
-      "environment": {}
+      "environment": {},
+      "extensions": [
+        "ms-python.python"
+      ]
     },
     {
-      "id": "nodejs-22",
-      "name": "Node.js 22",
+      "id": "nodejs-24",
+      "family": "nodejs",
+      "familyName": "Node.js",
+      "version": "24",
       "revision": 1,
       "summaries": {
-        "en": "JavaScript and TypeScript runtime with npm",
-        "de": "JavaScript- und TypeScript-Laufzeit mit npm"
+        "en": "LTS runtime with npm",
+        "de": "LTS-Laufzeit mit npm"
       },
-      "estimatedSizeBytes": 170091756,
-      "extensions": [
-        "dbaeumer.vscode-eslint"
-      ],
+      "estimatedSizeBytes": 174063387,
       "packages": [
         {
-          "url": "https://nodejs.org/dist/v22.23.4/node-v22.23.4-linux-arm64.tar.gz",
-          "sha256": "f7a1e486dbc8b286847815b477d4fb5e9fb963ed4489c3e1588853d685f589f9",
+          "url": "https://nodejs.org/dist/v24.22.1/node-v24.22.1-linux-arm64.tar.gz",
+          "sha256": "33c37be234ba8bee041961047b19160f4d7d0f164e8e246f78bdd10feff148b3",
           "format": "tar.gz",
-          "sizeBytes": 56697252,
-          "installRoot": "/opt/runfern/nodejs-22",
+          "sizeBytes": 58021129,
+          "installRoot": "/opt/runfern/nodejs-24",
           "stripComponents": 1
         }
       ],
       "commands": {
-        "node": "/opt/runfern/nodejs-22/bin/node",
-        "npm": "/opt/runfern/nodejs-22/bin/npm",
-        "npx": "/opt/runfern/nodejs-22/bin/npx",
-        "corepack": "/opt/runfern/nodejs-22/bin/corepack"
+        "node": "/opt/runfern/nodejs-24/bin/node",
+        "npm": "/opt/runfern/nodejs-24/bin/npm",
+        "npx": "/opt/runfern/nodejs-24/bin/npx",
+        "corepack": "/opt/runfern/nodejs-24/bin/corepack"
       },
-      "environment": {}
+      "environment": {},
+      "extensions": []
+    },
+    {
+      "id": "nodejs-26",
+      "family": "nodejs",
+      "familyName": "Node.js",
+      "version": "26",
+      "revision": 1,
+      "summaries": {
+        "en": "Current runtime with npm",
+        "de": "Aktuelle Laufzeit mit npm"
+      },
+      "estimatedSizeBytes": 187806432,
+      "packages": [
+        {
+          "url": "https://nodejs.org/dist/v26.12.1/node-v26.12.1-linux-arm64.tar.gz",
+          "sha256": "a6c01af459dd8972ab3fb08ee5da81244d26ba8c4944a62d5bbba8c597ae154f",
+          "format": "tar.gz",
+          "sizeBytes": 62602144,
+          "installRoot": "/opt/runfern/nodejs-26",
+          "stripComponents": 1
+        }
+      ],
+      "commands": {
+        "node": "/opt/runfern/nodejs-26/bin/node",
+        "npm": "/opt/runfern/nodejs-26/bin/npm",
+        "npx": "/opt/runfern/nodejs-26/bin/npx",
+        "corepack": "/opt/runfern/nodejs-26/bin/corepack"
+      },
+      "environment": {},
+      "extensions": []
     },
     {
       "id": "java-21",
-      "name": "Java 21",
+      "family": "java",
+      "familyName": "Java",
+      "version": "21",
       "revision": 1,
       "summaries": {
-        "en": "OpenJDK with Gradle support",
-        "de": "OpenJDK mit Gradle-Unterstützung"
+        "en": "JDK (LTS) and Gradle",
+        "de": "JDK (LTS) und Gradle"
       },
-      "estimatedSizeBytes": 1028131944,
-      "extensions": [
-        "vscjava.vscode-java-pack"
-      ],
+      "estimatedSizeBytes": 1072846068,
       "packages": [
         {
           "url": "https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.13%2B9/OpenJDK21U-jdk_aarch64_linux_hotspot_21.0.13_9.tar.gz",
@@ -113,10 +233,10 @@
           "stripComponents": 1
         },
         {
-          "url": "https://services.gradle.org/distributions/gradle-8.10.2-bin.zip",
-          "sha256": "31c55713e40233a8303827ceb42ca48a47267a0ad4bab9177123121e71524c26",
+          "url": "https://services.gradle.org/distributions/gradle-9.8.2-bin.zip",
+          "sha256": "21bd5da2de49b642904077f38c0efdc7778e92b3ed0889392dca61b97e389607",
           "format": "zip",
-          "sizeBytes": 136715430,
+          "sizeBytes": 151620138,
           "installRoot": "/opt/runfern/gradle",
           "stripComponents": 1
         }
@@ -130,7 +250,474 @@
       },
       "environment": {
         "JAVA_HOME": "/opt/runfern/jdk-21"
-      }
+      },
+      "extensions": [
+        "redhat.java",
+        "vscjava.vscode-java-debug"
+      ]
+    },
+    {
+      "id": "java-25",
+      "family": "java",
+      "familyName": "Java",
+      "version": "25",
+      "revision": 1,
+      "summaries": {
+        "en": "JDK (LTS) and Gradle",
+        "de": "JDK (LTS) und Gradle"
+      },
+      "estimatedSizeBytes": 875394924,
+      "packages": [
+        {
+          "url": "https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25.0.5%2B8/OpenJDK25U-jdk_aarch64_linux_hotspot_25.0.5_8.tar.gz",
+          "sha256": "bb5b2ded252f21c6090cf780b0a408ad0d83bbb557e702955643557f13231880",
+          "format": "tar.gz",
+          "sizeBytes": 140178170,
+          "installRoot": "/opt/runfern/jdk-25",
+          "stripComponents": 1
+        },
+        {
+          "url": "https://services.gradle.org/distributions/gradle-9.8.2-bin.zip",
+          "sha256": "21bd5da2de49b642904077f38c0efdc7778e92b3ed0889392dca61b97e389607",
+          "format": "zip",
+          "sizeBytes": 151620138,
+          "installRoot": "/opt/runfern/gradle",
+          "stripComponents": 1
+        }
+      ],
+      "commands": {
+        "java": "/opt/runfern/jdk-25/bin/java",
+        "javac": "/opt/runfern/jdk-25/bin/javac",
+        "jar": "/opt/runfern/jdk-25/bin/jar",
+        "jshell": "/opt/runfern/jdk-25/bin/jshell",
+        "gradle": "/opt/runfern/gradle/bin/gradle"
+      },
+      "environment": {
+        "JAVA_HOME": "/opt/runfern/jdk-25"
+      },
+      "extensions": [
+        "redhat.java",
+        "vscjava.vscode-java-debug"
+      ]
+    },
+    {
+      "id": "java-27",
+      "family": "java",
+      "familyName": "Java",
+      "version": "27",
+      "revision": 1,
+      "summaries": {
+        "en": "Current JDK and Gradle",
+        "de": "Aktuelles JDK und Gradle"
+      },
+      "estimatedSizeBytes": 879703170,
+      "packages": [
+        {
+          "url": "https://github.com/adoptium/temurin27-binaries/releases/download/jdk-27%2B35/OpenJDK27U-jdk_aarch64_linux_hotspot_27_35.tar.gz",
+          "sha256": "e4ec5c7276290c7bde0baecba9a29be4962f5388684296406a9799d465936087",
+          "format": "tar.gz",
+          "sizeBytes": 141614252,
+          "installRoot": "/opt/runfern/jdk-27",
+          "stripComponents": 1
+        },
+        {
+          "url": "https://services.gradle.org/distributions/gradle-9.8.2-bin.zip",
+          "sha256": "21bd5da2de49b642904077f38c0efdc7778e92b3ed0889392dca61b97e389607",
+          "format": "zip",
+          "sizeBytes": 151620138,
+          "installRoot": "/opt/runfern/gradle",
+          "stripComponents": 1
+        }
+      ],
+      "commands": {
+        "java": "/opt/runfern/jdk-27/bin/java",
+        "javac": "/opt/runfern/jdk-27/bin/javac",
+        "jar": "/opt/runfern/jdk-27/bin/jar",
+        "jshell": "/opt/runfern/jdk-27/bin/jshell",
+        "gradle": "/opt/runfern/gradle/bin/gradle"
+      },
+      "environment": {
+        "JAVA_HOME": "/opt/runfern/jdk-27"
+      },
+      "extensions": [
+        "redhat.java",
+        "vscjava.vscode-java-debug"
+      ]
+    },
+    {
+      "id": "go",
+      "family": "go",
+      "familyName": "Go",
+      "version": "1.27.3",
+      "revision": 1,
+      "summaries": {
+        "en": "Compiler and tools",
+        "de": "Compiler und Werkzeuge"
+      },
+      "estimatedSizeBytes": 201228132,
+      "packages": [
+        {
+          "url": "https://go.dev/dl/go1.27.3.linux-arm64.tar.gz",
+          "sha256": "a06e99309dbcbdca1a8ccd2282c3ee146e55930886e26b4f1193269587165f49",
+          "format": "tar.gz",
+          "sizeBytes": 67076044,
+          "installRoot": "/opt/runfern/go",
+          "stripComponents": 1
+        }
+      ],
+      "commands": {
+        "go": "/opt/runfern/go/bin/go",
+        "gofmt": "/opt/runfern/go/bin/gofmt"
+      },
+      "environment": {
+        "GOROOT": "/opt/runfern/go"
+      },
+      "extensions": [
+        "golang.go"
+      ]
+    },
+    {
+      "id": "rust",
+      "family": "rust",
+      "familyName": "Rust",
+      "version": "1.99.1",
+      "revision": 1,
+      "summaries": {
+        "en": "rustc, Cargo, rustfmt, and Clippy",
+        "de": "rustc, Cargo, rustfmt und Clippy"
+      },
+      "estimatedSizeBytes": 351584988,
+      "packages": [
+        {
+          "url": "https://static.rust-lang.org/dist/2026-10-15/rustc-1.99.1-aarch64-unknown-linux-gnu.tar.xz",
+          "sha256": "acdcdfe09ae1f103aa9a2b7f88903a9588bc2e99288af10e6fbf5514e2e49f25",
+          "format": "tar.xz",
+          "sizeBytes": 68717724,
+          "installRoot": "/opt/runfern/rust",
+          "stripComponents": 2
+        },
+        {
+          "url": "https://static.rust-lang.org/dist/2026-10-15/rust-std-1.99.1-aarch64-unknown-linux-gnu.tar.xz",
+          "sha256": "e25668477083d6a9ddb87b9beb9c00742225f38233ccb4bfba3afa7a07427f52",
+          "format": "tar.xz",
+          "sizeBytes": 31796492,
+          "installRoot": "/opt/runfern/rust",
+          "stripComponents": 2
+        },
+        {
+          "url": "https://static.rust-lang.org/dist/2026-10-15/cargo-1.99.1-aarch64-unknown-linux-gnu.tar.xz",
+          "sha256": "5156832e0c1254e9b49a79edabdc6d4c35f32f8fc1cf3ca700f268ff96087ab0",
+          "format": "tar.xz",
+          "sizeBytes": 10588432,
+          "installRoot": "/opt/runfern/rust",
+          "stripComponents": 2
+        },
+        {
+          "url": "https://static.rust-lang.org/dist/2026-10-15/rustfmt-1.99.1-aarch64-unknown-linux-gnu.tar.xz",
+          "sha256": "26b3200b1461921415927abf7fe410202a6eda2db3e419abde59e0abfcd93fc2",
+          "format": "tar.xz",
+          "sizeBytes": 2286880,
+          "installRoot": "/opt/runfern/rust",
+          "stripComponents": 2
+        },
+        {
+          "url": "https://static.rust-lang.org/dist/2026-10-15/clippy-1.99.1-aarch64-unknown-linux-gnu.tar.xz",
+          "sha256": "3bea76c26dcf30c176c0a8a8cc283eb59fabd754e24a68b4ca0701e5f3245f6b",
+          "format": "tar.xz",
+          "sizeBytes": 3805468,
+          "installRoot": "/opt/runfern/rust",
+          "stripComponents": 2
+        }
+      ],
+      "commands": {
+        "rustc": "/opt/runfern/rust/bin/rustc",
+        "cargo": "/opt/runfern/rust/bin/cargo",
+        "rustfmt": "/opt/runfern/rust/bin/rustfmt",
+        "cargo-fmt": "/opt/runfern/rust/bin/cargo-fmt",
+        "cargo-clippy": "/opt/runfern/rust/bin/cargo-clippy",
+        "clippy-driver": "/opt/runfern/rust/bin/clippy-driver"
+      },
+      "environment": {
+        "CARGO_HOME": "/home/runfern/.cargo"
+      },
+      "extensions": [
+        "rust-lang.rust-analyzer"
+      ]
+    },
+    {
+      "id": "dotnet",
+      "family": "dotnet",
+      "familyName": ".NET",
+      "version": "10.0",
+      "revision": 1,
+      "summaries": {
+        "en": "SDK (LTS) for C# and F#",
+        "de": "SDK (LTS) für C# und F#"
+      },
+      "estimatedSizeBytes": 697454631,
+      "packages": [
+        {
+          "url": "https://builds.dotnet.microsoft.com/dotnet/Sdk/10.0.403/dotnet-sdk-10.0.403-linux-arm64.tar.gz",
+          "sha256": "21fe1a0963984206bfaeb19968da07e7a61d30c9bc4621b7372a762a30c88679",
+          "format": "tar.gz",
+          "sizeBytes": 232484877,
+          "installRoot": "/opt/runfern/dotnet",
+          "stripComponents": 0
+        }
+      ],
+      "commands": {
+        "dotnet": "/opt/runfern/dotnet/dotnet"
+      },
+      "environment": {
+        "DOTNET_ROOT": "/opt/runfern/dotnet",
+        "DOTNET_CLI_TELEMETRY_OPTOUT": "1"
+      },
+      "extensions": [
+        "muhammad-sammy.csharp"
+      ]
+    },
+    {
+      "id": "bun",
+      "family": "bun",
+      "familyName": "Bun",
+      "version": "1.4.4",
+      "revision": 1,
+      "summaries": {
+        "en": "JavaScript runtime, bundler, and package manager",
+        "de": "JavaScript-Laufzeit, Bundler und Paketverwaltung"
+      },
+      "estimatedSizeBytes": 154934019,
+      "packages": [
+        {
+          "url": "https://github.com/oven-sh/bun/releases/download/bun-v1.4.4/bun-linux-aarch64.zip",
+          "sha256": "baa6bb36f51d6e58561e02bbea825038a9df454f673d6d776e8bbf86f8c7850e",
+          "format": "zip",
+          "sizeBytes": 51644673,
+          "installRoot": "/opt/runfern/bun",
+          "stripComponents": 1
+        }
+      ],
+      "commands": {
+        "bun": "/opt/runfern/bun/bun",
+        "bunx": "/opt/runfern/bun/bun"
+      },
+      "environment": {},
+      "extensions": [
+        "oven.bun-vscode"
+      ]
+    },
+    {
+      "id": "deno",
+      "family": "deno",
+      "familyName": "Deno",
+      "version": "2.9.8",
+      "revision": 1,
+      "summaries": {
+        "en": "JavaScript and TypeScript runtime",
+        "de": "JavaScript- und TypeScript-Laufzeit"
+      },
+      "estimatedSizeBytes": 120361788,
+      "packages": [
+        {
+          "url": "https://github.com/denoland/deno/releases/download/v2.9.8/deno-aarch64-unknown-linux-gnu.zip",
+          "sha256": "d49596c20b9788cf8f5d8ddf644103d4bde56ed239753f0bdb92ba9361d51905",
+          "format": "zip",
+          "sizeBytes": 40120596,
+          "installRoot": "/opt/runfern/deno",
+          "stripComponents": 0
+        }
+      ],
+      "commands": {
+        "deno": "/opt/runfern/deno/deno"
+      },
+      "environment": {},
+      "extensions": [
+        "denoland.vscode-deno"
+      ]
+    },
+    {
+      "id": "zig",
+      "family": "zig",
+      "familyName": "Zig",
+      "version": "0.17.0",
+      "revision": 1,
+      "summaries": {
+        "en": "Compiler and build system",
+        "de": "Compiler und Build-System"
+      },
+      "estimatedSizeBytes": 158631840,
+      "packages": [
+        {
+          "url": "https://ziglang.org/download/0.17.0/zig-aarch64-linux-0.17.0.tar.xz",
+          "sha256": "9e8d11661d4ae3bd57702a3832781e23ad151dde5798e16a5ccd503f65234ff8",
+          "format": "tar.xz",
+          "sizeBytes": 52877280,
+          "installRoot": "/opt/runfern/zig",
+          "stripComponents": 1
+        }
+      ],
+      "commands": {
+        "zig": "/opt/runfern/zig/zig"
+      },
+      "environment": {},
+      "extensions": [
+        "ziglang.vscode-zig"
+      ]
+    },
+    {
+      "id": "swift-debian-12",
+      "family": "swift",
+      "familyName": "Swift",
+      "version": "6.4.1",
+      "revision": 1,
+      "summaries": {
+        "en": "Compiler, Swift Package Manager, and SourceKit-LSP",
+        "de": "Compiler, Swift Package Manager und SourceKit-LSP"
+      },
+      "estimatedSizeBytes": 3327007845,
+      "packages": [
+        {
+          "url": "https://download.swift.org/swift-6.4.1-release/debian12-aarch64/swift-6.4.1-RELEASE/swift-6.4.1-RELEASE-debian12-aarch64.tar.gz",
+          "sha256": "c902b9eb9d50c6469821d054b5b06c0618de56222696411b762c22cc2af98632",
+          "format": "tar.gz",
+          "sizeBytes": 1109002615,
+          "installRoot": "/opt/runfern/swift",
+          "stripComponents": 1
+        }
+      ],
+      "commands": {
+        "swift": "/opt/runfern/swift/usr/bin/swift",
+        "swiftc": "/opt/runfern/swift/usr/bin/swiftc",
+        "sourcekit-lsp": "/opt/runfern/swift/usr/bin/sourcekit-lsp"
+      },
+      "environment": {},
+      "extensions": [
+        "swiftlang.swift-vscode"
+      ]
+    },
+    {
+      "id": "swift-debian-13",
+      "family": "swift",
+      "familyName": "Swift",
+      "version": "6.4.1",
+      "revision": 1,
+      "summaries": {
+        "en": "Compiler, Swift Package Manager, and SourceKit-LSP",
+        "de": "Compiler, Swift Package Manager und SourceKit-LSP"
+      },
+      "estimatedSizeBytes": 3307719555,
+      "packages": [
+        {
+          "url": "https://download.swift.org/swift-6.4.1-release/debian13-aarch64/swift-6.4.1-RELEASE/swift-6.4.1-RELEASE-debian13-aarch64.tar.gz",
+          "sha256": "bdddd98544ab2b3c569a405d6b377e50945d5b4621f5fa503114af342f55a5cd",
+          "format": "tar.gz",
+          "sizeBytes": 1102573185,
+          "installRoot": "/opt/runfern/swift",
+          "stripComponents": 1
+        }
+      ],
+      "commands": {
+        "swift": "/opt/runfern/swift/usr/bin/swift",
+        "swiftc": "/opt/runfern/swift/usr/bin/swiftc",
+        "sourcekit-lsp": "/opt/runfern/swift/usr/bin/sourcekit-lsp"
+      },
+      "environment": {},
+      "extensions": [
+        "swiftlang.swift-vscode"
+      ]
+    },
+    {
+      "id": "swift-ubuntu-24.04",
+      "family": "swift",
+      "familyName": "Swift",
+      "version": "6.4.1",
+      "revision": 1,
+      "summaries": {
+        "en": "Compiler, Swift Package Manager, and SourceKit-LSP",
+        "de": "Compiler, Swift Package Manager und SourceKit-LSP"
+      },
+      "estimatedSizeBytes": 3328581660,
+      "packages": [
+        {
+          "url": "https://download.swift.org/swift-6.4.1-release/ubuntu2404-aarch64/swift-6.4.1-RELEASE/swift-6.4.1-RELEASE-ubuntu24.04-aarch64.tar.gz",
+          "sha256": "b85dd70e204bc363ce62f1e35bd1887810d0e04487d13de8fd9d042635972f45",
+          "format": "tar.gz",
+          "sizeBytes": 1109527220,
+          "installRoot": "/opt/runfern/swift",
+          "stripComponents": 1
+        }
+      ],
+      "commands": {
+        "swift": "/opt/runfern/swift/usr/bin/swift",
+        "swiftc": "/opt/runfern/swift/usr/bin/swiftc",
+        "sourcekit-lsp": "/opt/runfern/swift/usr/bin/sourcekit-lsp"
+      },
+      "environment": {},
+      "extensions": [
+        "swiftlang.swift-vscode"
+      ]
+    },
+    {
+      "id": "swift-ubuntu-26.04",
+      "family": "swift",
+      "familyName": "Swift",
+      "version": "6.4.1",
+      "revision": 1,
+      "summaries": {
+        "en": "Compiler, Swift Package Manager, and SourceKit-LSP",
+        "de": "Compiler, Swift Package Manager und SourceKit-LSP"
+      },
+      "estimatedSizeBytes": 3306208185,
+      "packages": [
+        {
+          "url": "https://download.swift.org/swift-6.4.1-release/ubuntu2604-aarch64/swift-6.4.1-RELEASE/swift-6.4.1-RELEASE-ubuntu26.04-aarch64.tar.gz",
+          "sha256": "d2ce298367bf90b49a43c505f5c42034660fe819c047e4fba7c52b2d92661a18",
+          "format": "tar.gz",
+          "sizeBytes": 1102069395,
+          "installRoot": "/opt/runfern/swift",
+          "stripComponents": 1
+        }
+      ],
+      "commands": {
+        "swift": "/opt/runfern/swift/usr/bin/swift",
+        "swiftc": "/opt/runfern/swift/usr/bin/swiftc",
+        "sourcekit-lsp": "/opt/runfern/swift/usr/bin/sourcekit-lsp"
+      },
+      "environment": {},
+      "extensions": [
+        "swiftlang.swift-vscode"
+      ]
+    },
+    {
+      "id": "swift-fedora-44",
+      "family": "swift",
+      "familyName": "Swift",
+      "version": "6.4.1",
+      "revision": 1,
+      "summaries": {
+        "en": "Compiler, Swift Package Manager, and SourceKit-LSP",
+        "de": "Compiler, Swift Package Manager und SourceKit-LSP"
+      },
+      "estimatedSizeBytes": 3301303542,
+      "packages": [
+        {
+          "url": "https://download.swift.org/swift-6.4.1-release/fedora41-aarch64/swift-6.4.1-RELEASE/swift-6.4.1-RELEASE-fedora41-aarch64.tar.gz",
+          "sha256": "9565a61e898fd6a875efada8dc311b728dd150c06e75c8239c6ca34cee8470db",
+          "format": "tar.gz",
+          "sizeBytes": 1100434514,
+          "installRoot": "/opt/runfern/swift",
+          "stripComponents": 1
+        }
+      ],
+      "commands": {
+        "swift": "/opt/runfern/swift/usr/bin/swift",
+        "swiftc": "/opt/runfern/swift/usr/bin/swiftc",
+        "sourcekit-lsp": "/opt/runfern/swift/usr/bin/sourcekit-lsp"
+      },
+      "environment": {},
+      "extensions": [
+        "swiftlang.swift-vscode"
+      ]
     }
   ]
 }

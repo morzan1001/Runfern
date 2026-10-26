@@ -26,7 +26,6 @@ PACKAGES = "/mnt/runfern-packages"
 ENVIRONMENT = os.path.join(STATE_DIR, "environment.json")
 WORKSPACE = "/workspace"
 # Parent folder of all working copies shared by the app; only the active project is bound to /workspace.
-WORKSPACES = "/mnt/workspaces"
 IDE_BINARY = "/opt/openvscode-server/bin/openvscode-server"
 USER = "runfern"
 EXTENSIONS_DIR = f"/home/{USER}/.openvscode-server/extensions"
@@ -112,22 +111,6 @@ class Agent:
             raise RuntimeError("editor is not installed")
         return {"linux": "ok", "agent": "ok", "toolchains": ",".join(sorted(load_installed()))}
 
-    def command_mountWorkspace(self, path):
-        """Binds the active project's working copy to /workspace, where the editor opens it."""
-        parts = [part for part in path.split("/") if part not in ("", ".")]
-        if not parts or ".." in parts:
-            raise RuntimeError(f"invalid workspace path {path}")
-        os.listdir(WORKSPACES)  # Triggers the automount.
-        source = os.path.join(WORKSPACES, *parts)
-        if not os.path.isdir(source):
-            raise RuntimeError("project folder not found")
-        os.makedirs(WORKSPACE, exist_ok=True)
-        if os.path.ismount(WORKSPACE):
-            subprocess.run(["umount", "-l", WORKSPACE], check=True)
-        subprocess.run(["mount", "--bind", source, WORKSPACE], check=True)
-        console("workspace mounted")
-        return {}
-
     def command_mountFolder(self, port, token):
         """Mounts a folder in Files that the app serves over 9P on its loopback, reached via 10.0.2.2."""
         if not isinstance(port, int) or not 0 < port < 65536 or not re.fullmatch(r"[A-Za-z0-9_-]{16,128}", token):
@@ -154,11 +137,23 @@ class Agent:
                 return {"installed": id}
             console(f"installing {id} revision {revision}")
             os.listdir(PACKAGES)  # Triggers the automount.
-            for index, package in enumerate(packages):
-                self.event("progress", step=id, fraction=index / len(packages))
-                unpack(os.path.join(PACKAGES, safe_name(package["file"])), package["format"],
-                       package["installRoot"], package["stripComponents"])
+            # Packages with the same root (the parts of Rust, for example) are unpacked together.
+            roots = {}
+            for package in packages:
+                roots.setdefault(package["installRoot"], []).append(package)
+            done = 0
+            for root, parts in roots.items():
+                staging = begin_unpack(root)
+                for package in parts:
+                    self.event("progress", step=id, fraction=done / len(packages))
+                    extract(os.path.join(PACKAGES, safe_name(package["file"])), package["format"],
+                            staging, package["stripComponents"])
+                    done += 1
+                finish_unpack(staging, root)
             for name, target in commands.items():
+                # A wrong archive layout shows up here instead of as a missing command later.
+                if not os.access(target, os.X_OK):
+                    raise RuntimeError(f"{id}: {target} is missing after unpacking")
                 link = os.path.join("/usr/local/bin", safe_name(name))
                 if os.path.lexists(link):
                     os.remove(link)
@@ -294,15 +289,27 @@ def stripped(path, count):
     return "/".join(parts[count:])
 
 
-def unpack(archive, kind, root, strip):
-    """Unpacks into a fresh directory and swaps it in, so an interrupted run leaves no half state."""
+def begin_unpack(root):
+    """A fresh staging directory for `root`; archives are unpacked there and swapped in together,
+    so an interrupted run leaves no half state."""
     staging = root + ".new"
     shutil.rmtree(staging, ignore_errors=True)
     os.makedirs(staging)
-    if kind == "tar.gz":
+    return staging
+
+
+def finish_unpack(staging, root):
+    shutil.rmtree(root, ignore_errors=True)
+    os.makedirs(os.path.dirname(root), exist_ok=True)
+    os.rename(staging, root)
+
+
+def extract(archive, kind, staging, strip):
+    if kind in ("tar.gz", "tar.xz"):
         # Native tar is much faster than tarfile when the guest CPU is interpreted. GNU tar drops
         # leading slashes and refuses members containing "..".
-        result = subprocess.run(["tar", "-xzf", archive, "-C", staging, f"--strip-components={int(strip)}",
+        flag = "-xzf" if kind == "tar.gz" else "-xJf"
+        result = subprocess.run(["tar", flag, archive, "-C", staging, f"--strip-components={int(strip)}",
                                  "--no-same-owner", "--delay-directory-restore"],
                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
         if result.returncode != 0:
@@ -325,9 +332,6 @@ def unpack(archive, kind, root, strip):
                     os.chmod(target, mode)
     else:
         raise RuntimeError(f"unsupported archive format {kind}")
-    shutil.rmtree(root, ignore_errors=True)
-    os.makedirs(os.path.dirname(root), exist_ok=True)
-    os.rename(staging, root)
 
 
 def install_vsix(archive):
