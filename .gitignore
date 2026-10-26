@@ -1,0 +1,17 @@
+# Build products of Tools/QEMU (large binaries, rebuilt from source)
+Vendor/QEMU/
+# Guest image build output
+Tools/GuestImage/build/
+
+# StikJIT for the built-in JIT (Tools/JIT/build-jit-vendor.sh)
+Vendor/JIT/
+
+# Local clutter
+.DS_Store
+__pycache__/
+
+# Output of Tools/Build/build.sh
+/build/
+
+# Per-user Xcode state
+xcuserdata/

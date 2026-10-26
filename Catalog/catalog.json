@@ -1,0 +1,136 @@
+{
+  "format": 1,
+  "catalogVersion": 3,
+  "publishedAt": "2026-10-25T12:00:00Z",
+  "baseImages": [
+    {
+      "id": "debian-12-arm64",
+      "distribution": "Debian",
+      "release": "12",
+      "architecture": "arm64",
+      "catalogVersion": 4,
+      "downloadSizeBytes": 650000000,
+      "supportedToolchains": [
+        "python-3",
+        "nodejs-22",
+        "java-21"
+      ]
+    },
+    {
+      "id": "ubuntu-24.04-arm64",
+      "distribution": "Ubuntu",
+      "release": "24.04",
+      "architecture": "arm64",
+      "catalogVersion": 1,
+      "downloadSizeBytes": 780000000,
+      "supportedToolchains": [
+        "python-3",
+        "nodejs-22",
+        "java-21"
+      ]
+    }
+  ],
+  "toolchains": [
+    {
+      "id": "python-3",
+      "name": "Python 3",
+      "revision": 1,
+      "summaries": {
+        "en": "Runtime, pip, and editor support",
+        "de": "Laufzeit, pip und Editorunterstützung"
+      },
+      "estimatedSizeBytes": 87596133,
+      "extensions": [
+        "ms-python.python"
+      ],
+      "packages": [
+        {
+          "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20261021/cpython-3.12.15%2B20261021-aarch64-unknown-linux-gnu-install_only_stripped.tar.gz",
+          "sha256": "b4567aa5a11f51b540c4dfd9e082ebf23e554f8ac17b85caa6cea23e83693394",
+          "format": "tar.gz",
+          "sizeBytes": 29198711,
+          "installRoot": "/opt/runfern/python-3",
+          "stripComponents": 1
+        }
+      ],
+      "commands": {
+        "python": "/opt/runfern/python-3/bin/python3",
+        "python3": "/opt/runfern/python-3/bin/python3",
+        "pip": "/opt/runfern/python-3/bin/pip3",
+        "pip3": "/opt/runfern/python-3/bin/pip3"
+      },
+      "environment": {}
+    },
+    {
+      "id": "nodejs-22",
+      "name": "Node.js 22",
+      "revision": 1,
+      "summaries": {
+        "en": "JavaScript and TypeScript runtime with npm",
+        "de": "JavaScript- und TypeScript-Laufzeit mit npm"
+      },
+      "estimatedSizeBytes": 170091756,
+      "extensions": [
+        "dbaeumer.vscode-eslint"
+      ],
+      "packages": [
+        {
+          "url": "https://nodejs.org/dist/v22.23.4/node-v22.23.4-linux-arm64.tar.gz",
+          "sha256": "f7a1e486dbc8b286847815b477d4fb5e9fb963ed4489c3e1588853d685f589f9",
+          "format": "tar.gz",
+          "sizeBytes": 56697252,
+          "installRoot": "/opt/runfern/nodejs-22",
+          "stripComponents": 1
+        }
+      ],
+      "commands": {
+        "node": "/opt/runfern/nodejs-22/bin/node",
+        "npm": "/opt/runfern/nodejs-22/bin/npm",
+        "npx": "/opt/runfern/nodejs-22/bin/npx",
+        "corepack": "/opt/runfern/nodejs-22/bin/corepack"
+      },
+      "environment": {}
+    },
+    {
+      "id": "java-21",
+      "name": "Java 21",
+      "revision": 1,
+      "summaries": {
+        "en": "OpenJDK with Gradle support",
+        "de": "OpenJDK mit Gradle-Unterstützung"
+      },
+      "estimatedSizeBytes": 1028131944,
+      "extensions": [
+        "vscjava.vscode-java-pack"
+      ],
+      "packages": [
+        {
+          "url": "https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.13%2B9/OpenJDK21U-jdk_aarch64_linux_hotspot_21.0.13_9.tar.gz",
+          "sha256": "e3522e707fc7dbe2a72c30746b1e7068301a0213ecd213d4491f35a14eb55578",
+          "format": "tar.gz",
+          "sizeBytes": 205995218,
+          "installRoot": "/opt/runfern/jdk-21",
+          "stripComponents": 1
+        },
+        {
+          "url": "https://services.gradle.org/distributions/gradle-8.10.2-bin.zip",
+          "sha256": "31c55713e40233a8303827ceb42ca48a47267a0ad4bab9177123121e71524c26",
+          "format": "zip",
+          "sizeBytes": 136715430,
+          "installRoot": "/opt/runfern/gradle",
+          "stripComponents": 1
+        }
+      ],
+      "commands": {
+        "java": "/opt/runfern/jdk-21/bin/java",
+        "javac": "/opt/runfern/jdk-21/bin/javac",
+        "jar": "/opt/runfern/jdk-21/bin/jar",
+        "jshell": "/opt/runfern/jdk-21/bin/jshell",
+        "gradle": "/opt/runfern/gradle/bin/gradle"
+      },
+      "environment": {
+        "JAVA_HOME": "/opt/runfern/jdk-21"
+      }
+    }
+  ]
+}
