@@ -47,29 +47,45 @@ final class JITHelperHandler: NSObject, NSExtensionRequestHandling {
         let paths = DDIPaths.default(in: root)
         guard isFromRunfern(request) else { return Answer(success: false, message: "The request does not come from Runfern.") }
         let stage = StageRecorder()
+        // The port is fixed: StikJIT's Bonjour lookup could pick another device's service.
+        let configuration = StikJIT.Configuration(deviceAddress: JITProtocol.Tunnel.deviceAddress,
+                                                  rsdPort: JITProtocol.Tunnel.remotePairingPort,
+                                                  automaticallyDiscoverRSDPort: false)
         do {
             try fileManager.createDirectory(at: root, withIntermediateDirectories: true)
             switch request[JITProtocol.Key.operation] as? String {
             case JITProtocol.Operation.resetDiskImage:
                 try StikJIT.resetCachedDDI(at: paths)
                 return Answer(success: true, message: "Developer Disk Image removed.")
+            case JITProtocol.Operation.prepare:
+                guard let pairing = request[JITProtocol.Key.pairing] as? Data, !pairing.isEmpty else {
+                    return Answer(success: false, message: "The request is incomplete.")
+                }
+                let pairingFile = try writePairingFile(pairing)
+                defer { try? fileManager.removeItem(at: pairingFile) }
+                Self.log.info("Checking the developer services")
+                let readiness = StikJIT.prepareDevice(pairingFile: pairingFile, paths: paths, configuration: configuration,
+                                                      progress: { stage.record($0) })
+                switch readiness {
+                case .ready:
+                    Self.log.info("Ready")
+                    return Answer(success: true, message: "Ready.")
+                case .unreachable(let reason):
+                    Self.log.error("Unreachable: \(reason, privacy: .public)")
+                    return Answer(success: false, message: reason, stage: JITProtocol.Stage.reachability)
+                case .preparationFailed(let reason):
+                    Self.log.error("Failed at stage \(stage.current, privacy: .public): \(reason, privacy: .public)")
+                    return Answer(success: false, message: reason, stage: stage.current)
+                @unknown default:
+                    return Answer(success: false, message: "StikJIT reported an unknown state.", stage: stage.current)
+                }
             case JITProtocol.Operation.enable:
                 guard let pid = (request[JITProtocol.Key.pid] as? NSNumber)?.int32Value,
                       let pairing = request[JITProtocol.Key.pairing] as? Data, !pairing.isEmpty else {
                     return Answer(success: false, message: "The request is incomplete.")
                 }
-                // The pairing file exists only for the duration of the request and is never logged.
-                // It lives in the helper's temporary folder, which is never backed up, under one
-                // name, so a request that was killed leaves nothing behind for long: the next one
-                // overwrites it (requests run one at a time). StikJIT reads it again for every
-                // connection, so it must stay readable while the iPad is locked.
-                let pairingFile = fileManager.temporaryDirectory.appending(path: "pairingFile.plist")
-                try pairing.write(to: pairingFile, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+                let pairingFile = try writePairingFile(pairing)
                 defer { try? fileManager.removeItem(at: pairingFile) }
-                // The port is fixed: StikJIT's Bonjour lookup could pick another device's service.
-                let configuration = StikJIT.Configuration(deviceAddress: JITProtocol.Tunnel.deviceAddress,
-                                                          rsdPort: JITProtocol.Tunnel.remotePairingPort,
-                                                          automaticallyDiscoverRSDPort: false)
                 Self.log.info("Enabling JIT for process \(pid, privacy: .public)")
                 // QEMU stops at its breakpoint whenever a debugger is attached, so the script always
                 // runs, also where StikJIT detects no Trusted Execution Monitor.
@@ -89,6 +105,17 @@ final class JITHelperHandler: NSObject, NSExtensionRequestHandling {
         #else
         return Answer(success: false, message: "StikJIT is not part of this build.")
         #endif
+    }
+
+    /// Writes the pairing file for StikJIT, which takes a path. The file exists only for the duration
+    /// of the request and is never logged. It lives in the helper's temporary folder, which is never
+    /// backed up, under one name, so a request that was killed leaves nothing behind for long: the
+    /// next one overwrites it (requests run one at a time). StikJIT reads it again for every
+    /// connection, so it must stay readable while the iPad is locked.
+    private static func writePairingFile(_ pairing: Data) throws -> URL {
+        let pairingFile = FileManager.default.temporaryDirectory.appending(path: "pairingFile.plist")
+        try pairing.write(to: pairingFile, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+        return pairingFile
     }
 
     /// Whether the request carries the token Runfern left in the shared container for it. The

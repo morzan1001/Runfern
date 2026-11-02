@@ -666,6 +666,16 @@
         }
       }
     },
+    "Allow Runfern's VPN" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VPN von Runfern erlauben"
+          }
+        }
+      }
+    },
     "Another Linux environment is still running." : {
       "localizations" : {
         "de" : {
@@ -816,16 +826,6 @@
         }
       }
     },
-    "Built-In needs a pairing file of this iPad. Create it here (iPadOS 27) or on a computer, as described in How Runfern Works." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "„Eingebaut“ braucht eine Pairing-Datei dieses iPads. Erstelle sie hier (iPadOS 27) oder auf einem Computer, wie unter „So funktioniert Runfern“ beschrieben."
-          }
-        }
-      }
-    },
     "Built-In needs a pairing file of this iPad. Create it on a computer, as described in How Runfern Works." : {
       "localizations" : {
         "de" : {
@@ -902,6 +902,26 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Nach Katalogaktualisierung suchen"
+          }
+        }
+      }
+    },
+    "Check JIT" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JIT prüfen"
+          }
+        }
+      }
+    },
+    "Check the Connection" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindung prüfen"
           }
         }
       }
@@ -1142,36 +1162,6 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Archiv erstellen"
-          }
-        }
-      }
-    },
-    "Create it under Settings › Performance › Create on This iPad: Runfern then appears under Settings › Privacy & Security › Developer Mode, and you confirm it there with the code Runfern shows." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Erstelle sie unter Einstellungen › Leistung › Auf diesem iPad erstellen: Runfern erscheint dann unter Einstellungen › Datenschutz & Sicherheit › Entwicklermodus, und du bestätigst dort mit dem Code, den Runfern anzeigt."
-          }
-        }
-      }
-    },
-    "Create on This iPad…" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Auf diesem iPad erstellen …"
-          }
-        }
-      }
-    },
-    "Create Pairing File" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pairing-Datei erstellen"
           }
         }
       }
@@ -1572,16 +1562,6 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Gib einen Host, einen Benutzernamen und ein Token ein."
-          }
-        }
-      }
-    },
-    "Enter the code Runfern shows here and in a notification." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gib den Code ein, den Runfern hier und in einer Mitteilung anzeigt."
           }
         }
       }
@@ -2072,6 +2052,16 @@
         }
       }
     },
+    "In Settings, open Privacy & Security › Developer Mode and tap “Pair with %@”. Then enter the code Runfern shows here and in a notification." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffne in den Einstellungen Datenschutz & Sicherheit › Entwicklermodus und tippe auf „Mit %@ koppeln“. Gib dann den Code ein, den Runfern hier und in einer Mitteilung anzeigt."
+          }
+        }
+      }
+    },
     "Include Installed Packages" : {
       "localizations" : {
         "de" : {
@@ -2173,6 +2163,26 @@
         }
       }
     },
+    "iPadOS asks once." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPadOS fragt einmal nach."
+          }
+        }
+      }
+    },
+    "iPadOS did not allow Runfern's VPN. Try again and tap Allow." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPadOS hat das VPN von Runfern nicht erlaubt. Versuche es erneut und tippe auf „Erlauben“."
+          }
+        }
+      }
+    },
     "iPadOS did not provide the extension interface the JIT helper needs." : {
       "localizations" : {
         "de" : {
@@ -2183,12 +2193,12 @@
         }
       }
     },
-    "It needs Developer Mode, Wi-Fi, and a pairing file of this iPad (a Remote Pairing file, not a lockdown record)." : {
+    "It needs Wi-Fi and a pairing file of this iPad (a Remote Pairing file, not a lockdown record)." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dafür braucht es den Entwicklermodus, WLAN und eine Pairing-Datei dieses iPads (eine Remote-Pairing-Datei, keinen Lockdown-Record)."
+            "value" : "Dafür braucht es WLAN und eine Pairing-Datei dieses iPads (eine Remote-Pairing-Datei, keinen Lockdown-Record)."
           }
         }
       }
@@ -2203,22 +2213,22 @@
         }
       }
     },
+    "JIT is ready. Linux uses it from its next start." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JIT ist bereit. Linux nutzt es ab dem nächsten Start."
+          }
+        }
+      }
+    },
     "Keep Both" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Beide behalten"
-          }
-        }
-      }
-    },
-    "Keep this iPad on Wi-Fi. No internet connection is needed." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lass dieses iPad mit dem WLAN verbunden. Eine Internetverbindung ist nicht nötig."
           }
         }
       }
@@ -2831,6 +2841,16 @@
         }
       }
     },
+    "Once; again only after the passcode changes." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einmalig; erneut nur nach einer Änderung des Codes."
+          }
+        }
+      }
+    },
     "Only in Runfern" : {
       "localizations" : {
         "de" : {
@@ -2871,22 +2891,22 @@
         }
       }
     },
+    "Open Settings" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einstellungen öffnen"
+          }
+        }
+      }
+    },
     "Open Settings › Privacy & Security › Developer Mode" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Öffne Einstellungen › Datenschutz & Sicherheit › Entwicklermodus"
-          }
-        }
-      }
-    },
-    "Open Settings › Privacy & Security › Developer Mode and tap “Pair with %@”." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Öffne Einstellungen › Datenschutz & Sicherheit › Entwicklermodus und tippe auf „Mit %@ koppeln“."
           }
         }
       }
@@ -2911,22 +2931,12 @@
         }
       }
     },
-    "Paired with %@. JIT is used from the next Linux start." : {
+    "Pair This iPad" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mit %@ gekoppelt. JIT wird ab dem nächsten Linux-Start genutzt."
-          }
-        }
-      }
-    },
-    "Paired. JIT is used from the next Linux start." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gekoppelt. JIT wird ab dem nächsten Linux-Start genutzt."
+            "value" : "Dieses iPad koppeln"
           }
         }
       }
@@ -3601,6 +3611,16 @@
         }
       }
     },
+    "Runfern sets up JIT by itself. You only confirm two things: Runfern's VPN, and the pairing with this iPad in Settings." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Runfern richtet JIT selbst ein. Du bestätigst nur zwei Dinge: das VPN von Runfern und das Koppeln mit diesem iPad in den Einstellungen."
+          }
+        }
+      }
+    },
     "Runfern Total" : {
       "localizations" : {
         "de" : {
@@ -3811,6 +3831,36 @@
         }
       }
     },
+    "Set Up JIT" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JIT einrichten"
+          }
+        }
+      }
+    },
+    "Set up JIT under Settings › Performance to use it." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Richte JIT unter Einstellungen › Leistung ein, um es zu nutzen."
+          }
+        }
+      }
+    },
+    "Set Up JIT…" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JIT einrichten …"
+          }
+        }
+      }
+    },
     "Setting Up" : {
       "localizations" : {
         "de" : {
@@ -3837,6 +3887,16 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Einstellungen"
+          }
+        }
+      }
+    },
+    "Settings › Performance › Set Up JIT does everything else: Runfern adds its VPN, appears under Settings › Privacy & Security › Developer Mode, where you confirm the pairing with the code Runfern shows, and checks that JIT works." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einstellungen › Leistung › JIT einrichten erledigt den Rest: Runfern richtet sein VPN ein, erscheint unter Einstellungen › Datenschutz & Sicherheit › Entwicklermodus, wo du das Koppeln mit dem angezeigten Code bestätigst, und prüft, ob JIT funktioniert."
           }
         }
       }
@@ -4367,12 +4427,12 @@
         }
       }
     },
-    "Tap Start, and allow Runfern to find devices on your local network." : {
+    "Tap Set Up JIT. Runfern does the rest; you only allow its VPN and confirm the pairing in Settings." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tippe auf „Starten“ und erlaube Runfern, Geräte in deinem lokalen Netzwerk zu finden."
+            "value" : "Tippe auf „JIT einrichten“. Runfern erledigt den Rest; du erlaubst nur sein VPN und bestätigst das Koppeln in den Einstellungen."
           }
         }
       }
@@ -4644,6 +4704,16 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Die Datei ist kein gültiges ZIP-Archiv."
+          }
+        }
+      }
+    },
+    "The first time, this downloads the Developer Disk Image, which needs the internet and can take a few minutes." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beim ersten Mal wird dabei das Developer Disk Image geladen; das braucht Internet und kann einige Minuten dauern."
           }
         }
       }
@@ -4995,6 +5065,16 @@
         }
       }
     },
+    "This build cannot create the pairing file on the iPad. Create it on a computer and import it, as described in How Runfern Works." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieser Build kann die Pairing-Datei nicht auf dem iPad erstellen. Erstelle sie auf einem Computer und importiere sie, wie unter „So funktioniert Runfern“ beschrieben."
+          }
+        }
+      }
+    },
     "This build of Runfern cannot create pairing files." : {
       "localizations" : {
         "de" : {
@@ -5135,12 +5215,12 @@
         }
       }
     },
-    "Tip: Keep Settings and Runfern side by side, as windows or in Stage Manager, to see the code while you type it." : {
+    "Tip: Keep Settings and Runfern side by side, as windows or in Stage Manager, to see the code while you type it. Stay on Wi-Fi; no internet connection is needed." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tipp: Halte die Einstellungen und Runfern nebeneinander, als Fenster oder im Stage Manager, damit du den Code beim Eingeben siehst."
+            "value" : "Tipp: Halte die Einstellungen und Runfern nebeneinander, als Fenster oder im Stage Manager, damit du den Code beim Eingeben siehst. Bleib im WLAN; eine Internetverbindung ist nicht nötig."
           }
         }
       }
@@ -5391,16 +5471,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Warten auf die Einstellungen"
-          }
-        }
-      }
-    },
-    "Waiting for “Pair with %@” in Settings" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Warten auf „Mit %@ koppeln“ in den Einstellungen"
           }
         }
       }

@@ -49,7 +49,7 @@ enum BuiltInJIT {
         if let unavailableReason { return fail(unavailableReason) }
         let pairing: Data
         do {
-            guard let loaded = try PairingFile.load() else { return fail(String(localized: "Import a pairing file to use JIT.")) }
+            guard let loaded = try PairingFile.load() else { return fail(String(localized: "Set up JIT under Settings › Performance to use it.")) }
             pairing = loaded
         } catch {
             return fail(error.localizedDescription)
@@ -104,6 +104,43 @@ enum BuiltInJIT {
             return fail(response.map { explanation(of: $0) } ?? String(localized: "The debugger did not attach in time."))
         }
         return true
+    }
+
+    /// Checks the whole way to the iPad's developer services without starting Linux: the VPN, the
+    /// pairing file, and the Developer Disk Image, which is downloaded and mounted if needed, so the
+    /// next Linux start is quick. Returns nil when JIT is ready, otherwise what is wrong.
+    static func check() async -> String? {
+        if let unavailableReason { return unavailableReason }
+        let pairing: Data
+        do {
+            guard let loaded = try PairingFile.load() else { return String(localized: "Set up JIT under Settings › Performance to use it.") }
+            pairing = loaded
+        } catch {
+            return error.localizedDescription
+        }
+        let wakeLock = WakeLock()
+        defer { wakeLock.release() }
+        do {
+            try await LoopbackTunnel.connect()
+        } catch {
+            return error.localizedDescription
+        }
+        let problem: String?
+        do {
+            let signedRequest = try signed([
+                JITProtocol.Key.operation: JITProtocol.Operation.prepare,
+                JITProtocol.Key.pairing: pairing,
+            ])
+            defer { signedRequest.discardToken() }
+            let response = try await JITHelperClient.send(signedRequest.request)
+            problem = response.success ? nil : explanation(of: response)
+        } catch {
+            problem = error.localizedDescription
+        }
+        await LoopbackTunnel.disconnect()
+        lastError = problem
+        DiagnosticsLog.record(problem == nil ? .info : .warning, .runtime, "JIT check: \(problem ?? "ready")")
+        return problem
     }
 
     /// Removes the cached Developer Disk Image, so the next attempt downloads it again.
