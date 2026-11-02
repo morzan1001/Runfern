@@ -26,7 +26,7 @@ struct JITSetupView: View {
                     if setup.pairingStep == .running {
                         pairingDetails
                     }
-                    if !setup.isRunning, setup.pairing.needsLocalNetworkPermission {
+                    if !setup.isRunning, setup.pairingStep != .done, setup.pairing.needsLocalNetworkPermission {
                         Button("Open Runfern's Settings", systemImage: "network") {
                             openFirst(UIApplication.openSettingsURLString)
                         }

@@ -119,9 +119,7 @@ nonisolated final class PairingHost: @unchecked Sendable {
     /// Waits for this iPad to connect and runs the pairing. Gives up after `timeout`, or when the
     /// calling task is cancelled.
     func pair(timeout: Duration, onEvent: @escaping @Sendable (Event) -> Void) async throws -> Pairing {
-        lock.lock()
-        self.onEvent = onEvent
-        lock.unlock()
+        setEventHandler(onEvent)
         let seconds = Double(timeout.components.seconds)
         DispatchQueue.global().asyncAfter(deadline: .now() + seconds) { [weak self] in self?.stop(.timedOut) }
         return try await withTaskCancellationHandler {
@@ -146,6 +144,13 @@ nonisolated final class PairingHost: @unchecked Sendable {
         var byte: UInt8 = 1
         _ = Darwin.write(cancelPipe.write, &byte, 1)
         if connection >= 0 { _ = Darwin.shutdown(connection, SHUT_RDWR) }
+    }
+
+    /// NSLock may not be used directly in async functions, so `pair` sets its handler through here.
+    private func setEventHandler(_ handler: @escaping @Sendable (Event) -> Void) {
+        lock.lock()
+        onEvent = handler
+        lock.unlock()
     }
 
     /// Why `stop` was called, if it was.
