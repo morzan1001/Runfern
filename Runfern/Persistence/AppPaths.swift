@@ -60,12 +60,13 @@ nonisolated enum AppPaths {
             values.isExcludedFromBackup = true
             try? dir.setResourceValues(values)
         }
-        // Leftovers of a deletion interrupted by quitting.
+        // Leftovers of a deletion interrupted by quitting. ImageBundle.remove also lifts the
+        // immutable flag of a deleted base's files; anything else it simply removes.
         let leftovers = trash
         Task.detached(priority: .background) {
             let fm = FileManager.default
             for item in (try? fm.contentsOfDirectory(at: leftovers, includingPropertiesForKeys: nil)) ?? [] {
-                try? fm.removeItem(at: item)
+                try? ImageBundle.remove(item)
             }
         }
     }

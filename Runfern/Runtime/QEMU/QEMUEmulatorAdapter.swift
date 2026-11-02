@@ -52,7 +52,7 @@ nonisolated struct QEMUEmulatorAdapter: EmulatorAdapter {
                 _ = try await awaitDetached(Task {
                     try await machine.agent.send(.installExtensions(ids: ids), timeout: Self.toolchainTimeout)
                 })
-            } catch GuestAgentClient.AgentError.rejected(let reason) where reason.hasPrefix("unknown command") {
+            } catch GuestAgentClient.AgentError.unsupported {
                 throw ExtensionError.unsupportedBase
             }
         }
@@ -62,7 +62,7 @@ nonisolated struct QEMUEmulatorAdapter: EmulatorAdapter {
         try await machines.withMachine(configuration) { machine in
             do {
                 try await machine.agent.send(.applyEditorSettings(settings: settings))
-            } catch GuestAgentClient.AgentError.rejected(let reason) where reason.hasPrefix("unknown command") {
+            } catch GuestAgentClient.AgentError.unsupported {
                 throw ExtensionError.unsupportedBase
             }
         }

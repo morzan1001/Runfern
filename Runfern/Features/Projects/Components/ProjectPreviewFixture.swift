@@ -10,7 +10,8 @@ struct ProjectPreviewFixture {
 
     let store = ProjectStore(fileURL: URL.temporaryDirectory.appending(path: "preview-\(UUID().uuidString).json"))
     let sync = SyncCenter()
-    let images = ImageLibrary()
+    let images = ImageLibrary(offersUnpublished: true)
+    let catalog = CatalogStore()
     let connectivity = Connectivity()
     let provisioner: Provisioner
     let runtime: RuntimeCoordinator
@@ -45,6 +46,7 @@ struct ProjectPreviewFixture {
             .environment(store)
             .environment(sync)
             .environment(images)
+            .environment(catalog)
             .environment(connectivity)
             .environment(provisioner)
             .environment(runtime)

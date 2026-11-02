@@ -3,6 +3,8 @@ import SwiftUI
 /// Edits one environment preset: base, tools, VS Code extensions, VS Code settings, and resources.
 struct PresetEditorView: View {
     @Environment(ProjectStore.self) private var store
+    @Environment(ImageLibrary.self) private var images
+    @Environment(CatalogStore.self) private var catalog
     @Environment(\.dismiss) private var dismiss
 
     @State private var preset: EnvironmentPreset
@@ -18,7 +20,7 @@ struct PresetEditorView: View {
         _settingsText = State(initialValue: preset.editorSettings ?? "")
     }
 
-    private var base: BaseImage? { Catalog.baseImage(id: preset.baseImageId) }
+    private var base: BaseImage? { catalog.baseImages.first { $0.id == preset.baseImageId } }
 
     /// Edits that Cancel or a swipe down would throw away (A2). A blank new preset closes without asking.
     private var hasChanges: Bool {
@@ -36,7 +38,7 @@ struct PresetEditorView: View {
                     TextField("Name", text: $preset.name)
                 }
 
-                Section("Environment") {
+                Section {
                     BaseImagePicker(selection: $preset.baseImageId)
                     SoftwareLink(base: base, selection: $preset.software)
                     Picker("Resources", selection: $preset.resources) {
@@ -46,6 +48,13 @@ struct PresetEditorView: View {
                                 .tag(profile)
                                 .selectionDisabled(!profile.isSupported())
                         }
+                    }
+                } header: {
+                    Text("Environment")
+                } footer: {
+                    // A preset kept from an earlier catalog, or made in the simulator.
+                    if let base, !images.isOffered(base) {
+                        StatusLabel("\(base.displayName) is not available for download yet.")
                     }
                 }
 

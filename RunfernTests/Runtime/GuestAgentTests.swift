@@ -58,6 +58,21 @@ import Testing
         await #expect(throws: GuestAgentClient.AgentError.disconnected) { try await pending.value }
     }
 
+    /// An image built with an older agent answers new commands with “unknown command …”; that
+    /// becomes an error that names the outdated base instead of the agent's raw reply.
+    @Test func unknownCommandMeansOutdatedBase() async throws {
+        let (host, guest) = InMemoryAgentTransport.pair()
+        let client = GuestAgentClient(transport: host)
+        await client.start()
+
+        let pending = Task { try await client.send(.mountFolder(port: 5640, token: "token"), timeout: .seconds(10)) }
+        try await Task.sleep(for: .milliseconds(20))
+        try await guest.send(AgentCoding.encodeLine(AgentFrame.reply(
+            AgentReply(id: 1, ok: false, error: "unknown command mountFolder"))))
+
+        await #expect(throws: GuestAgentClient.AgentError.unsupported(command: "mountFolder")) { try await pending.value }
+    }
+
     @Test func malformedFramesAreIgnored() async throws {
         let (host, guest) = InMemoryAgentTransport.pair()
         let client = GuestAgentClient(transport: host)

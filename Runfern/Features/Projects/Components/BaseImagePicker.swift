@@ -1,16 +1,20 @@
 import SwiftUI
 
 /// Chooses a Linux base in two steps: the distribution, then its release. Form rows, so it fits
-/// into any section.
+/// into any section. Offers only bases this iPad can get (`ImageLibrary.isOffered`), plus the
+/// current choice, so a base that is no longer offered stays visible instead of being replaced
+/// without the person noticing; the screen around the picker explains it.
 struct BaseImagePicker: View {
     @Binding var selection: String
-
-    private var families: [BaseImageFamily] { Catalog.baseImageFamilies }
-    private var current: BaseImage? { Catalog.baseImage(id: selection) }
-    private var family: BaseImageFamily? { families.first { $0.distribution == current?.distribution } }
+    @Environment(ImageLibrary.self) private var images
+    @Environment(CatalogStore.self) private var catalog
 
     var body: some View {
-        Picker("Distribution", selection: distribution) {
+        // Read once per pass: every lookup checks the file system.
+        let families = Catalog.families(of: catalog.baseImages.filter { images.isOffered($0) || $0.id == selection })
+        let current = catalog.baseImages.first { $0.id == selection }
+        let family = families.first { $0.distribution == current?.distribution }
+        Picker("Distribution", selection: distribution(in: families, current: current)) {
             ForEach(families) { Text($0.distribution).tag($0.distribution) }
         }
         if let family {
@@ -25,7 +29,7 @@ struct BaseImagePicker: View {
     }
 
     /// Changing the distribution selects its first release.
-    private var distribution: Binding<String> {
+    private func distribution(in families: [BaseImageFamily], current: BaseImage?) -> Binding<String> {
         Binding(get: { current?.distribution ?? "" },
                 set: { name in
                     if let first = families.first(where: { $0.distribution == name })?.releases.first {
@@ -38,4 +42,6 @@ struct BaseImagePicker: View {
 #Preview {
     @Previewable @State var selection = Catalog.baseImages.first?.id ?? ""
     Form { BaseImagePicker(selection: $selection) }
+        .environment(ImageLibrary(offersUnpublished: true))
+        .environment(CatalogStore())
 }
