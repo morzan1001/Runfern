@@ -37,6 +37,11 @@ final class JITSetup {
     private var task: Task<Void, Never>?
     /// The step that was running when iPadOS ended the background work.
     private var interruptedStep: Step?
+    /// A new pairing was asked for and has not succeeded yet, so trying again pairs again.
+    private var pairingIsForced = false
+
+    /// Ends the background work as unsuccessful for iPadOS.
+    private struct SetupIncomplete: Error {}
 
     private enum Step {
         case pairing
@@ -55,12 +60,14 @@ final class JITSetup {
     /// ask iPadOS to continue in the background.
     func start(forcingPairing: Bool = false) {
         guard task == nil else { return }
+        let forcing = forcingPairing || (pairingIsForced && pairingStep != .done)
+        pairingIsForced = forcing
         if vpn != .done { vpn = .pending }
-        if pairingStep != .done || forcingPairing { pairingStep = .pending }
+        if pairingStep != .done || forcing { pairingStep = .pending }
         check = .pending
         canPairAgain = false
         task = Task {
-            await run(forcingPairing: forcingPairing)
+            await run(forcingPairing: forcing)
             task = nil
         }
     }
@@ -95,7 +102,8 @@ final class JITSetup {
         let title = String(localized: "Setting Up JIT")
         let subtitle = needsPairing ? String(localized: "Waiting for Settings") : String(localized: "Checking the connection")
         _ = try? await ContinuedWork.shared.run(title: title, subtitle: subtitle) { progress in
-            await self.pairAndCheck(needsPairing: needsPairing, progress: progress)
+            // iPadOS shows whether the work succeeded.
+            guard await self.pairAndCheck(needsPairing: needsPairing, progress: progress) else { throw SetupIncomplete() }
         }
         // Ended, but not by the person: iPadOS stopped the background work.
         if let interruptedStep, !Task.isCancelled {
@@ -107,8 +115,8 @@ final class JITSetup {
         }
     }
 
-    /// Steps 2 and 3, inside the background work.
-    private func pairAndCheck(needsPairing: Bool, progress: ContinuedWork.Handle) async {
+    /// Steps 2 and 3, inside the background work. Returns whether JIT is ready.
+    private func pairAndCheck(needsPairing: Bool, progress: ContinuedWork.Handle) async -> Bool {
         if needsPairing {
             pairingStep = .running
             guard await pairing.pairToEnd(progress: progress) else {
@@ -120,13 +128,16 @@ final class JITSetup {
                 } else {
                     pairingStep = .failed(String(localized: "The pairing was cancelled."))
                 }
-                return
+                return false
             }
             // A new pairing file makes an earlier failure meaningless.
             BuiltInJIT.clearLastError()
         }
         pairingStep = .done
-        guard !Task.isCancelled else { return }
+        guard !Task.isCancelled else {
+            interruptedStep = .check
+            return false
+        }
 
         check = .running
         progress.report(completed: 0, of: Self.checkUnits, subtitle: String(localized: "Checking the connection"))
@@ -145,12 +156,15 @@ final class JITSetup {
         case .ready:
             check = .done
             progress.report(completed: Self.checkUnits, of: Self.checkUnits, subtitle: String(localized: "JIT is ready"))
+            return true
         case .failed(let message, let needsNewPairing):
             check = .failed(message)
             canPairAgain = needsNewPairing && OnDevicePairing.isSupported
+            return false
         case .cancelled:
             check = .pending
             interruptedStep = .check
+            return false
         }
     }
 }

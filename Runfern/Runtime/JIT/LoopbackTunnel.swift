@@ -69,9 +69,9 @@ enum LoopbackTunnel {
 
     fileprivate static func endUse() async {
         users -= 1
-        if users == 0 {
-            await existingManager()?.connection.stopVPNTunnel()
-        }
+        // Checked again after loading the configuration: another use may have begun meanwhile.
+        guard users == 0, let manager = await existingManager(), users == 0 else { return }
+        manager.connection.stopVPNTunnel()
     }
 
     /// Adds Runfern's VPN configuration without connecting it, so iPadOS asks for permission during
