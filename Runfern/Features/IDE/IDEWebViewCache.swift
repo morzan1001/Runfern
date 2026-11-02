@@ -1,3 +1,4 @@
+import UIKit
 import WebKit
 
 /// Keeps the editor's web view alive for the whole session, so leaving the editor and coming back
@@ -13,6 +14,14 @@ final class IDEWebViewCache {
     private let bridge = BridgeHandler()
     private var touchOptimized = false
     private var width: Double = 0
+    private var keyboardObserver: NSObjectProtocol?
+
+    private init() {
+        keyboardObserver = NotificationCenter.default.addObserver(forName: UIResponder.keyboardDidHideNotification,
+                                                                  object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.restorePositionAfterKeyboard() }
+        }
+    }
 
     /// Actions of the editor currently on screen; messages from the web view are forwarded there.
     var actions: EditorActions? {
@@ -84,6 +93,23 @@ final class IDEWebViewCache {
     func applyTouchOptimization() {
         guard let view = entry?.view else { return }
         view.evaluateJavaScript(EditorTouchScript.apply(touchOptimized, width: width > 0 ? width : view.bounds.width))
+    }
+
+    /// WebKit scrolls the page, and in the mobile content mode its scroll view, so that a focused
+    /// field stays above the on-screen keyboard, and leaves them there when the keyboard goes away.
+    /// VS Code never scrolls its page, so the whole editor stayed shifted up with a gap below it.
+    /// Puts both back, and lets VS Code lay itself out for the full height again.
+    private func restorePositionAfterKeyboard() {
+        guard let view = entry?.view else { return }
+        let scrollView = view.scrollView
+        let insets = scrollView.adjustedContentInset
+        let visibleHeight = scrollView.bounds.height - insets.top - insets.bottom
+        // In the desktop content mode the page may be zoomed and legitimately scrolled.
+        if touchOptimized || scrollView.contentSize.height <= visibleHeight + 1 {
+            let top = CGPoint(x: scrollView.contentOffset.x, y: -insets.top)
+            if scrollView.contentOffset != top { scrollView.setContentOffset(top, animated: false) }
+        }
+        view.evaluateJavaScript("window.scrollTo(0, 0); window.dispatchEvent(new Event('resize'));")
     }
 
     /// Sends a key or shortcut from the keyboard bar to the focused element in VS Code.
