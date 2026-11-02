@@ -40,7 +40,7 @@ struct JITSection: View {
     var body: some View {
         if isIncluded {
             Section {
-                Toggle(isOn: $isEnabled) {
+                Toggle(isOn: $isEnabled.animation()) {
                     Label("JIT Compilation", systemImage: "bolt")
                 }
                 // Presentations hang on this one row, which is always there: on the Section, a
@@ -50,7 +50,7 @@ struct JITSection: View {
                 }
                 .onAppear(perform: refresh)
                 if isEnabled {
-                    Picker(selection: method) {
+                    Picker(selection: method.animation()) {
                         // A choice that is no longer available stays visible, so it is never
                         // replaced without the person noticing.
                         if isBuiltInAvailable {

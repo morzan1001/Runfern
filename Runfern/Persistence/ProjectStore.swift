@@ -24,6 +24,8 @@ final class ProjectStore {
     private(set) var lastSaveError: String?
     /// Environments marked as needing repair at launch after an unclean exit (DAT04).
     private(set) var recoveredEnvironmentIDs: Set<UUID> = []
+    /// Launch and activation can ask at the same time; one check at a time is enough.
+    @ObservationIgnored private var isRefreshingAccess = false
     private let fileURL: URL
 
     init(fileURL: URL = AppPaths.store) {
@@ -211,7 +213,8 @@ final class ProjectStore {
 
     /// Resets only the Linux environment; project files and working copy are kept (Plan 4.7).
     func resetEnvironment(of project: Project) {
-        try? FileManager.default.removeItem(at: AppPaths.environment(project.environmentId))
+        // Renamed into the trash, so setup can recreate the directory at once.
+        AppPaths.discard([AppPaths.environment(project.environmentId)])
         update(project.environmentId) { env in
             env.completedSteps = []
             env.state = .provisioning
@@ -223,14 +226,15 @@ final class ProjectStore {
     /// Creates an independent copy with new identities (PRJ07, Plan 4.7). The copy's files live in Runfern;
     /// a reference to the same external folder would not be an independent copy. With `includeSystemState`
     /// the environment overlay is copied too, otherwise the copy is set up fresh from the recipe.
-    func duplicate(_ project: Project, name: String, includeSystemState: Bool) throws -> Project {
+    /// The files are copied off the main thread: a large working copy or a folder on another volume
+    /// can take seconds. Only the inventory changes on main.
+    func duplicate(_ project: Project, name: String, includeSystemState: Bool) async throws -> Project {
         guard let environment = environment(for: project), let source = binding(for: project) else {
             throw StoreError.emptyName
         }
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { throw StoreError.emptyName }
 
-        let fm = FileManager.default
         let binding = WorkspaceBinding.appInternal()
         var copy = DevEnvironment(id: UUID(), baseImageId: environment.baseImageId,
                                   baseCatalogVersion: environment.baseCatalogVersion,
@@ -238,18 +242,34 @@ final class ProjectStore {
                                   completedSteps: [], lastError: nil, resources: environment.resources,
                                   extensionIds: environment.extensionIds, editorSettings: environment.editorSettings,
                                   excludedExtensionIds: environment.excludedExtensionIds)
-        try fm.createDirectory(at: AppPaths.workspaceRoot(binding.id), withIntermediateDirectories: true)
-        let sourceFiles = try WorkspaceFiles(source)
-        if fm.fileExists(atPath: sourceFiles.url.path(percentEncoded: false)) {
-            try fm.copyItem(at: sourceFiles.url, to: AppPaths.workingCopy(binding.id))
-        } else {
-            try fm.createDirectory(at: AppPaths.workingCopy(binding.id), withIntermediateDirectories: true)
-        }
-        if includeSystemState {
-            if fm.fileExists(atPath: AppPaths.environment(environment.id).path(percentEncoded: false)) {
-                try fm.createDirectory(at: AppPaths.environments, withIntermediateDirectories: true)
-                try fm.copyItem(at: AppPaths.environment(environment.id), to: AppPaths.environment(copy.id))
+        let bindingID = binding.id
+        let sourceEnvID = environment.id
+        let copyEnvID = copy.id
+        try await Task.detached(priority: .userInitiated) {
+            let fm = FileManager.default
+            let root = AppPaths.workspaceRoot(bindingID)
+            do {
+                try fm.createDirectory(at: root, withIntermediateDirectories: true)
+                // Created here, so its security scope covers the whole copy of a folder in Files.
+                let sourceFiles = try WorkspaceFiles(source)
+                if fm.fileExists(atPath: sourceFiles.url.path(percentEncoded: false)) {
+                    try fm.copyItem(at: sourceFiles.url, to: AppPaths.workingCopy(bindingID))
+                } else {
+                    try fm.createDirectory(at: AppPaths.workingCopy(bindingID), withIntermediateDirectories: true)
+                }
+                withExtendedLifetime(sourceFiles) {}
+                if includeSystemState, fm.fileExists(atPath: AppPaths.environment(sourceEnvID).path(percentEncoded: false)) {
+                    try fm.createDirectory(at: AppPaths.environments, withIntermediateDirectories: true)
+                    try fm.copyItem(at: AppPaths.environment(sourceEnvID), to: AppPaths.environment(copyEnvID))
+                }
+            } catch {
+                // No half copy is left behind.
+                try? fm.removeItem(at: root)
+                try? fm.removeItem(at: AppPaths.environment(copyEnvID))
+                throw error
             }
+        }.value
+        if includeSystemState {
             copy.completedSteps = environment.completedSteps
             copy.state = environment.isFullyProvisioned ? .ready : .provisioning
         }
@@ -271,18 +291,34 @@ final class ProjectStore {
         snapshot.environments.removeAll { $0.id == project.environmentId }
         snapshot.bindings.removeAll { $0.id == project.workspaceBindingId }
         save()
-        try? FileManager.default.removeItem(at: AppPaths.environment(project.environmentId))
-        try? FileManager.default.removeItem(at: AppPaths.workspaceRoot(project.workspaceBindingId))
+        AppPaths.discard([AppPaths.environment(project.environmentId), AppPaths.workspaceRoot(project.workspaceBindingId)])
     }
 
-    /// Checks folder access; bookmarks are refreshed when needed (FIL02/FIL03).
-    func refreshAccess() {
-        for i in snapshot.bindings.indices where snapshot.bindings[i].isInFiles {
-            let result = WorkspaceAccess.check(snapshot.bindings[i])
-            snapshot.bindings[i].accessState = result.state
-            if let data = result.refreshedBookmark { snapshot.bindings[i].bookmark = data }
+    /// Checks folder access off the main thread; bookmarks are refreshed when needed (FIL02/FIL03).
+    /// Resolving bookmarks talks to file providers and can block, so it never runs on main.
+    func refreshAccess() async {
+        guard !isRefreshingAccess else { return }
+        isRefreshingAccess = true
+        defer { isRefreshingAccess = false }
+        let bindings = snapshot.bindings.filter { $0.isInFiles }
+        let results = await Task.detached(priority: .userInitiated) {
+            bindings.map { ($0.id, $0.bookmark, WorkspaceAccess.check($0)) }
+        }.value
+        var changed = false
+        for (id, checkedBookmark, result) in results {
+            // A folder removed or reassigned meanwhile keeps its newer state.
+            guard let i = snapshot.bindings.firstIndex(where: { $0.id == id }),
+                  snapshot.bindings[i].bookmark == checkedBookmark else { continue }
+            if snapshot.bindings[i].accessState != result.state {
+                snapshot.bindings[i].accessState = result.state
+                changed = true
+            }
+            if let data = result.refreshedBookmark {
+                snapshot.bindings[i].bookmark = data
+                changed = true
+            }
         }
-        save()
+        if changed { save() }
     }
 
     // MARK: Private

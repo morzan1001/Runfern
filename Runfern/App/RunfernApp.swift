@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 @main struct RunfernApp: App {
     @State private var store: ProjectStore
@@ -32,7 +33,8 @@ import SwiftUI
         let images = ImageLibrary()
         let packages = PackageLibrary()
         let connectivity = Connectivity()
-        sync.load(store.snapshot.bindings)
+        // Reads the stored sync state after launch; the journals and working-copy scans run detached.
+        Task { await sync.load(store.snapshot.bindings) }
         _store = State(initialValue: store)
         _sync = State(initialValue: sync)
         _images = State(initialValue: images)
@@ -51,17 +53,23 @@ import SwiftUI
         WindowGroup {
             mainWindow
         }
-        .commands { EditorCommands() }
+        .commands {
+            EditorCommands()
+            AppCommands()
+        }
         // Additional windows show single projects; all windows share one runtime, so one VM at most (UX05).
         WindowGroup("Project", id: ProjectWindow.id, for: UUID.self) { $projectID in
             withServices(ProjectWindow(projectID: projectID))
         }
         .onChange(of: scenePhase) { _, phase in
             // When returning, re-check access and pull in external changes for the active session (Plan 2.5).
+            // The access check runs first, off the main thread, then the sync.
             guard phase == .active else { return }
-            store.refreshAccess()
-            if let id = runtime.activeProjectID, let project = store.project(id: id), let binding = store.binding(for: project) {
-                Task { await sync.sync(binding) }
+            Task {
+                await store.refreshAccess()
+                if let id = runtime.activeProjectID, let project = store.project(id: id), let binding = store.binding(for: project) {
+                    await sync.sync(binding)
+                }
             }
         }
     }
@@ -89,5 +97,18 @@ import SwiftUI
             .environment(credentials)
             .environment(provisioner)
             .environment(runtime)
+            #if RUNFERN_JIT
+            // Looks up what JIT depends on off the main thread, so the first Settings open draws
+            // without file and container lookups. Runs once per window; repeats only read caches.
+            .task(priority: .utility) {
+                // Only while unlocked, or the protected pairing file would be cached as missing.
+                let warmPairing = UIApplication.shared.isProtectedDataAvailable
+                await Task.detached(priority: .utility) {
+                    JITInstallation.warmUp()
+                    if warmPairing { _ = PairingFile.state }
+                }.value
+                _ = BuiltInJIT.unavailableReason   // Now quick: it reads only cached values.
+            }
+            #endif
     }
 }

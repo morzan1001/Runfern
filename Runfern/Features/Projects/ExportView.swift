@@ -10,7 +10,10 @@ struct ExportView: View {
     @State private var preview: ProjectExporter.Preview?
     @State private var archive: URL?
     @State private var isExporting = false
-    @State private var errorMessage: String?
+    /// The contents couldn't be read; shown in place of them (A7).
+    @State private var previewError: String?
+    /// Creating or saving the archive failed; shown as an alert (A7).
+    @State private var exportError: String?
     @State private var movingArchive = false
 
     var body: some View {
@@ -20,6 +23,8 @@ struct ExportView: View {
                     if let preview {
                         LabeledContent("Files", value: preview.fileCount.formatted())
                         LabeledContent("Size", value: preview.totalBytes.formattedBytes)
+                    } else if let previewError {
+                        StatusLabel(previewError, tint: .red)
                     } else {
                         ProgressView()
                     }
@@ -32,31 +37,34 @@ struct ExportView: View {
                     if let preview {
                         Text("Excluded: \(preview.excludedNames.formatted(.list(type: .and)))")
                     }
-                    Label("Secrets you stored in project files yourself (such as .env) are included.",
-                          systemImage: "key")
-                        .foregroundStyle(.orange)
+                    StatusLabel("Secrets you stored in project files yourself (such as .env) are included.",
+                                systemImage: "key")
                 } header: {
                     Text("Scope")
-                }
-                if let errorMessage {
-                    Section { Text(errorMessage).foregroundStyle(.red) }
                 }
             }
             .navigationTitle("Export")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() } }
+                ToolbarItem(placement: .cancellationAction) {
+                    // The archive is written in the background and can't be stopped halfway (A3).
+                    CancelButton().disabled(isExporting)
+                }
                 ToolbarItem(placement: .confirmationAction) {
                     if isExporting {
                         ProgressView()
                     } else {
-                        Button("Create Archive", action: export).disabled(preview == nil)
+                        Button("Create Archive", role: .confirm, action: export)
+                            .keyboardShortcut(.return, modifiers: .command)
+                            .disabled(preview == nil)
                     }
                 }
             }
+            .interactiveDismissDisabled(isExporting)
+            .errorAlert("Couldn't Export Project", message: $exportError)
             .task { await loadPreview() }
             .fileMover(isPresented: $movingArchive, file: archive) { result in
-                if case .failure(let error) = result { errorMessage = error.localizedDescription } else { dismiss() }
+                if case .failure(let error) = result { exportError = error.localizedDescription } else { dismiss() }
             }
         }
     }
@@ -71,7 +79,7 @@ struct ExportView: View {
             let files = try projectFiles()
             preview = try await Task.detached { try ProjectExporter.preview(workingCopy: files.url) }.value
         } catch {
-            errorMessage = error.localizedDescription
+            previewError = error.localizedDescription
         }
     }
 
@@ -79,7 +87,7 @@ struct ExportView: View {
         let name = project.name
         let recipe = store.environment(for: project).flatMap(Catalog.recipe(for:))
         isExporting = true
-        errorMessage = nil
+        exportError = nil
         Task {
             do {
                 let files = try projectFiles()
@@ -88,7 +96,7 @@ struct ExportView: View {
                 }.value
                 movingArchive = true
             } catch {
-                errorMessage = error.localizedDescription
+                exportError = error.localizedDescription
             }
             isExporting = false
         }

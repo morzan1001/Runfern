@@ -38,6 +38,55 @@ import Testing
         #expect(store.environment(for: project)?.toolchainIds == ["python-3"])
     }
 
+    @MainActor
+    private func makeArchive() throws -> URL {
+        let environment = DevEnvironment(id: UUID(), baseImageId: Catalog.baseImages[0].id, baseCatalogVersion: 1,
+                                         toolchainIds: ["python-3"], state: .ready, completedSteps: [], lastError: nil)
+        return try ProjectExporter.export(projectName: "Into Folder", workingCopy: makeWorkingCopy(),
+                                          recipe: Catalog.recipe(for: environment))
+    }
+
+    private func makeFolder() throws -> URL {
+        let folder = URL.temporaryDirectory.appending(path: "ImportTarget-\(UUID().uuidString)", directoryHint: .isDirectory)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        return folder
+    }
+
+    /// A folder on the device is used in place, so the files have to land in it, not in a working copy.
+    @MainActor
+    @Test func importIntoFolderOnDeviceMovesFilesIntoIt() throws {
+        let preview = try ProjectImporter.prepare(archive: makeArchive())
+        let folder = try makeFolder()
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let binding = try WorkspaceAccess.makeBinding(for: folder)
+        #expect(binding.storageMode == .mountedFolder)
+
+        let store = ProjectStore(fileURL: URL.temporaryDirectory.appending(path: "store-\(UUID().uuidString).json"))
+        let project = try ProjectImporter.commit(preview, store: store, binding: binding)
+        defer { store.remove(project) }
+
+        #expect(try String(contentsOf: folder.appending(path: "Grüße/Ünïcödé.txt"), encoding: .utf8) == "äöü\n")
+        #expect(try String(contentsOf: folder.appending(path: "main.py"), encoding: .utf8) == "print('hi')\n")
+        #expect(!FileManager.default.fileExists(atPath: AppPaths.workingCopy(binding.id).path(percentEncoded: false)))
+    }
+
+    @MainActor
+    @Test func importIntoFolderWithContentIsRejected() throws {
+        let preview = try ProjectImporter.prepare(archive: makeArchive())
+        defer { ProjectImporter.discard(preview) }
+        let folder = try makeFolder()
+        defer { try? FileManager.default.removeItem(at: folder) }
+        try Data("keep\n".utf8).write(to: folder.appending(path: "notes.txt"))
+        let binding = try WorkspaceAccess.makeBinding(for: folder)
+
+        let store = ProjectStore(fileURL: URL.temporaryDirectory.appending(path: "store-\(UUID().uuidString).json"))
+        #expect(throws: ProjectImporter.ImportError.self) {
+            try ProjectImporter.commit(preview, store: store, binding: binding)
+        }
+        #expect(store.activeProjects.isEmpty)
+        #expect(try FileManager.default.contentsOfDirectory(atPath: folder.path(percentEncoded: false)) == ["notes.txt"])
+    }
+
     @Test func pathsEscapingTheDestinationAreRejected() throws {
         for path in ["../evil.txt", "/etc/passwd", "a/../../b", "C:\\x", "./hidden"] {
             #expect(throws: ZipArchiveReader.ZipError.unsafePath(path)) {

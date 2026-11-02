@@ -23,20 +23,33 @@ struct SettingsView: View {
                     NavigationLink { CredentialsView() } label: { Label("Git Credentials", systemImage: "key") }
                 }
 
-                Section("Linux") {
+                Section {
                     NavigationLink { BaseImagesView() } label: { Label("Linux Bases", systemImage: "shippingbox") }
                     NavigationLink { StorageOverviewView() } label: { Label("Storage Usage", systemImage: "internaldrive") }
+                    LabeledContent("Catalog", value: catalog.publishedAt.formatted(date: .abbreviated, time: .omitted))
                     // Only offered once a catalog source is published.
                     if CatalogStore.updateURL != nil {
                         Button {
                             Task { await catalog.checkForUpdate(isOnline: connectivity.isOnline) }
                         } label: {
-                            Label("Check for Catalog Update", systemImage: "arrow.triangle.2.circlepath")
+                            HStack {
+                                Label("Check for Catalog Update", systemImage: "arrow.triangle.2.circlepath")
+                                Spacer()
+                                if catalog.isChecking {
+                                    ProgressView()
+                                }
+                            }
                         }
                         .disabled(catalog.isChecking || !connectivity.isOnline)
                     }
                     if let error = catalog.lastError {
-                        Label(error, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.red)
+                        StatusLabel(error, tint: .red)
+                    }
+                } header: {
+                    Text("Linux")
+                } footer: {
+                    if CatalogStore.updateURL != nil, !connectivity.isOnline {
+                        Text("Checking for updates needs an internet connection.")
                     }
                 }
 
@@ -71,6 +84,7 @@ struct SettingsView: View {
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done", role: .confirm) { dismiss() }
+                        .keyboardShortcut(.cancelAction)
                 }
             }
         }

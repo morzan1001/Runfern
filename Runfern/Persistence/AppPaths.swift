@@ -13,6 +13,7 @@ import Foundation
 ///       Workspaces/<id>/files/     local working copy of a project
 ///       Workspaces/<id>/sync.json  sync baseline and journal
 ///       Workspaces/<id>/Conflicts/ preserved conflict versions
+///       Trash/                     removed items, deleted in the background (`discard`)
 nonisolated enum AppPaths {
     static let root = URL.applicationSupportDirectory.appending(path: "Runfern", directoryHint: .isDirectory)
 
@@ -28,6 +29,7 @@ nonisolated enum AppPaths {
     static var workspaces: URL { root.appending(path: "Workspaces", directoryHint: .isDirectory) }
     static var exports: URL { URL.temporaryDirectory.appending(path: "Exports", directoryHint: .isDirectory) }
     static var imports: URL { URL.temporaryDirectory.appending(path: "Imports", directoryHint: .isDirectory) }
+    static var trash: URL { root.appending(path: "Trash", directoryHint: .isDirectory) }
 
     /// Every published version of a base lives in its own directory: overlays reference their exact
     /// base, so a newer version must never replace the files of an older one (ADR05).
@@ -57,6 +59,33 @@ nonisolated enum AppPaths {
             var values = URLResourceValues()
             values.isExcludedFromBackup = true
             try? dir.setResourceValues(values)
+        }
+        // Leftovers of a deletion interrupted by quitting.
+        let leftovers = trash
+        Task.detached(priority: .background) {
+            let fm = FileManager.default
+            for item in (try? fm.contentsOfDirectory(at: leftovers, includingPropertiesForKeys: nil)) ?? [] {
+                try? fm.removeItem(at: item)
+            }
+        }
+    }
+
+    /// Moves the items into the trash right away (a rename on the same volume) and deletes them in the
+    /// background: callers never wait for large trees, and the paths can be reused at once.
+    static func discard(_ urls: [URL]) {
+        let fm = FileManager.default
+        let bin = trash
+        try? fm.createDirectory(at: bin, withIntermediateDirectories: true)
+        let moved = urls.compactMap { url -> URL? in
+            let target = bin.appending(path: UUID().uuidString)
+            if (try? fm.moveItem(at: url, to: target)) != nil { return target }
+            // Rare: the rename failed although the item exists. Delete it in place so the path is free.
+            if fm.fileExists(atPath: url.path(percentEncoded: false)) { try? fm.removeItem(at: url) }
+            return nil
+        }
+        guard !moved.isEmpty else { return }
+        Task.detached(priority: .background) {
+            for url in moved { try? FileManager.default.removeItem(at: url) }
         }
     }
 }

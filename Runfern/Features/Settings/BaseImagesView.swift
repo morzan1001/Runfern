@@ -23,13 +23,20 @@ struct BaseImagesView: View {
                         }
                         Text("Offline setup possible with: \(Catalog.toolchains(for: image).map(\.name).formatted(.list(type: .and)))")
                             .font(.caption).foregroundStyle(.secondary)
+                        // Bordered, so only the button reacts, not a tap on the row's text.
                         action(for: image, status: status)
+                            .buttonStyle(.bordered)
                     }
                     .padding(.vertical, 4)
                 }
-                if let errorMessage { Text(errorMessage).foregroundStyle(.red) }
+                if let errorMessage { StatusLabel(errorMessage, tint: .red) }
             } footer: {
-                Text("Shared by all projects.")
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Shared by all projects.")
+                    if !connectivity.isOnline {
+                        Text("Downloading needs an internet connection.")
+                    }
+                }
             }
         }
         .navigationTitle("Linux Bases")
@@ -39,24 +46,32 @@ struct BaseImagesView: View {
     private func action(for image: BaseImage, status: ImageLibrary.Status) -> some View {
         switch status {
         case .downloading, .verifying:
-            Button("Cancel Download", role: .cancel) { images.cancel(image) }
+            Button("Cancel Download", systemImage: "xmark.circle", role: .cancel) { images.cancel(image) }
         case .missing, .partial, .failed:
-            Button(status == .partial ? String(localized: "Resume Download") : String(localized: "Download")) {
-                Task {
-                    do {
-                        try await ContinuedWork.shared.run(title: String(localized: "Downloading \(image.displayName)"),
-                                                           subtitle: image.downloadSizeBytes.formattedBytes) { _ in
-                            try await images.ensureAvailable(image, isOnline: connectivity.isOnline)
-                        }
-                        errorMessage = nil
-                    } catch {
-                        errorMessage = error.localizedDescription
-                    }
+            Group {
+                if status == .partial {
+                    Button("Resume Download", systemImage: "arrow.down.circle") { startDownload(image) }
+                } else {
+                    Button("Download", systemImage: "arrow.down.circle") { startDownload(image) }
                 }
             }
             .disabled(!connectivity.isOnline)
         case .available, .notPublished:
             EmptyView()
+        }
+    }
+
+    private func startDownload(_ image: BaseImage) {
+        Task {
+            do {
+                try await ContinuedWork.shared.run(title: String(localized: "Downloading \(image.displayName)"),
+                                                   subtitle: image.downloadSizeBytes.formattedBytes) { _ in
+                    try await images.ensureAvailable(image, isOnline: connectivity.isOnline)
+                }
+                errorMessage = nil
+            } catch {
+                errorMessage = error.localizedDescription
+            }
         }
     }
 }

@@ -10,11 +10,9 @@ struct DeviceProfileSection: View {
             LabeledContent("Processor Cores", value: profile.processorCount.formatted())
             LabeledContent("Resource Profiles", value: profile.supportedProfiles.map(\.title).formatted(.list(type: .and)))
             if profile.meetsTarget {
-                Label("Supported iPad", systemImage: "checkmark.seal.fill")
-                    .foregroundStyle(.green)
+                StatusLabel("Supported iPad", systemImage: "checkmark.seal.fill", tint: .green)
             } else {
-                Label("Below the supported device class (iPad with M-series chip)", systemImage: "exclamationmark.triangle.fill")
-                    .foregroundStyle(.orange)
+                StatusLabel("Below the supported device class (iPad with M-series chip)")
             }
         } header: {
             Text("This iPad")

@@ -17,11 +17,17 @@ struct WorkspaceEditorView: View {
     let close: () -> Void
 
     @State private var tree: [FileNode] = []
+    /// Keeps the empty state hidden until the files have been listed once.
+    @State private var treeLoaded = false
     @State private var selection: String?
     @State private var text = ""
     @State private var savedText = ""
     @State private var isBinary = false
+    /// Only for writing the open file; it shows in the status bar.
     @State private var saveError: String?
+    @State private var createError: String?
+    @State private var deleteError: String?
+    @State private var importError: String?
     @State private var changedOnDisk = false
     @State private var newFileName = ""
     @State private var creatingFile = false
@@ -36,26 +42,33 @@ struct WorkspaceEditorView: View {
         NavigationSplitView {
             List(tree, children: \.children, selection: $selection) { node in
                 Label(node.name, systemImage: node.isDirectory ? "folder" : "doc.text")
+                    // Folders only expand; selecting one would open an empty text view.
+                    .selectionDisabled(node.isDirectory)
                     .contextMenu {
                         if !node.isDirectory {
                             Button("Delete", systemImage: "trash", role: .destructive) { pathToDelete = node.id }
                         }
                     }
+                    // On the row, so on iPad the dialog points at the file.
+                    .confirmationDialog("Delete File?",
+                                        isPresented: Binding(get: { pathToDelete == node.id },
+                                                             set: { if !$0 { pathToDelete = nil } }),
+                                        titleVisibility: .visible) {
+                        Button("Delete", role: .destructive) { delete(node.id) }
+                    } message: {
+                        Text("“\(node.name)” is also deleted from the project folder with the next sync.")
+                    }
+            }
+            .overlay {
+                if treeLoaded && tree.isEmpty {
+                    ContentUnavailableView("No Files", systemImage: "folder",
+                                           description: Text("Create a file or drop files here."))
+                }
             }
             .navigationTitle(project.name)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Overview", systemImage: "square.grid.2x2") {
-                        saveIfNeeded()
-                        close()
-                    }
-                    .keyboardShortcut("o", modifiers: [.command, .shift])
-                }
                 ToolbarItem(placement: .primaryAction) {
-                    Button("Preview", systemImage: "safari") { showingPreview = true }
-                }
-                ToolbarItem(placement: .primaryAction) {
-                    Button("New File", systemImage: "doc.badge.plus") { creatingFile = true }
+                    Button("New File…", systemImage: "doc.badge.plus") { creatingFile = true }
                         .keyboardShortcut("n", modifiers: [.command, .shift])
                 }
             }
@@ -68,11 +81,19 @@ struct WorkspaceEditorView: View {
         } detail: {
             editor
         }
+        // The Project menu's Back to Overview and Open Preview… work here too, also with the sidebar hidden.
+        .focusedSceneValue(\.editorActions, EditorActions(showOverview: {
+            saveIfNeeded()
+            close()
+        }, showPreview: { showingPreview = true }))
         .task {
             files = try? WorkspaceFiles(binding)
             reloadTree()
         }
-        .sheet(isPresented: $showingPreview) { DevServerPreviewView() }
+        .sheet(isPresented: $showingPreview) {
+            DevServerPreviewView()
+                .presentationSizing(.page)
+        }
         .onChange(of: selection) { oldValue, newValue in
             if let oldValue { save(oldValue, interactive: false) }
             load(newValue)
@@ -96,12 +117,9 @@ struct WorkspaceEditorView: View {
             Button("Create", action: createFile)
             Button("Cancel", role: .cancel) { newFileName = "" }
         }
-        .confirmationDialog("Delete File?", isPresented: Binding(get: { pathToDelete != nil }, set: { if !$0 { pathToDelete = nil } }),
-                            presenting: pathToDelete) { path in
-            Button("Delete “\(path)”", role: .destructive) { delete(path) }
-        } message: { _ in
-            Text("The deletion is also applied to the project folder with the next sync.")
-        }
+        .errorAlert("Couldn't Create File", message: $createError)
+        .errorAlert("Couldn't Delete File", message: $deleteError)
+        .errorAlert("Couldn't Import Files", message: $importError)
         .alert("File Changed Elsewhere", isPresented: $changedOnDisk) {
             Button("Save My Version") { forceSave() }
             Button("Load Other Version", role: .destructive) { load(selection) }
@@ -114,12 +132,15 @@ struct WorkspaceEditorView: View {
     private var editor: some View {
         Group {
             if let selection, !isBinary {
+                // The file name is the title, its folder the subtitle (empty at the project's top level).
+                let folder = (selection as NSString).deletingLastPathComponent
                 TextEditor(text: $text)
                     .font(.body.monospaced())
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
                     .contentMargins(.horizontal, 12, for: .scrollContent)
-                    .navigationTitle(selection)
+                    .navigationTitle((selection as NSString).lastPathComponent)
+                    .navigationSubtitle(folder)
             } else if isBinary {
                 ContentUnavailableView("Not a Text File", systemImage: "doc.questionmark",
                                        description: Text("This file can't be shown in the built-in editor."))
@@ -130,7 +151,17 @@ struct WorkspaceEditorView: View {
         }
         .navigationBarTitleDisplayMode(.inline)
         .safeAreaInset(edge: .bottom) { statusBar }
+        // In the detail's toolbar, so the exit and Preview stay visible with the sidebar hidden.
         .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Overview", systemImage: "square.grid.2x2") {
+                    saveIfNeeded()
+                    close()
+                }
+            }
+            ToolbarItem(placement: .primaryAction) {
+                Button("Preview", systemImage: "safari") { showingPreview = true }
+            }
             ToolbarItem(placement: .primaryAction) {
                 Button("Save", systemImage: "square.and.arrow.down") { saveIfNeeded() }
                     .keyboardShortcut("s", modifiers: .command)
@@ -143,7 +174,7 @@ struct WorkspaceEditorView: View {
         let status = sync.status(for: binding)
         return HStack(spacing: 12) {
             if let saveError {
-                Label("Not saved: \(saveError)", systemImage: "exclamationmark.triangle").foregroundStyle(.red)
+                StatusLabel("Not saved: \(saveError)", tint: .red)
             } else if isDirty {
                 Label("Unsaved Changes", systemImage: "pencil")
             } else if binding.storageMode == .mountedFolder {
@@ -155,11 +186,11 @@ struct WorkspaceEditorView: View {
             if binding.storageMode == .localFolder {
                 switch status.phase {
                 case .syncing: Label("Syncing…", systemImage: "arrow.triangle.2.circlepath")
-                case .unreachable: Label("Folder Not Reachable", systemImage: "externaldrive.badge.xmark").foregroundStyle(.orange)
-                case .failed: Label("Sync Failed", systemImage: "exclamationmark.triangle").foregroundStyle(.red)
+                case .unreachable: StatusLabel("Folder Not Reachable", systemImage: "externaldrive.badge.xmark")
+                case .failed: StatusLabel("Sync Failed", tint: .red)
                 case .idle:
                     if !status.conflicts.isEmpty {
-                        Label("\(status.conflicts.count) conflicts", systemImage: "exclamationmark.2").foregroundStyle(.orange)
+                        StatusLabel("\(status.conflicts.count) conflicts", systemImage: "exclamationmark.2")
                     } else if status.pendingLocalChanges > 0 {
                         Label("\(status.pendingLocalChanges) pending", systemImage: "clock.arrow.circlepath")
                     } else {
@@ -178,6 +209,7 @@ struct WorkspaceEditorView: View {
 
     private func reloadTree() {
         tree = Self.buildTree(at: root, relativeTo: "")
+        treeLoaded = true
     }
 
     private static func buildTree(at url: URL, relativeTo prefix: String) -> [FileNode] {
@@ -258,7 +290,11 @@ struct WorkspaceEditorView: View {
     private func createFile() {
         let path = newFileName.trimmingCharacters(in: .whitespaces).trimmingCharacters(in: CharacterSet(charactersIn: "/"))
         newFileName = ""
-        guard !path.isEmpty, !path.split(separator: "/").contains("..") else { return }
+        guard !path.isEmpty else { return }
+        guard !path.split(separator: "/").contains("..") else {
+            createError = String(localized: "The path must stay inside the project.")
+            return
+        }
         let url = root.appending(path: path)
         do {
             try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
@@ -267,7 +303,7 @@ struct WorkspaceEditorView: View {
             selection = path
             Task { await sync.sync(binding) }
         } catch {
-            saveError = error.localizedDescription
+            createError = error.localizedDescription
         }
     }
 
@@ -278,12 +314,13 @@ struct WorkspaceEditorView: View {
             reloadTree()
             Task { await sync.sync(binding) }
         } catch {
-            saveError = error.localizedDescription
+            deleteError = error.localizedDescription
         }
     }
 
     private func importDroppedItems(_ urls: [URL]) {
         let fm = FileManager.default
+        var failures: [String] = []
         for url in urls {
             let didStart = url.startAccessingSecurityScopedResource()
             defer { if didStart { url.stopAccessingSecurityScopedResource() } }
@@ -294,9 +331,10 @@ struct WorkspaceEditorView: View {
             do {
                 try fm.copyItem(at: url, to: root.appending(path: name))
             } catch {
-                saveError = error.localizedDescription
+                failures.append(error.localizedDescription)
             }
         }
+        if !failures.isEmpty { importError = failures.joined(separator: "\n") }
         reloadTree()
         Task { await sync.sync(binding) }
     }

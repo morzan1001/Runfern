@@ -12,43 +12,64 @@ struct DuplicateProjectView: View {
 
     @State private var name = ""
     @State private var includeSystemState = true
+    @State private var isDuplicating = false
     @State private var errorMessage: String?
+
+    /// A name is needed, and a running environment's system state can't be copied consistently.
+    private var canDuplicate: Bool {
+        !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && !(runtime.activeProjectID == project.id && includeSystemState)
+    }
 
     var body: some View {
         NavigationStack {
             Form {
                 Section {
                     TextField("Name", text: $name)
+                        .submitLabel(.done)
+                        .onSubmit {
+                            if canDuplicate { Task { await duplicate() } }
+                        }
                     Toggle("Include Installed Packages", isOn: $includeSystemState)
                 } footer: {
                     Text("The copy is stored only in Runfern and is independent of the original.")
                 }
                 if runtime.activeProjectID == project.id, includeSystemState {
                     Section {
-                        Label("Stop the environment first to copy a consistent system state.", systemImage: "exclamationmark.triangle")
-                            .foregroundStyle(.orange)
+                        StatusLabel("Stop the environment first to copy a consistent system state.")
                     }
                 }
-                if let errorMessage {
-                    Section { Text(errorMessage).foregroundStyle(.red) }
-                }
             }
+            .disabled(isDuplicating)
             .navigationTitle("Duplicate Project")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                ToolbarItem(placement: .cancellationAction) {
+                    // The copy keeps running once started, so there is nothing to cancel meanwhile (A3).
+                    CancelButton().disabled(isDuplicating)
+                }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Duplicate", action: duplicate)
-                        .disabled(runtime.activeProjectID == project.id && includeSystemState)
+                    if isDuplicating {
+                        ProgressView()
+                    } else {
+                        Button("Duplicate", role: .confirm) { Task { await duplicate() } }
+                            .keyboardShortcut(.return, modifiers: .command)
+                            .disabled(!canDuplicate)
+                    }
                 }
             }
+            .interactiveDismissDisabled(isDuplicating)
+            .errorAlert("Couldn't Duplicate Project", message: $errorMessage)
             .onAppear { name = String(localized: "\(project.name) Copy") }
         }
     }
 
-    private func duplicate() {
+    private func duplicate() async {
+        guard !isDuplicating else { return }
+        isDuplicating = true
+        defer { isDuplicating = false }
         do {
-            let copy = try store.duplicate(project, name: name, includeSystemState: includeSystemState)
+            let copy = try await store.duplicate(project, name: name, includeSystemState: includeSystemState)
             if store.environment(for: copy)?.isFullyProvisioned == false { provisioner.start(copy) }
             onDuplicated(copy)
             dismiss()

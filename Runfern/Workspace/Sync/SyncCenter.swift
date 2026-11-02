@@ -29,25 +29,36 @@ final class SyncCenter {
     }
 
     private(set) var statuses: [UUID: Status] = [:]
+    /// Stored sync state is read once per launch, off the main thread (`load(_:)`).
+    /// Until then `status(for:)` knows nothing, so callers that warn about data loss stay cautious.
+    private(set) var hasLoaded = false
     private var inFlight: [UUID: Task<Bool, Never>] = [:]
 
     func status(for binding: WorkspaceBinding) -> Status {
         statuses[binding.id] ?? Status()
     }
 
-    /// Loads the stored state of all bindings, e.g. to detect interrupted runs.
-    func load(_ bindings: [WorkspaceBinding]) {
-        for binding in bindings where binding.storageMode == .localFolder {
-            let state = SyncState.load(from: AppPaths.syncState(binding.id))
-            var status = statuses[binding.id] ?? Status()
+    /// Loads the stored state of all bindings, e.g. to detect interrupted runs. Decoding the journals
+    /// and scanning the working copies runs detached, so launch never waits for it.
+    func load(_ bindings: [WorkspaceBinding]) async {
+        let synced = bindings.filter { $0.storageMode == .localFolder }
+        let loaded = await Task.detached(priority: .utility) {
+            synced.map { b -> (UUID, SyncState, Int) in
+                let state = SyncState.load(from: AppPaths.syncState(b.id))
+                return (b.id, state, SyncEngine.pendingLocalChanges(localRoot: AppPaths.workingCopy(b.id), state: state))
+            }
+        }.value
+        for (id, state, pending) in loaded where statuses[id] == nil {   // A sync that already started wins.
+            var status = Status()
             status.lastSyncedAt = state.lastCompletedAt
             status.conflicts = state.conflicts
             status.unsupported = state.unsupported
             status.pendingDownloads = state.pendingDownloads?.count ?? 0
             status.wasInterrupted = state.applyInProgress
-            status.pendingLocalChanges = SyncEngine.pendingLocalChanges(localRoot: AppPaths.workingCopy(binding.id), state: state)
-            statuses[binding.id] = status
+            status.pendingLocalChanges = pending
+            statuses[id] = status
         }
+        hasLoaded = true
     }
 
     /// Syncs and returns `true` if the selected folder matches the local state afterwards.
@@ -87,11 +98,8 @@ final class SyncCenter {
         await sync(binding)
     }
 
-    /// Removes the working copy, journal, and conflict versions of a binding.
-    func removeData(for bindingID: UUID) {
-        statuses[bindingID] = nil
-        try? FileManager.default.removeItem(at: AppPaths.workspaceRoot(bindingID))
-    }
+    /// The binding is gone; its files are removed with the project (`ProjectStore.remove`).
+    func forgetStatus(for bindingID: UUID) { statuses[bindingID] = nil }
 
     // MARK: Private
 

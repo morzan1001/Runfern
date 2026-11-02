@@ -27,10 +27,14 @@ struct EditorKeyboardBar: View {
                                     send(key)
                                 } label: {
                                     label(for: key)
-                                        .frame(width: 44, height: 44)
+                                        .frame(minWidth: 44, minHeight: 44)
                                         .contentShape(.rect)
                                 }
                                 .buttonStyle(.plain)
+                                // The bar is capped like the system keyboard; a long press shows the key large.
+                                .accessibilityShowsLargeContentViewer()
+                                // Typing and cursor keys act like keyboard keys; ⌘ shortcuts are commands.
+                                .accessibilityAddTraits(key.meta ? [] : .isKeyboardKey)
                             }
                         }
                         .padding(.horizontal, 4)
@@ -42,6 +46,8 @@ struct EditorKeyboardBar: View {
         }
         .scrollIndicators(.hidden)
         .defaultScrollAnchor(.center, for: .alignment)
+        // The system keyboard and its shortcut bar don't grow beyond this size either.
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
         .font(.body.weight(.medium))
         .padding(.bottom, 8)
     }

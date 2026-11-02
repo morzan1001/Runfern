@@ -26,6 +26,7 @@ struct ComponentsView: View {
                 Text(component.role).font(.subheadline)
                 Text(component.license).font(.caption).foregroundStyle(.secondary)
             }
+            .accessibilityElement(children: .combine)
         }
         .navigationTitle("Components and Licenses")
     }

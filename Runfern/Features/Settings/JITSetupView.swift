@@ -58,12 +58,13 @@ struct JITSetupView: View {
                     }
                 }
             }
-            .navigationTitle("Set Up JIT")
+            .navigationTitle(startsAutomatically && !forcesPairing ? Text("Check JIT") : Text("Set Up JIT"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 if setup.isDone {
                     ToolbarItem(placement: .confirmationAction) {
                         Button("Done", role: .confirm) { dismiss() }
+                            .keyboardShortcut(.cancelAction)
                     }
                 } else {
                     ToolbarItem(placement: .cancellationAction) {
@@ -71,6 +72,7 @@ struct JITSetupView: View {
                             setup.cancel()
                             dismiss()
                         }
+                        .keyboardShortcut(.cancelAction)
                     }
                 }
             }
@@ -152,8 +154,8 @@ private struct StepRow: View {
             }
             Group {
                 if case .failed(let message) = state {
+                    // Plain text: the step's icon already shows the failure.
                     Text(message)
-                        .foregroundStyle(.red)
                 } else {
                     Text(detail)
                         .foregroundStyle(.secondary)

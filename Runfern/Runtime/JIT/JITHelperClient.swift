@@ -60,9 +60,7 @@ enum JITHelperClient {
 
     static var isInstalled: Bool { helperIdentifier != nil }
 
-    private static var helperIdentifier: String? {
-        Bundle.main.builtInPlugInsURL.flatMap { Bundle(url: $0.appending(path: "RunfernJITHelper.appex"))?.bundleIdentifier }
-    }
+    private static var helperIdentifier: String? { JITInstallation.helperIdentifier }
 
     /// Requests in flight, kept alive until they end.
     private static var running: [Request] = []

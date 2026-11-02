@@ -7,17 +7,6 @@ struct PresetsView: View {
 
     var body: some View {
         List {
-            if store.presets.isEmpty {
-                ContentUnavailableView {
-                    Label("No Presets", systemImage: "square.stack.3d.up")
-                } description: {
-                    Text("Save tools, VS Code extensions, and VS Code settings once and reuse them for new projects.")
-                } actions: {
-                    Button("Create Preset") { editing = .blank }
-                        .buttonStyle(.glassProminent)
-                }
-                .listRowBackground(Color.clear)
-            }
             ForEach(store.presets) { preset in
                 Button {
                     editing = preset
@@ -27,9 +16,31 @@ struct PresetsView: View {
                         Text(preset.summary).font(.footnote).foregroundStyle(.secondary)
                     }
                 }
+                // A preset is quick to recreate, so a full swipe deletes it without asking (A4).
+                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                    Button("Delete", systemImage: "trash", role: .destructive) {
+                        withAnimation { store.removePreset(preset) }
+                    }
+                }
+                .contextMenu {
+                    Button("Edit", systemImage: "pencil") { editing = preset }
+                    Divider()
+                    Button("Delete", systemImage: "trash", role: .destructive) {
+                        withAnimation { store.removePreset(preset) }
+                    }
+                }
             }
-            .onDelete { offsets in
-                offsets.map { store.presets[$0] }.forEach(store.removePreset)
+        }
+        .overlay {
+            if store.presets.isEmpty {
+                ContentUnavailableView {
+                    Label("No Presets", systemImage: "square.stack.3d.up")
+                } description: {
+                    Text("Save tools, VS Code extensions, and VS Code settings once and reuse them for new projects.")
+                } actions: {
+                    Button("New Preset") { editing = .blank }
+                        .buttonStyle(.borderedProminent)
+                }
             }
         }
         .navigationTitle("Presets")

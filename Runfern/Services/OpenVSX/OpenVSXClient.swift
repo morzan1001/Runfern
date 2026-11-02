@@ -41,8 +41,11 @@ nonisolated struct OpenVSXClient: Sendable {
 
     static let base = URL(string: "https://open-vsx.org/api")!
 
+    // `@concurrent` keeps the decoding off the caller's actor; with approachable concurrency a plain
+    // nonisolated async method would run on the main actor of the views that call it.
+
     /// Matching extensions; without a query the most downloaded ones.
-    func search(_ query: String, size: Int = 30) async throws -> [Summary] {
+    @concurrent func search(_ query: String, size: Int = 30) async throws -> [Summary] {
         var components = URLComponents(url: Self.base.appending(path: "-/search"), resolvingAgainstBaseURL: false)!
         var items = [URLQueryItem(name: "size", value: "\(size)")]
         let trimmed = query.trimmingCharacters(in: .whitespaces)
@@ -56,14 +59,14 @@ nonisolated struct OpenVSXClient: Sendable {
         return try JSONDecoder().decode(SearchResult.self, from: data).extensions
     }
 
-    func details(of id: String) async throws -> Details {
+    @concurrent func details(of id: String) async throws -> Details {
         let parts = id.split(separator: ".", maxSplits: 1).map(String.init)
         guard parts.count == 2 else { throw URLError(.badURL) }
         let (data, _) = try await URLSession.shared.data(from: Self.base.appending(path: parts[0]).appending(path: parts[1]))
         return try JSONDecoder().decode(Details.self, from: data)
     }
 
-    func readme(at url: URL) async throws -> String {
+    @concurrent func readme(at url: URL) async throws -> String {
         let (data, _) = try await URLSession.shared.data(from: url)
         return String(decoding: data, as: UTF8.self)
     }

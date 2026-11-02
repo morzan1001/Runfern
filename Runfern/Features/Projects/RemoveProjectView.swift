@@ -20,7 +20,9 @@ struct RemoveProjectView: View {
         let binding = store.binding(for: project)
         let status = binding.map { sync.status(for: $0) }
         let onlyInApp = binding?.storageMode == .appInternal
+        // Until the stored sync state has loaded, a synced project may hold unsynced changes.
         let losesData = onlyInApp || status?.hasUnsyncedData == true
+            || (binding?.storageMode == .localFolder && !sync.hasLoaded)
 
         NavigationStack {
             Form {
@@ -38,37 +40,41 @@ struct RemoveProjectView: View {
                     }
                     Label("Shared Linux base images", systemImage: "square.stack.3d.up")
                 }
-                if let errorMessage {
-                    Section {
-                        Label(errorMessage, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.red)
-                    }
-                }
                 if losesData {
                     Section {
                         if let status, status.hasUnsyncedData {
-                            Label("\(status.pendingLocalChanges) changes and \(status.conflicts.count) conflicts are not in the project folder yet.",
-                                  systemImage: "exclamationmark.triangle")
-                                .foregroundStyle(.orange)
+                            StatusLabel("\(status.pendingLocalChanges) changes and \(status.conflicts.count) conflicts are not in the project folder yet.")
                             if let binding {
                                 Button("Sync First") { Task { await sync.sync(binding) } }
                             }
                         }
                         Button("Export First…") { showingExport = true }
-                        Toggle("Delete this data anyway", isOn: $acknowledgedDataLoss)
+                        Toggle("Delete Data Anyway", isOn: $acknowledgedDataLoss)
                     } header: {
                         Text("Warning")
                     }
                 }
             }
+            // Removal keeps going once started, so nothing here may change meanwhile (A3).
+            .disabled(isRemoving)
             .navigationTitle("Remove “\(project.name)”")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                ToolbarItem(placement: .cancellationAction) {
+                    // Stopping the environment can take seconds, and removal carries on regardless (A3).
+                    CancelButton().disabled(isRemoving)
+                }
                 ToolbarItem(placement: .destructiveAction) {
-                    Button("Remove", role: .destructive) { remove() }
-                        .disabled(isRemoving || (losesData && !acknowledgedDataLoss))
+                    if isRemoving {
+                        ProgressView()
+                    } else {
+                        Button("Remove", role: .destructive) { remove() }
+                            .disabled(losesData && !acknowledgedDataLoss)
+                    }
                 }
             }
+            .interactiveDismissDisabled(isRemoving)
+            .errorAlert("Couldn't Remove Project", message: $errorMessage)
             .sheet(isPresented: $showingExport) { ExportView(project: project) }
         }
     }
@@ -92,7 +98,7 @@ struct RemoveProjectView: View {
             var transaction = Transaction()
             transaction.disablesAnimations = true
             withTransaction(transaction) {
-                sync.removeData(for: project.workspaceBindingId)
+                sync.forgetStatus(for: project.workspaceBindingId)
                 store.remove(project)
             }
             await IDEWebViewCache.shared.removeData(for: project.id)

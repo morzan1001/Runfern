@@ -9,12 +9,17 @@ struct StatusCard<Leading: View, Content: View, Actions: View>: View {
     @ViewBuilder let content: Content
     @ViewBuilder let actions: Actions
 
+    @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    /// Grows with the title font, so larger symbols and the spinner keep lining up with the title.
+    @ScaledMetric(relativeTo: .title2) private var leadingSize: CGFloat = 28
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(spacing: 12) {
                 leading
                     .font(.title2)
-                    .frame(width: 28, height: 28)
+                    .frame(width: leadingSize, height: leadingSize)
                 Text(title)
                     .font(.headline)
                 Spacer()
@@ -28,7 +33,12 @@ struct StatusCard<Leading: View, Content: View, Actions: View>: View {
             content
             // Without actions, an empty row would still add spacing below the title.
             if Actions.self != EmptyView.self {
-                HStack(spacing: 12) {
+                // Stacked at accessibility sizes and in narrow windows rather than truncated. AnyLayout
+                // keeps one instance of each button, so its shortcut and dialog survive the switch.
+                let layout = typeSize.isAccessibilitySize || sizeClass == .compact
+                    ? AnyLayout(VStackLayout(alignment: .leading, spacing: 12))
+                    : AnyLayout(HStackLayout(spacing: 12))
+                layout {
                     actions
                 }
                 .controlSize(.large)
@@ -58,7 +68,7 @@ extension StatusCard where Content == EmptyView, Actions == EmptyView {
     }
 }
 
-/// The prominent action of a status card, with a visible symbol on the filled background.
+/// The prominent action of a status card. Bordered, not glass: the card is content, not a floating control.
 struct PrimaryActionButton: View {
     let title: String
     let systemImage: String
@@ -67,9 +77,8 @@ struct PrimaryActionButton: View {
     var body: some View {
         Button(action: action) {
             Label(title, systemImage: systemImage)
-                .foregroundStyle(.white)
         }
-        .buttonStyle(.glassProminent)
+        .buttonStyle(.borderedProminent)
     }
 }
 

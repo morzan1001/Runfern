@@ -16,8 +16,9 @@ enum BuiltInJIT {
     static var isAvailable: Bool { unavailableReason == nil }
 
     /// Why this installation cannot use the built-in method, or nil if it can. Nothing it depends
-    /// on changes while Runfern runs, and finding it out takes file and container lookups, so it is
-    /// worked out once, not every time Settings draws itself.
+    /// on changes while Runfern runs, so it is worked out once, not every time Settings draws
+    /// itself. Its file and container lookups come from `JITInstallation`, which `RunfernApp` reads
+    /// off the main thread after launch.
     static let unavailableReason: String? = findUnavailableReason()
 
     private static func findUnavailableReason() -> String? {
@@ -27,13 +28,13 @@ enum BuiltInJIT {
         if !LoopbackTunnel.isInstalled || !JITHelperClient.isInstalled {
             return JITHelperClient.ClientError.missingHelper.errorDescription
         }
-        if !hasStikJIT {
+        if !JITInstallation.hasStikJIT {
             return String(localized: "StikJIT is missing from this installation. Build Runfern again after running Tools/JIT/build-jit-vendor.sh.")
         }
         if ProcessInfo.processInfo.environment["LC_HOME_PATH"] != nil {
             return String(localized: "Built-In does not work inside LiveContainer. Use StikDebug instead.")
         }
-        if FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: JITProtocol.appGroup) == nil {
+        if !JITInstallation.hasAppGroupContainer {
             return JITHelperClient.ClientError.missingAppGroup.errorDescription
         }
         return nil
@@ -218,12 +219,6 @@ enum BuiltInJIT {
         String(localized: "Set up JIT, or import a pairing file, under Settings › Performance › Built-In JIT.")
     }
 
-    /// StikJIT is embedded where the helper loads it from.
-    private static var hasStikJIT: Bool {
-        guard let url = Bundle.main.privateFrameworksURL?.appending(path: "StikJIT.framework/StikJIT") else { return false }
-        return FileManager.default.fileExists(atPath: url.path(percentEncoded: false))
-    }
-
     /// A request with a fresh one-time token, and the token's file in the shared container, where
     /// only Runfern's own helper can read it (see `JITProtocol.appGroup`).
     private struct SignedRequest {
@@ -277,6 +272,38 @@ enum BuiltInJIT {
             Self.holders -= 1
             if Self.holders == 0 { UIApplication.shared.isIdleTimerDisabled = Self.wasDisabled }
         }
+    }
+}
+
+/// File, bundle, and container lookups that never change while Runfern runs. Read once, off the
+/// main thread, after launch (`warmUp()`), so Settings draws without touching the disk.
+nonisolated enum JITInstallation {
+    /// The bundle identifier of the VPN extension (PlugIns/RunfernTunnel.appex) in this installation.
+    static let tunnelIdentifier: String? = plugInIdentifier("RunfernTunnel.appex")
+    /// The bundle identifier of the JIT helper (PlugIns/RunfernJITHelper.appex) in this installation.
+    static let helperIdentifier: String? = plugInIdentifier("RunfernJITHelper.appex")
+    /// StikJIT is embedded where the helper loads it from.
+    static let hasStikJIT: Bool = Bundle.main.privateFrameworksURL.map {
+        FileManager.default.fileExists(atPath: $0.appending(path: "StikJIT.framework/StikJIT").path(percentEncoded: false))
+    } ?? false
+    /// Runfern and its helper share an app group. Asking is a call to another process, which also
+    /// logs “not entitled” when the signing lacks the group.
+    static let hasAppGroupContainer: Bool =
+        FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: JITProtocol.appGroup) != nil
+
+    /// Does every lookup now, so later reads only take the cached values.
+    static func warmUp() {
+        _ = JITSupport.isIncluded
+        // `JITSupport.allowsTunnel` reads these; `isIncluded` skips them without the JIT backend.
+        _ = JITSupport.provisionedEntitlements
+        _ = tunnelIdentifier
+        _ = helperIdentifier
+        _ = hasStikJIT
+        _ = hasAppGroupContainer
+    }
+
+    private static func plugInIdentifier(_ name: String) -> String? {
+        Bundle.main.builtInPlugInsURL.flatMap { Bundle(url: $0.appending(path: name))?.bundleIdentifier }
     }
 }
 #endif
