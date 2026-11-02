@@ -119,7 +119,9 @@ nonisolated final class PairingHost: @unchecked Sendable {
     /// Waits for this iPad to connect and runs the pairing. Gives up after `timeout`, or when the
     /// calling task is cancelled.
     func pair(timeout: Duration, onEvent: @escaping @Sendable (Event) -> Void) async throws -> Pairing {
-        lock.withLock { self.onEvent = onEvent }
+        lock.lock()
+        self.onEvent = onEvent
+        lock.unlock()
         let seconds = Double(timeout.components.seconds)
         DispatchQueue.global().asyncAfter(deadline: .now() + seconds) { [weak self] in self?.stop(.timedOut) }
         return try await withTaskCancellationHandler {
@@ -137,13 +139,20 @@ nonisolated final class PairingHost: @unchecked Sendable {
 
     /// Ends a running `pair`: wakes the wait for a connection and closes a connection in progress.
     func stop(_ reason: HostError = .cancelled) {
-        lock.withLock {
-            guard stopReason == nil, !isClosed else { return }
-            stopReason = reason
-            var byte: UInt8 = 1
-            _ = Darwin.write(cancelPipe.write, &byte, 1)
-            if connection >= 0 { _ = Darwin.shutdown(connection, SHUT_RDWR) }
-        }
+        lock.lock()
+        defer { lock.unlock() }
+        guard stopReason == nil, !isClosed else { return }
+        stopReason = reason
+        var byte: UInt8 = 1
+        _ = Darwin.write(cancelPipe.write, &byte, 1)
+        if connection >= 0 { _ = Darwin.shutdown(connection, SHUT_RDWR) }
+    }
+
+    /// Why `stop` was called, if it was.
+    private var currentStopReason: HostError? {
+        lock.lock()
+        defer { lock.unlock() }
+        return stopReason
     }
 
     // MARK: - Pairing thread
@@ -166,7 +175,8 @@ nonisolated final class PairingHost: @unchecked Sendable {
         }
         if let error {
             let reason = Self.message(of: error)
-            throw lock.withLock { stopReason } ?? HostError.pairing(reason)
+            if let stopReason = currentStopReason { throw stopReason }
+            throw HostError.pairing(reason)
         }
         guard let file else { throw HostError.pairing("no pairing file") }
 
@@ -176,7 +186,10 @@ nonisolated final class PairingHost: @unchecked Sendable {
         guard let bytes else { throw HostError.pairing("empty pairing file") }
         let data = Data(bytes: bytes, count: Int(count))
         idevice_data_free(bytes, count)
-        let deviceName = peer.flatMap { $0.pointee.name }.map { String(cString: $0) }
+        var deviceName: String?
+        if let peer, let name = peer.pointee.name {
+            deviceName = String(cString: name)
+        }
         return Pairing(file: data, deviceName: deviceName)
     }
 
@@ -187,7 +200,7 @@ nonisolated final class PairingHost: @unchecked Sendable {
             var descriptors = [pollfd(fd: listener, events: Int16(POLLIN), revents: 0),
                                pollfd(fd: cancelPipe.read, events: Int16(POLLIN), revents: 0)]
             let ready = Darwin.poll(&descriptors, nfds_t(descriptors.count), -1)
-            if let reason = lock.withLock({ stopReason }) { throw reason }
+            if let reason = currentStopReason { throw reason }
             if ready < 0 {
                 if errno == EINTR { continue }
                 throw HostError.setup(Self.lastSystemError())
@@ -206,33 +219,36 @@ nonisolated final class PairingHost: @unchecked Sendable {
             // says otherwise. The flag belongs to the socket, so idevice's dup() of it has it too.
             var noSigPipe: Int32 = 1
             _ = Darwin.setsockopt(accepted, SOL_SOCKET, SO_NOSIGPIPE, &noSigPipe, socklen_t(MemoryLayout<Int32>.size))
-            let isStopped = lock.withLock {
-                if stopReason == nil { connection = accepted }
-                return stopReason != nil
-            }
-            if isStopped {
+            lock.lock()
+            let reason = stopReason
+            if reason == nil { connection = accepted }
+            lock.unlock()
+            if let reason {
                 Darwin.close(accepted)
-                throw lock.withLock { stopReason } ?? HostError.cancelled
+                throw reason
             }
             return accepted
         }
     }
 
     private func report(_ event: Event) {
-        lock.withLock { onEvent }?(event)
+        lock.lock()
+        let handler = onEvent
+        lock.unlock()
+        if let handler { handler(event) }
     }
 
     private func closeAll() {
-        lock.withLock {
-            guard !isClosed else { return }
-            isClosed = true
-            if connection >= 0 { Darwin.close(connection) }
-            connection = -1
-            Darwin.close(listener)
-            Darwin.close(cancelPipe.read)
-            Darwin.close(cancelPipe.write)
-            onEvent = nil
-        }
+        lock.lock()
+        defer { lock.unlock() }
+        guard !isClosed else { return }
+        isClosed = true
+        if connection >= 0 { Darwin.close(connection) }
+        connection = -1
+        Darwin.close(listener)
+        Darwin.close(cancelPipe.read)
+        Darwin.close(cancelPipe.write)
+        onEvent = nil
     }
 
     // MARK: - Sockets
@@ -295,7 +311,8 @@ nonisolated final class PairingHost: @unchecked Sendable {
 
     /// The error's message; frees the error.
     private static func message(of error: UnsafeMutablePointer<IdeviceFfiError>) -> String {
-        let message = error.pointee.message.map { String(cString: $0) } ?? "error \(error.pointee.code)"
+        var message = "error \(error.pointee.code)"
+        if let text = error.pointee.message { message = String(cString: text) }
         idevice_error_free(error)
         return message
     }

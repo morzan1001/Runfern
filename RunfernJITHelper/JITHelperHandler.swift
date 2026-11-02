@@ -124,6 +124,8 @@ private final class StageRecorder: @unchecked Sendable {
         case .downloadingDDI: next = JITProtocol.Stage.diskImageDownload
         case .mountingDDI, .verifyingDDI: next = JITProtocol.Stage.diskImageMount
         case .ready: next = JITProtocol.Stage.debugger
+        // A stage a later StikJIT adds: the last known one stays the best description.
+        @unknown default: return
         }
         let changed = lock.withLock {
             defer { stage = next }

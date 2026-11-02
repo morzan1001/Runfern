@@ -94,14 +94,22 @@ final class OnDevicePairing {
 
         // iPadOS may end background work that shows no progress, and most of the time is spent
         // waiting for the person; the progress moves a little every few seconds meanwhile.
-        let heartbeat = Task { @MainActor in
-            while (try? await Task.sleep(for: .seconds(5))) != nil {
+        let heartbeat = Task {
+            while !Task.isCancelled {
+                do {
+                    try await Task.sleep(for: .seconds(5))
+                } catch {
+                    break
+                }
                 progress.advance(withinStagesOf: Self.stage)
             }
         }
         defer { heartbeat.cancel() }
-        let pairing = try await host.pair(timeout: .seconds(5 * 60)) { event in
-            Task { @MainActor [weak self] in self?.handle(event, name: name, progress: progress) }
+        // Events come from the pairing thread; they are handled on the main thread, in order.
+        let pairing = try await host.pair(timeout: .seconds(5 * 60)) { [weak self] event in
+            DispatchQueue.main.async {
+                MainActor.assumeIsolated { self?.handle(event, name: name, progress: progress) }
+            }
         }
         progress.report(completed: 4 * Self.stage, of: 4 * Self.stage, subtitle: String(localized: "Saving"))
         try PairingFile.store(pairing.file)
