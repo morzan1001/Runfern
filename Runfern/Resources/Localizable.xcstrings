@@ -2741,6 +2741,16 @@
         }
       }
     },
+    "Pairing File Unusable" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pairing-Datei unbrauchbar"
+          }
+        }
+      }
+    },
     "Partially downloaded" : {
       "localizations" : {
         "de" : {
@@ -4665,6 +4675,16 @@
         }
       }
     },
+    "This is a lockdown pairing record, as Finder or idevicepair create it. The built-in JIT needs a Remote Pairing file instead; see How Runfern Works for how to create one." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das ist ein Lockdown-Pairing-Record, wie ihn Finder oder idevicepair anlegen. Das integrierte JIT braucht stattdessen eine Remote-Pairing-Datei; wie man sie erstellt, steht unter „So funktioniert Runfern“."
+          }
+        }
+      }
+    },
     "This Linux base does not support extensions and VS Code settings yet. Create a new project with the current base." : {
       "localizations" : {
         "de" : {
@@ -4991,6 +5011,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mit JIT läuft Linux um ein Vielfaches schneller. Vor dem ersten Linux-Start nach dem Öffnen verbindet sich das VPN von Runfern kurz, damit sich ein Debugger an Runfern anhängen kann; danach trennt sich das VPN wieder."
+          }
+        }
+      }
+    },
+    "Wrong Format" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falsches Format"
           }
         }
       }

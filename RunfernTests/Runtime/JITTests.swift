@@ -40,6 +40,53 @@ import Testing
     }
 }
 
+/// Pairing files: StikJIT reads only Remote Pairing (RPPairing) files, never lockdown records.
+@Suite struct PairingFileTests {
+    private func plist(_ record: [String: Any], format: PropertyListSerialization.PropertyListFormat = .xml) throws -> Data {
+        try PropertyListSerialization.data(fromPropertyList: record, format: format, options: 0)
+    }
+
+    private var remotePairing: [String: Any] {
+        ["public_key": Data(repeating: 1, count: 32), "private_key": Data(repeating: 2, count: 32),
+         "identifier": "8C6F0E2A-6A4B-3C1D-9E8F-0123456789AB", "alt_irk": Data(repeating: 3, count: 16)]
+    }
+
+    @Test(arguments: [PropertyListSerialization.PropertyListFormat.xml, .binary])
+    func remotePairingFilesAreAccepted(format: PropertyListSerialization.PropertyListFormat) throws {
+        try PairingFile.validate(plist(remotePairing, format: format))
+    }
+
+    @Test func altIRKIsOptional() throws {
+        var record = remotePairing
+        record["alt_irk"] = nil
+        try PairingFile.validate(plist(record))
+    }
+
+    @Test func lockdownRecordsAreRecognizedAndRejected() throws {
+        let lockdown: [String: Any] = ["HostID": "A1B2", "SystemBUID": "C3D4", "HostCertificate": Data([1, 2, 3]),
+                                       "HostPrivateKey": Data([4, 5, 6]), "DeviceCertificate": Data([7, 8, 9])]
+        #expect(throws: PairingFile.ImportError.lockdownRecord) { try PairingFile.validate(plist(lockdown)) }
+    }
+
+    @Test(arguments: ["public_key", "private_key", "identifier"])
+    func incompleteFilesAreRejected(missing key: String) throws {
+        var record = remotePairing
+        record[key] = nil
+        #expect(throws: PairingFile.ImportError.invalid) { try PairingFile.validate(plist(record)) }
+    }
+
+    @Test func keysOfTheWrongSizeAreRejected() throws {
+        var record = remotePairing
+        record["private_key"] = Data(repeating: 2, count: 64)
+        #expect(throws: PairingFile.ImportError.invalid) { try PairingFile.validate(plist(record)) }
+    }
+
+    @Test func otherFilesAreRejected() {
+        #expect(throws: PairingFile.ImportError.invalid) { try PairingFile.validate(Data("not a property list".utf8)) }
+        #expect(throws: PairingFile.ImportError.invalid) { try PairingFile.validate(Data()) }
+    }
+}
+
 /// The request Runfern sends to StikDebug (StikJIT INTEGRATION.md).
 @Suite struct StikDebugTests {
     @Test func requestNamesProcessAndTheFixedScript() throws {
