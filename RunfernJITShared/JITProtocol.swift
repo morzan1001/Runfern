@@ -33,7 +33,8 @@ nonisolated enum JITProtocol {
         static let pairing = "pairing"
         static let success = "success"
         static let message = "message"
-        /// In a failed answer to `Operation.enable`: how far the helper got (`Stage`).
+        /// In a failed answer to `Operation.enable` or `Operation.prepare`: how far the helper got
+        /// (`Stage`).
         static let stage = "stage"
     }
 
@@ -55,6 +56,9 @@ nonisolated enum JITProtocol {
     enum Operation {
         /// Attaches to Runfern and answers QEMU's code-region breakpoint until the script detaches.
         static let enable = "enable"
+        /// Checks the way to the developer services (VPN, pairing file) and downloads and mounts
+        /// the Developer Disk Image if needed, without attaching. Carries `Key.pairing`.
+        static let prepare = "prepare"
         /// Removes the cached Developer Disk Image.
         static let resetDiskImage = "resetDiskImage"
     }

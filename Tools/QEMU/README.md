@@ -55,10 +55,13 @@ list with `public_key`, `private_key`, `identifier`, and optionally `alt_irk`, a
 StikJIT read it. A lockdown pairing record (`HostID`, `HostCertificate`, … from Finder or
 libimobiledevice) does not work. Ways to create the file:
 
-- **On the iPad** (iPadOS 27): Settings › Performance › Create on This iPad…. Runfern advertises
-  itself as a pairable host (`_remotepairing-pairable-host._tcp`, idevice's `pairable_host_*`
+- **On the iPad** (iPadOS 27): Settings › Performance › Set Up JIT…. Runfern adds its VPN
+  configuration, advertises itself as a pairable host (`_remotepairing-pairable-host._tcp`, idevice's `pairable_host_*`
   functions from `Vendor/JIT/IDevice.xcframework`); the iPad offers “Pair with Runfern-…” under
-  Settings › Privacy & Security › Developer Mode and asks for the code Runfern shows.
+  Settings › Privacy & Security › Developer Mode and asks for the code Runfern shows. Runfern then
+  checks the whole way (VPN, pairing, Developer Disk Image) with the helper's `prepare` request,
+  which also downloads and mounts the Developer Disk Image, so the first Linux start is quick.
+  An imported file is checked the same way right after the import.
 - **On a computer**: `Tools/JIT/create-pairing-file.sh` pairs over USB using idevice's own tools and
   checks the result against the iPad (with `--wifi`, it lets the iPad pair with the computer
   instead, without that check).

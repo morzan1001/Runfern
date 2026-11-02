@@ -23,9 +23,9 @@ struct HelpView: View {
             #if RUNFERN_JIT
             Section("JIT Compilation") {
                 Text("With JIT, Linux runs several times faster. Before the first Linux start after opening Runfern, its VPN connects briefly so a debugger can attach to Runfern; afterwards the VPN disconnects again. The first time after the iPad restarts, this also downloads the Developer Disk Image from the internet.")
-                Text("It needs Developer Mode, Wi-Fi, and a pairing file of this iPad (a Remote Pairing file, not a lockdown record).")
+                Text("It needs Wi-Fi and a pairing file of this iPad (a Remote Pairing file, not a lockdown record).")
                 if OnDevicePairing.isSupported {
-                    Text("Create it under Settings › Performance › Create on This iPad: Runfern then appears under Settings › Privacy & Security › Developer Mode, and you confirm it there with the code Runfern shows.")
+                    Text("Settings › Performance › Set Up JIT does everything else: Runfern adds its VPN, appears under Settings › Privacy & Security › Developer Mode, where you confirm the pairing with the code Runfern shows, and checks that JIT works.")
                 }
                 Text("On a computer the iPad trusts, create it with Tools/JIT/create-pairing-file.sh from Runfern's source, idevice_pair, or iloader, and import it under Settings › Performance. Create a new pairing file after changing or removing the iPad's passcode.")
             }

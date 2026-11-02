@@ -3,7 +3,7 @@ import Foundation
 import Observation
 import UserNotifications
 
-/// Creating the pairing file on this iPad (iPadOS 27), step by step, for `PairingCreationView`.
+/// Creating the pairing file on this iPad (iPadOS 27), step by step, for `JITSetup`.
 ///
 /// Runfern advertises itself as a pairable host (`PairingHost`), the person picks it under
 /// Settings › Privacy & Security › Developer Mode and types the code Runfern shows, and the
@@ -44,6 +44,19 @@ final class OnDevicePairing {
             await run()
             task = nil
         }
+    }
+
+    /// Runs a pairing to its end, for a caller that continues afterwards. Returns whether a pairing
+    /// file was stored. Must be called as a direct result of a person's action.
+    func pairToEnd() async -> Bool {
+        guard task == nil else { return false }
+        phase = .idle
+        let running = Task { await run() }
+        task = running
+        await running.value
+        task = nil
+        if case .done = phase { return true }
+        return false
     }
 
     func cancel() {

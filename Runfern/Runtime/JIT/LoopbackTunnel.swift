@@ -39,6 +39,12 @@ enum LoopbackTunnel {
         throw TunnelError.notConnected
     }
 
+    /// Adds Runfern's VPN configuration without connecting it, so iPadOS asks for permission during
+    /// setup rather than at the first Linux start. Returns whether the configuration is in place.
+    static func requestPermission() async -> Bool {
+        await manager() != nil
+    }
+
     static func disconnect() async {
         await existingManager()?.connection.stopVPNTunnel()
     }

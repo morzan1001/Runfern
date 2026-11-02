@@ -12,11 +12,18 @@ struct JITSection: View {
     var canCreatePairingFile = OnDevicePairing.isSupported
 
     @State private var isImporting = false
-    @State private var isCreatingPairingFile = false
+    @State private var setup: SetupRequest?
     @State private var pairingState = PairingFile.state
     @State private var message: String?
 
     private var isBuiltInAvailable: Bool { builtInUnavailableReason == nil }
+
+    /// An open `JITSetupView`.
+    private struct SetupRequest: Identifiable {
+        let id = UUID()
+        /// Runs at once, to check a pairing file that is already there.
+        var startsAutomatically: Bool
+    }
 
     private var method: Binding<JITMethod> {
         Binding(get: { storedMethod ?? (isBuiltInAvailable ? .builtIn : .stikDebug) },
@@ -62,13 +69,15 @@ struct JITSection: View {
                     try PairingFile.importFile(at: result.get())
                     message = nil
                     pairingFileChanged()
+                    // Finish the setup with the imported file and check it right away.
+                    setup = SetupRequest(startsAutomatically: true)
                 } catch {
                     message = error.localizedDescription
                     pairingState = PairingFile.state
                 }
             }
-            .sheet(isPresented: $isCreatingPairingFile, onDismiss: pairingFileChanged) {
-                PairingCreationView()
+            .sheet(item: $setup, onDismiss: pairingFileChanged) { request in
+                JITSetupView(startsAutomatically: request.startsAutomatically)
             }
         }
     }
@@ -83,7 +92,7 @@ struct JITSection: View {
             Text(lastError)
         } else if isEnabled, method.wrappedValue == .builtIn, pairingState != .ready {
             if canCreatePairingFile {
-                Text("Built-In needs a pairing file of this iPad. Create it here (iPadOS 27) or on a computer, as described in How Runfern Works.")
+                Text("Tap Set Up JIT. Runfern does the rest; you only allow its VPN and confirm the pairing in Settings.")
             } else {
                 Text("Built-In needs a pairing file of this iPad. Create it on a computer, as described in How Runfern Works.")
             }
@@ -103,11 +112,17 @@ struct JITSection: View {
         } label: {
             Label("Pairing File", systemImage: "key")
         }
-        if canCreatePairingFile {
-            Button("Create on This iPad…", systemImage: "ipad") {
+        if pairingState == .ready {
+            Button("Check JIT", systemImage: "checkmark.shield") {
                 message = nil
-                isCreatingPairingFile = true
+                setup = SetupRequest(startsAutomatically: true)
             }
+        } else if canCreatePairingFile {
+            Button("Set Up JIT…", systemImage: "wand.and.stars") {
+                message = nil
+                setup = SetupRequest(startsAutomatically: false)
+            }
+            .bold()
         }
         Button("Import Pairing File…", systemImage: "square.and.arrow.down") { isImporting = true }
         if pairingState != .missing {
@@ -147,7 +162,7 @@ struct JITSection: View {
                     } else {
                         switch pairingState {
                         case .ready: "On Next Linux Start"
-                        case .missing: "Pairing File Missing"
+                        case .missing: "Not Set Up"
                         case .unusable: "Pairing File Unusable"
                         }
                     }
