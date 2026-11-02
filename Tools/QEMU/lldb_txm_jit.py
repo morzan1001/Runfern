@@ -1,6 +1,6 @@
-"""LLDB stand-in for StikDebug's utmjit.js, to test the JIT backend from Xcode.
+"""LLDB stand-in for StikDebug's and StikJIT's legacy.js, to test the JIT backend from Xcode.
 
-On devices with the Trusted Execution Monitor, QEMU stops at `brk #0x69` with the code region in
+Whenever a debugger is attached, QEMU stops at `brk #0x69` with the code region in
 x0 (address) and x1 (length). A debugger write to every 16 KB page lets that page execute; then
 the program continues after the breakpoint.
 
@@ -9,7 +9,7 @@ Usage in Xcode's debug console:
     txm_prepare          (when the app stopped at brk #0x69)
     txm_run [minutes] [detach]
                          (keeps the app running and answers every brk #0x69; with "detach" it
-                         leaves after the first one, exactly like StikDebug's utmjit.js)
+                         leaves after the first one, exactly like legacy.js)
 """
 import time
 

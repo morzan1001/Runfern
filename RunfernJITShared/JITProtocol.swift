@@ -24,6 +24,32 @@ nonisolated enum JITProtocol {
         return zip(expected, candidate).reduce(UInt8(0)) { $0 | ($1.0 ^ $1.1) } == 0
     }
 
+    /// The helper's answer to a request, as it travels in an extension item's `userInfo`.
+    struct Answer: Sendable {
+        var success: Bool
+        var message: String
+        /// For a failed `Operation.enable` or `Operation.prepare`: how far the helper got (`Stage`).
+        var stage: String?
+
+        init(success: Bool, message: String, stage: String? = nil) {
+            self.success = success
+            self.message = message
+            self.stage = stage
+        }
+
+        /// The answer in `userInfo`, or nil if it carries none.
+        init?(userInfo: [AnyHashable: Any]?) {
+            guard let success = userInfo?[Key.success] as? Bool else { return nil }
+            self.init(success: success, message: userInfo?[Key.message] as? String ?? "", stage: userInfo?[Key.stage] as? String)
+        }
+
+        var userInfo: [String: Any] {
+            var userInfo: [String: Any] = [Key.success: success, Key.message: message]
+            if let stage { userInfo[Key.stage] = stage }
+            return userInfo
+        }
+    }
+
     /// Keys of the extension items that carry a request to the helper and its answer back.
     enum Key {
         static let requestID = "requestID"

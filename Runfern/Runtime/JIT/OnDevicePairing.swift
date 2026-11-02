@@ -12,14 +12,12 @@ import UserNotifications
 @MainActor
 @Observable
 final class OnDevicePairing {
-    enum Phase: Equatable {
+    enum Phase {
         case idle
         /// Runfern is visible under Developer Mode as `name`.
         case advertising(name: String)
         /// This iPad has connected; `code` is shown once it is known.
-        case pairing(name: String, code: String?)
-        case done(deviceName: String?)
-        case failed(String)
+        case pairing(code: String?)
     }
 
     /// This build can create pairing files (it contains idevice).
@@ -31,15 +29,20 @@ final class OnDevicePairing {
         #endif
     }
 
+    static var unsupportedMessage: String {
+        String(localized: "This build cannot create the pairing file on the iPad. Create it on a computer and import it, as described in How Runfern Works.")
+    }
+
     private(set) var phase: Phase = .idle
     /// The last attempt failed because Runfern may not use the local network.
     private(set) var needsLocalNetworkPermission = false
 
     /// Runs a pairing to its end in the calling task, reporting to the caller's background work.
-    /// Returns whether a pairing file was stored. Cancelling the calling task ends the pairing.
-    func pairToEnd(progress: ContinuedWork.Handle) async -> Bool {
-        phase = .idle
+    /// Returns nil once the pairing file is stored, otherwise why it failed. Cancelling the calling
+    /// task ends the pairing.
+    func pairToEnd(progress: ContinuedWork.Handle) async -> String? {
         needsLocalNetworkPermission = false
+        defer { phase = .idle }
         #if canImport(IDevice)
         let notifications = UNUserNotificationCenter.current()
         defer {
@@ -48,24 +51,23 @@ final class OnDevicePairing {
         }
         do {
             try await pair(progress: progress)
+            return nil
         } catch is CancellationError {
-            phase = .failed(PairingHost.HostError.cancelled.localizedDescription)
+            return PairingHost.HostError.cancelled.localizedDescription
         } catch BonjourAdvertiser.AdvertiserError.localNetworkDenied {
             needsLocalNetworkPermission = true
-            phase = .failed(BonjourAdvertiser.AdvertiserError.localNetworkDenied.localizedDescription)
+            return BonjourAdvertiser.AdvertiserError.localNetworkDenied.localizedDescription
         } catch {
-            phase = .failed(error.localizedDescription)
+            return error.localizedDescription
         }
         #else
-        phase = .failed(String(localized: "This build of Runfern cannot create pairing files."))
+        return Self.unsupportedMessage
         #endif
-        if case .done = phase { return true }
-        return false
     }
 
     private static let notificationID = "nrw.cyber.runfern.pairing-code"
     /// Progress units per step of the pairing (advertising, connected, code shown, saved).
-    private static let stage = 100
+    private static let unitsPerStage = 100
 
     #if canImport(IDevice)
     private func pair(progress: ContinuedWork.Handle) async throws {
@@ -79,49 +81,38 @@ final class OnDevicePairing {
         try await advertiser.publish()
         try Task.checkCancellation()
         phase = .advertising(name: name)
-        progress.report(completed: 1 * Self.stage, of: 4 * Self.stage,
+        progress.report(completed: 1 * Self.unitsPerStage, of: 4 * Self.unitsPerStage,
                         subtitle: String(localized: "Open Settings › Privacy & Security › Developer Mode"))
 
-        // iPadOS may end background work that shows no progress, and most of the time is spent
-        // waiting for the person; the progress moves a little every few seconds meanwhile.
-        let heartbeat = Task {
-            while !Task.isCancelled {
-                do {
-                    try await Task.sleep(for: .seconds(5))
-                } catch {
-                    break
-                }
-                progress.advance(withinStagesOf: Self.stage)
-            }
-        }
+        // Most of the time is spent waiting for the person.
+        let heartbeat = progress.heartbeat(withinStagesOf: Self.unitsPerStage)
         defer { heartbeat.cancel() }
         // Events come from the pairing thread; they are handled on the main thread, in order.
-        let pairing = try await host.pair(timeout: .seconds(5 * 60)) { [weak self] event in
+        let file = try await host.pair(timeout: .seconds(5 * 60)) { [weak self] event in
             DispatchQueue.main.async {
-                MainActor.assumeIsolated { self?.handle(event, name: name, progress: progress) }
+                MainActor.assumeIsolated { self?.handle(event, progress: progress) }
             }
         }
-        progress.report(completed: 4 * Self.stage, of: 4 * Self.stage, subtitle: String(localized: "Saving"))
-        try PairingFile.store(pairing.file)
-        phase = .done(deviceName: pairing.deviceName)
+        progress.report(completed: 4 * Self.unitsPerStage, of: 4 * Self.unitsPerStage, subtitle: String(localized: "Saving"))
+        try PairingFile.store(file)
     }
 
     /// Events arrive from the pairing thread, so they may come late or out of order.
-    private func handle(_ event: PairingHost.Event, name: String, progress: ContinuedWork.Handle) {
+    private func handle(_ event: PairingHost.Event, progress: ContinuedWork.Handle) {
         switch (event, phase) {
         case (.connected, .advertising):
-            phase = .pairing(name: name, code: nil)
-            progress.report(completed: 2 * Self.stage, of: 4 * Self.stage, subtitle: String(localized: "Connected"))
+            phase = .pairing(code: nil)
+            progress.report(completed: 2 * Self.unitsPerStage, of: 4 * Self.unitsPerStage, subtitle: String(localized: "Connected"))
         case (.code(let code), .advertising), (.code(let code), .pairing):
-            show(code, name: name, progress: progress)
+            show(code, progress: progress)
         default:
             break
         }
     }
 
-    private func show(_ code: String, name: String, progress: ContinuedWork.Handle) {
-        phase = .pairing(name: name, code: code)
-        progress.report(completed: 3 * Self.stage, of: 4 * Self.stage, subtitle: String(localized: "Enter \(code) on this iPad"))
+    private func show(_ code: String, progress: ContinuedWork.Handle) {
+        phase = .pairing(code: code)
+        progress.report(completed: 3 * Self.unitsPerStage, of: 4 * Self.unitsPerStage, subtitle: String(localized: "Enter \(code) on this iPad"))
         let content = UNMutableNotificationContent()
         content.title = String(localized: "Pairing Code")
         content.body = String(localized: "Enter \(code) in Settings › Privacy & Security › Developer Mode.")

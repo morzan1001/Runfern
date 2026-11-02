@@ -27,7 +27,11 @@ and everything works offline. No cloud, no remote server.
 2. For JIT builds, fetch StikJIT and idevice: `Tools/JIT/build-jit-vendor.sh`. Built-in JIT also
    needs a pairing file of the iPad, which Runfern creates on iPadOS 27 itself, or
    `Tools/JIT/create-pairing-file.sh` on a computer (`Tools/QEMU/README.md`, “Built-in JIT”).
-3. Open `Runfern.xcodeproj` and run the `Runfern` scheme, or build a distributable variant:
+3. Open `Runfern.xcodeproj` and run the `Runfern` scheme, or build a distributable variant. Run
+   from Xcode, Xcode's debugger is attached: with the Built-In JIT method Linux then runs
+   interpreted; with StikDebug or External Debugger it stops at QEMU's `brk #0x69` inside
+   `qemu_init` unless `Tools/QEMU/lldb_txm_jit.py` answers it. To use Built-In JIT, start Runfern
+   from the Home Screen.
 
 ```sh
 Tools/Build/build.sh appstore   # interpreter only: no JIT code, no extensions

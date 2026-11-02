@@ -4,10 +4,16 @@ import os
 import StikJIT
 #endif
 
+/// Where the helper reports what StikJIT does; never the pairing file.
+private let helperLog = Logger(subsystem: "nrw.cyber.runfern.jit-helper", category: "stikjit")
+
 /// The debugger half of Runfern's built-in JIT. A process cannot debug itself, so Runfern starts
 /// this extension and sends it its process ID and the pairing file. StikJIT connects to the iPad's
 /// developer services through Runfern's loopback VPN, attaches, and runs its bundled `legacy.js`,
 /// which prepares QEMU's code region at `brk #0x69` and detaches. The request lasts until then.
+/// The helper also answers `prepare` (the check in Settings: the developer services, the pairing,
+/// and the Developer Disk Image, which it downloads and mounts, without attaching) and
+/// `resetDiskImage`.
 ///
 /// The helper only acts for Runfern: every request must carry the one-time token Runfern left in
 /// their shared container (`JITProtocol.appGroup`), which no other app can read.
@@ -19,22 +25,16 @@ import StikJIT
 final class JITHelperHandler: NSObject, NSExtensionRequestHandling {
     /// StikJIT's calls block; they run one at a time on this queue (StikJIT INTEGRATION.md).
     private static let queue = DispatchQueue(label: "nrw.cyber.runfern.jit-helper")
-    private static let log = Logger(subsystem: "nrw.cyber.runfern.jit-helper", category: "stikjit")
+    private static var log: Logger { helperLog }
 
-    private struct Answer {
-        var success: Bool
-        var message: String
-        var stage: String?
-    }
+    private typealias Answer = JITProtocol.Answer
 
     func beginRequest(with context: NSExtensionContext) {
         let request = (context.inputItems.first as? NSExtensionItem)?.userInfo ?? [:]
         Self.queue.async {
             let answer = Self.handle(request)
             let item = NSExtensionItem()
-            var userInfo: [String: Any] = [JITProtocol.Key.success: answer.success, JITProtocol.Key.message: answer.message]
-            if let stage = answer.stage { userInfo[JITProtocol.Key.stage] = stage }
-            item.userInfo = userInfo
+            item.userInfo = answer.userInfo
             context.completeRequest(returningItems: [item], completionHandler: nil)
         }
     }
@@ -155,7 +155,7 @@ final class JITHelperHandler: NSObject, NSExtensionRequestHandling {
 private final class StageRecorder: @unchecked Sendable {
     private let lock = NSLock()
     private var stage = JITProtocol.Stage.reachability
-    private static let log = Logger(subsystem: "nrw.cyber.runfern.jit-helper", category: "stikjit")
+    private static var log: Logger { helperLog }
 
     var current: String {
         lock.withLock { stage }
