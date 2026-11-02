@@ -28,7 +28,7 @@ struct JITSetupView: View {
                     }
                     if !setup.isRunning, setup.pairingStep != .done, setup.pairing.needsLocalNetworkPermission {
                         Button("Open Runfern's Settings", systemImage: "network") {
-                            openFirst(UIApplication.openSettingsURLString)
+                            openSettings()
                         }
                     }
                     StepRow(title: "Check the Connection",
@@ -97,7 +97,7 @@ struct JITSetupView: View {
         switch setup.pairing.phase {
         case .advertising(let name):
             VStack(alignment: .leading, spacing: 12) {
-                Text("In Settings, open Privacy & Security › Developer Mode, at the very bottom, or search Settings for “Developer Mode”. Tap “Pair with \(name)”, then enter the code Runfern shows here and in a notification.")
+                Text("In Settings, tap Privacy & Security in the sidebar and then Developer Mode at the very bottom, or search Settings for “Developer Mode”. Tap “Pair with \(name)”, then enter the code Runfern shows here and in a notification.")
                 Button("Open Settings", systemImage: "gear") { openSettings() }
                     .buttonStyle(.borderedProminent)
                 Text("Tip: Keep Settings and Runfern side by side, as windows or in Stage Manager, to see the code while you type it. Stay on Wi-Fi; no internet connection is needed.")
@@ -125,24 +125,12 @@ struct JITSetupView: View {
         }
     }
 
-    /// Opens Settings › Privacy & Security, where Developer Mode is the last entry. There is no
-    /// documented address for Developer Mode itself, and an unknown path made iPadOS open
-    /// Settings › Apps instead, so this asks for the Privacy & Security page only. These addresses
-    /// are not public either; Runfern's own page in Settings is the last resort.
+    /// Opens Runfern's page in Settings, the only documented address. iPadOS has none for Developer
+    /// Mode: on iPadOS 27 every undocumented `App-prefs:` address opens Settings › Apps as well.
+    /// From there, the Settings sidebar shows Privacy & Security and the search field.
     private func openSettings() {
-        openFirst("App-prefs:root=Privacy", UIApplication.openSettingsURLString)
-    }
-
-    /// Opens the first of `candidates` that iPadOS accepts.
-    private func openFirst(_ candidates: String...) {
-        Task {
-            for candidate in candidates {
-                if let url = URL(string: candidate), await UIApplication.shared.open(url) {
-                    DiagnosticsLog.record(.info, .app, "Opened Settings with \(candidate)")
-                    return
-                }
-            }
-        }
+        guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+        Task { _ = await UIApplication.shared.open(url) }
     }
 }
 
