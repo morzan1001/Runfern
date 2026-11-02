@@ -23,7 +23,7 @@ enum BuiltInJIT {
 
     private static func findUnavailableReason() -> String? {
         if !JITSupport.allowsTunnel {
-            return String(localized: "This installation may not use Runfern's VPN. Built-In needs signing with the Network Extension capability, for example from Xcode with a paid developer account; AltStore, SideStore, and iloader cannot add it. Use StikDebug instead.")
+            return String(localized: "This installation may not use Runfern’s VPN. Built-In needs signing with the Network Extension capability, for example from Xcode with a paid developer account; AltStore, SideStore, and iloader cannot add it. Use StikDebug instead.")
         }
         if !LoopbackTunnel.isInstalled || !JITHelperClient.isInstalled {
             return JITHelperClient.ClientError.missingHelper.errorDescription
@@ -199,7 +199,7 @@ enum BuiltInJIT {
     static func explanation(of response: JITHelperClient.Response) -> String {
         let meaning: String? = switch response.stage ?? "" {
         case JITProtocol.Stage.reachability:
-            String(localized: "The iPad's developer services could not be reached through Runfern's VPN. Check that Developer Mode is on and Wi-Fi is connected, and that no other VPN took over.")
+            String(localized: "The iPad’s developer services could not be reached through Runfern’s VPN. Check that Developer Mode is on and Wi-Fi is connected, and that no other VPN took over.")
         case JITProtocol.Stage.pairing:
             String(localized: "This iPad did not accept the pairing file. Create a new one; this is needed after the passcode was changed or removed, or if the file comes from another iPad.")
         case JITProtocol.Stage.diskImageDownload:

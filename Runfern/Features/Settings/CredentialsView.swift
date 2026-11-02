@@ -68,7 +68,7 @@ struct CredentialsView: View {
         .sheet(item: $editing) { draft in
             CredentialEditor(draft: draft)
         }
-        .errorAlert("Couldn't Remove Credential", message: $removeError)
+        .errorAlert("Couldn’t Remove Credential", message: $removeError)
     }
 
     private func remove(_ credential: Credential) {
@@ -137,7 +137,7 @@ private struct CredentialEditor: View {
             .navigationTitle(draft.isReplacing ? Text("Replace Token") : Text("Add Credential"))
             .navigationBarTitleDisplayMode(.inline)
             .interactiveDismissDisabled(hasInput)
-            .errorAlert("Couldn't Save Credential", message: $errorMessage)
+            .errorAlert("Couldn’t Save Credential", message: $errorMessage)
             .onAppear { focused = draft.isReplacing ? .token : .host }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

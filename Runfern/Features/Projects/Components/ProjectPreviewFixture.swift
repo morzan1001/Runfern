@@ -29,7 +29,7 @@ struct ProjectPreviewFixture {
         switch sample {
         case .setupFailed:
             store.markCompleted(.checkStorage, for: project.environmentId)
-            store.setState(.failed, error: String(localized: "Debian 12 has not been published for download yet."),
+            store.setState(.failed, error: "Debian 12 has not been published for download yet.",
                            for: project.environmentId)
         case .ready, .startFailed:
             for step in ProvisioningStep.allCases { store.markCompleted(step, for: project.environmentId) }

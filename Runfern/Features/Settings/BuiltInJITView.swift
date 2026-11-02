@@ -43,7 +43,7 @@ struct BuiltInJITView: View {
                 if let problem = message ?? lastError {
                     Text(problem)
                 } else {
-                    Text("The pairing file connects Runfern with this iPad's developer services. Create a new one after changing or removing the iPad's passcode.")
+                    Text("The pairing file connects Runfern with this iPad’s developer services. Create a new one after changing or removing the iPad’s passcode.")
                 }
             }
 

@@ -14,8 +14,8 @@ struct NewProjectView: View {
     @State private var name = ""
     @State private var details = ""
     @State private var storageMode = StorageMode.localFolder
-    @State private var baseImageId = Catalog.baseImages[0].id
-    @State private var software = SoftwareSelection(toolchainIds: ["python-3"])
+    @State private var baseImageId = Self.initialBaseImageId
+    @State private var software = Self.initialSoftware
     @State private var resources: ResourceProfile?
     @State private var editorSettings: String?
     @State private var presetID: UUID?
@@ -34,8 +34,15 @@ struct NewProjectView: View {
     private var toolchains: [ToolchainProfile] { software.toolchains }
     private var trimmedName: String { name.trimmingCharacters(in: .whitespaces) }
 
-    /// Input the person would lose by dismissing the sheet (A2). A blank sheet closes without asking.
-    private var hasInput: Bool { !trimmedName.isEmpty || !details.isEmpty || binding != nil || presetID != nil }
+    nonisolated private static let initialBaseImageId = Catalog.baseImages[0].id
+    nonisolated private static let initialSoftware = SoftwareSelection(toolchainIds: ["python-3"])
+
+    /// Input the person would lose by dismissing the sheet (A2), including a changed Linux base or
+    /// software choice. A blank sheet closes without asking.
+    private var hasInput: Bool {
+        !trimmedName.isEmpty || !details.isEmpty || binding != nil || presetID != nil
+            || baseImageId != Self.initialBaseImageId || software != Self.initialSoftware
+    }
 
     private func totalDownload(_ status: ImageLibrary.Status) -> Int64 {
         (status == .available ? 0 : baseImage.downloadSizeBytes) + toolchains.reduce(0) { $0 + $1.estimatedSizeBytes }
@@ -174,7 +181,7 @@ struct NewProjectView: View {
                 software.toolchainIds.removeAll { !baseImage.supportedToolchains.contains($0) }
             }
             .interactiveDismissDisabled(hasInput)
-            .errorAlert("Couldn't Create Project", message: $createError)
+            .errorAlert("Couldn’t Create Project", message: $createError)
             .task {
                 availableCapacity = await Task.detached(priority: .userInitiated) { DiskUsage.availableCapacity }.value
             }

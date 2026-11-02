@@ -337,7 +337,7 @@ struct ProjectDetailView: View {
                 if let folderError { StatusLabel(folderError, tint: .red) }
                 if !status.unsupported.isEmpty {
                     DisclosureGroup("Not Synced (\(status.unsupported.count))") {
-                        Text("Symbolic links, cloud files that aren't downloaded, and special files are not transferred.")
+                        Text("Symbolic links, cloud files that aren’t downloaded, and special files are not transferred.")
                             .font(.caption).foregroundStyle(.secondary)
                         ForEach(status.unsupported, id: \.self) { Text($0).font(.caption.monospaced()) }
                     }

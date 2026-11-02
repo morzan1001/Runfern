@@ -61,7 +61,7 @@ struct ExportView: View {
                 }
             }
             .interactiveDismissDisabled(isExporting)
-            .errorAlert("Couldn't Export Project", message: $exportError)
+            .errorAlert("Couldn’t Export Project", message: $exportError)
             .task { await loadPreview() }
             .fileMover(isPresented: $movingArchive, file: archive) { result in
                 if case .failure(let error) = result { exportError = error.localizedDescription } else { dismiss() }

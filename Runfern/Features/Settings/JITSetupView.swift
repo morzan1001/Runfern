@@ -19,16 +19,16 @@ struct JITSetupView: View {
         NavigationStack {
             Form {
                 Section {
-                    Text("Runfern sets up JIT by itself. You only answer what iPadOS asks: allow Runfern's VPN, local network access, and notifications, and confirm the pairing with this iPad in Settings.")
+                    Text("Runfern sets up JIT by itself. You only answer what iPadOS asks: allow Runfern’s VPN, local network access, and notifications, and confirm the pairing with this iPad in Settings.")
                 }
                 Section {
-                    StepRow(title: "Allow Runfern's VPN", detail: "iPadOS asks once.", state: setup.vpnStep)
+                    StepRow(title: "Allow Runfern’s VPN", detail: "iPadOS asks once.", state: setup.vpnStep)
                     StepRow(title: "Pair This iPad", detail: "Once; again only after the passcode changes.", state: setup.pairingStep)
                     if setup.pairingStep == .running {
                         pairingDetails
                     }
                     if !setup.isRunning, setup.pairingStep != .done, setup.pairing.needsLocalNetworkPermission {
-                        Button("Open Runfern's Settings", systemImage: "network") {
+                        Button("Open Runfern’s Settings", systemImage: "network") {
                             openSettings()
                         }
                     }

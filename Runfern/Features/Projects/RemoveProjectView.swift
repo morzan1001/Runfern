@@ -74,7 +74,7 @@ struct RemoveProjectView: View {
                 }
             }
             .interactiveDismissDisabled(isRemoving)
-            .errorAlert("Couldn't Remove Project", message: $errorMessage)
+            .errorAlert("Couldn’t Remove Project", message: $errorMessage)
             .sheet(isPresented: $showingExport) { ExportView(project: project) }
         }
     }

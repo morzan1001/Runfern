@@ -16,7 +16,7 @@ import Testing
     }
 
     @MainActor
-    @Test func exportedPackageImportsAsNewProject() throws {
+    @Test func exportedPackageImportsAsNewProject() async throws {
         let source = try makeWorkingCopy()
         let environment = DevEnvironment(id: UUID(), baseImageId: Catalog.baseImages[0].id, baseCatalogVersion: 1,
                                          toolchainIds: ["python-3"], state: .ready, completedSteps: [], lastError: nil)
@@ -30,7 +30,7 @@ import Testing
 
         let store = ProjectStore(fileURL: URL.temporaryDirectory.appending(path: "store-\(UUID().uuidString).json"))
         let binding = WorkspaceBinding.appInternal()
-        let project = try ProjectImporter.commit(preview, store: store, binding: binding)
+        let project = try await ProjectImporter.commit(preview, store: store, binding: binding)
         defer { store.remove(project) }
 
         let imported = AppPaths.workingCopy(binding.id)
@@ -54,7 +54,7 @@ import Testing
 
     /// A folder on the device is used in place, so the files have to land in it, not in a working copy.
     @MainActor
-    @Test func importIntoFolderOnDeviceMovesFilesIntoIt() throws {
+    @Test func importIntoFolderOnDeviceMovesFilesIntoIt() async throws {
         let preview = try ProjectImporter.prepare(archive: makeArchive())
         let folder = try makeFolder()
         defer { try? FileManager.default.removeItem(at: folder) }
@@ -62,7 +62,7 @@ import Testing
         #expect(binding.storageMode == .mountedFolder)
 
         let store = ProjectStore(fileURL: URL.temporaryDirectory.appending(path: "store-\(UUID().uuidString).json"))
-        let project = try ProjectImporter.commit(preview, store: store, binding: binding)
+        let project = try await ProjectImporter.commit(preview, store: store, binding: binding)
         defer { store.remove(project) }
 
         #expect(try String(contentsOf: folder.appending(path: "Grüße/Ünïcödé.txt"), encoding: .utf8) == "äöü\n")
@@ -71,7 +71,7 @@ import Testing
     }
 
     @MainActor
-    @Test func importIntoFolderWithContentIsRejected() throws {
+    @Test func importIntoFolderWithContentIsRejected() async throws {
         let preview = try ProjectImporter.prepare(archive: makeArchive())
         defer { ProjectImporter.discard(preview) }
         let folder = try makeFolder()
@@ -80,8 +80,8 @@ import Testing
         let binding = try WorkspaceAccess.makeBinding(for: folder)
 
         let store = ProjectStore(fileURL: URL.temporaryDirectory.appending(path: "store-\(UUID().uuidString).json"))
-        #expect(throws: ProjectImporter.ImportError.self) {
-            try ProjectImporter.commit(preview, store: store, binding: binding)
+        await #expect(throws: ProjectImporter.ImportError.self) {
+            try await ProjectImporter.commit(preview, store: store, binding: binding)
         }
         #expect(store.activeProjects.isEmpty)
         #expect(try FileManager.default.contentsOfDirectory(atPath: folder.path(percentEncoded: false)) == ["notes.txt"])

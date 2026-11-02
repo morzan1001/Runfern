@@ -59,7 +59,7 @@ struct DuplicateProjectView: View {
                 }
             }
             .interactiveDismissDisabled(isDuplicating)
-            .errorAlert("Couldn't Duplicate Project", message: $errorMessage)
+            .errorAlert("Couldn’t Duplicate Project", message: $errorMessage)
             .onAppear { name = String(localized: "\(project.name) Copy") }
         }
     }

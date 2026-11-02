@@ -58,7 +58,7 @@ struct DiagnosticsView: View {
                             Task { await reload() }
                         }
                     } message: {
-                        Text("This can't be undone.")
+                        Text("This can’t be undone.")
                     }
             }
         }

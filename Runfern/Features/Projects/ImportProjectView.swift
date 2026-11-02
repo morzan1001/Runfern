@@ -30,6 +30,8 @@ struct ImportProjectView: View {
     @State private var folderError: String?
     /// A failed “Import”, shown as an alert (A7).
     @State private var commitError: String?
+    /// The files are moving into place; the import can't be stopped then (A3).
+    @State private var isImporting = false
 
     init(archive: URL, onImported: @escaping (Project) -> Void) {
         self.onImported = onImported
@@ -37,7 +39,7 @@ struct ImportProjectView: View {
     }
 
     private var canImport: Bool {
-        guard let preview, preview.missingComponents.isEmpty, !isWorking,
+        guard let preview, preview.missingComponents.isEmpty, !isWorking, !isImporting,
               !preview.projectName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return false }
         return storageMode == .appInternal || folder != nil
     }
@@ -100,6 +102,7 @@ struct ImportProjectView: View {
                     }
                 }
             }
+            .disabled(isImporting)
             // Progress and problems with the package itself show where its content would be (A7, A8).
             .overlay {
                 if preview == nil {
@@ -108,7 +111,7 @@ struct ImportProjectView: View {
                     } else {
                         ContentUnavailableView {
                             if prepareError != nil {
-                                Label("Couldn't Open Package", systemImage: "exclamationmark.triangle")
+                                Label("Couldn’t Open Package", systemImage: "exclamationmark.triangle")
                             } else {
                                 Label("No Package Selected", systemImage: "shippingbox")
                             }
@@ -124,13 +127,18 @@ struct ImportProjectView: View {
             .navigationTitle("Import Project")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { CancelButton() }
+                ToolbarItem(placement: .cancellationAction) { CancelButton().disabled(isImporting) }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Import", role: .confirm, action: commit)
-                        .keyboardShortcut(.return, modifiers: .command)
-                        .disabled(!canImport)
+                    if isImporting {
+                        ProgressView()
+                    } else {
+                        Button("Import", role: .confirm) { Task { await commit() } }
+                            .keyboardShortcut(.return, modifiers: .command)
+                            .disabled(!canImport)
+                    }
                 }
             }
+            .interactiveDismissDisabled(isImporting)
             // The folder importer sits on the Form and the package importer on the stack, so two
             // importers never share one view.
             .fileImporter(isPresented: $pickingFolder, allowedContentTypes: [.folder]) { result in
@@ -146,7 +154,7 @@ struct ImportProjectView: View {
                     folderError = error.localizedDescription
                 }
             }
-            .errorAlert("Couldn't Import Project", message: $commitError)
+            .errorAlert("Couldn’t Import Project", message: $commitError)
             .task(id: archive.id) { await prepare() }
             // Swiping the sheet down is the same as Cancel. After an import this finds nothing left to delete.
             .onDisappear { if let preview { ProjectImporter.discard(preview) } }
@@ -184,12 +192,14 @@ struct ImportProjectView: View {
         }
     }
 
-    private func commit() {
-        guard let preview else { return }
+    private func commit() async {
+        guard let preview, !isImporting else { return }
         let binding = storageMode == .appInternal ? WorkspaceBinding.appInternal() : folder
         guard let binding else { return }
+        isImporting = true
+        defer { isImporting = false }
         do {
-            let project = try ProjectImporter.commit(preview, store: store, binding: binding)
+            let project = try await ProjectImporter.commit(preview, store: store, binding: binding)
             provisioner.start(project)
             onImported(project)
             dismiss()
