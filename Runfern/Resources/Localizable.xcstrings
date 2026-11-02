@@ -499,6 +499,16 @@
         }
       }
     },
+    "A pairing file created on a computer, for example with Tools/JIT/create-pairing-file.sh, can be imported instead." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stattdessen lässt sich auch eine auf einem Computer erstellte Pairing-Datei importieren, zum Beispiel aus Tools/JIT/create-pairing-file.sh."
+          }
+        }
+      }
+    },
     "A project is your files. The environment is Linux with your tools. You can reset an environment without losing project files." : {
       "localizations" : {
         "de" : {
@@ -676,6 +686,16 @@
         }
       }
     },
+    "Another debugger, such as Xcode's, is attached, so Linux runs interpreted. To use JIT with it, choose External Debugger and answer QEMU's breakpoint with Tools/QEMU/lldb_txm_jit.py." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein anderer Debugger, etwa der von Xcode, ist angehängt, daher läuft Linux mit dem Interpreter. Um JIT damit zu nutzen, wähle „Externer Debugger“ und beantworte QEMUs Breakpoint mit Tools/QEMU/lldb_txm_jit.py."
+          }
+        }
+      }
+    },
     "Another Linux environment is still running." : {
       "localizations" : {
         "de" : {
@@ -822,6 +842,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "„Eingebaut“ funktioniert nicht in LiveContainer. Nutze stattdessen StikDebug."
+          }
+        }
+      }
+    },
+    "Built-In JIT" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eingebauter JIT"
+          }
+        }
+      }
+    },
+    "Built-In JIT stops working until you set it up again." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der eingebaute JIT funktioniert erst wieder, wenn du ihn neu einrichtest."
           }
         }
       }
@@ -2515,6 +2555,16 @@
         }
       }
     },
+    "Needs Attention" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prüfen nötig"
+          }
+        }
+      }
+    },
     "New File" : {
       "localizations" : {
         "de" : {
@@ -2961,6 +3011,16 @@
         }
       }
     },
+    "Other Debugger Attached" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anderer Debugger angehängt"
+          }
+        }
+      }
+    },
     "Overview" : {
       "localizations" : {
         "de" : {
@@ -3381,6 +3441,16 @@
         }
       }
     },
+    "Remove the pairing file?" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pairing-Datei entfernen?"
+          }
+        }
+      }
+    },
     "Remove “%@”" : {
       "localizations" : {
         "de" : {
@@ -3607,6 +3677,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Runfern überträgt keine Quelltexte, Projektdateien oder Diagnosedaten."
+          }
+        }
+      }
+    },
+    "Runfern downloads it again at the next check or Linux start." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Runfern lädt es bei der nächsten Prüfung oder beim nächsten Linux-Start erneut."
           }
         }
       }
@@ -4687,6 +4767,16 @@
         }
       }
     },
+    "The Developer Disk Image was removed. Runfern downloads it again at the next check or Linux start." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Developer Disk Image wurde entfernt. Runfern lädt es bei der nächsten Prüfung oder beim nächsten Linux-Start erneut."
+          }
+        }
+      }
+    },
     "The development server is not responding. Is it running in the terminal?" : {
       "localizations" : {
         "de" : {
@@ -5021,6 +5111,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Das Pairing ist fehlgeschlagen: %@. Falls du den Code eingegeben hast, prüfe ihn und versuche es erneut."
+          }
+        }
+      }
+    },
+    "The pairing file connects Runfern with this iPad's developer services. Create a new one after changing or removing the iPad's passcode." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Pairing-Datei verbindet Runfern mit den Entwicklerdiensten dieses iPads. Erstelle nach dem Ändern oder Entfernen des iPad-Codes eine neue."
           }
         }
       }
