@@ -1,7 +1,7 @@
 {
   "format": 1,
-  "catalogVersion": 1,
-  "publishedAt": "2026-10-26T09:55:17Z",
+  "catalogVersion": 2,
+  "publishedAt": "2026-11-02T22:47:24Z",
   "baseImages": [
     {
       "id": "debian-12-arm64",
