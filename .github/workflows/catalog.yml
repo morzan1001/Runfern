@@ -11,17 +11,7 @@ name: Catalog
 
 on:
   push:
-    paths:
-      - Catalog/**
-      - Tools/Catalog/**
-      - Runfern/Catalog/CatalogStore.swift
-      - .github/workflows/catalog.yml
   pull_request:
-    paths:
-      - Catalog/**
-      - Tools/Catalog/**
-      - Runfern/Catalog/CatalogStore.swift
-      - .github/workflows/catalog.yml
   workflow_dispatch:
 
 permissions:
@@ -33,13 +23,23 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
           # The history holds the previous catalog for the version check.
           fetch-depth: 0
       - name: Check the catalog and its signature
         run: Tools/Catalog/verify-catalog.sh
+      - name: Test catalog publishing invariants
+        run: python3 -m unittest discover -s Tools/Catalog -p 'test_*.py'
+      - name: Verify license notice integrity
+        run: |
+          python3 Tools/Licenses/verify.py --notices-only
+          python3 -m unittest discover -s Tools/Licenses -p 'test_*.py'
+      - name: Check the release version
+        run: |
+          version="$(sed -n 's/^MARKETING_VERSION = //p' Version.xcconfig)"
+          bash Tools/Build/check-version.sh "v$version"
       - name: Check that a changed catalog has a higher version
         env:
           # The pull request's base, or the branch before this push (zeros for a new branch).

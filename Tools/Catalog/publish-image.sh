@@ -36,6 +36,8 @@ ASSET_LIMIT=2147483648
 fail() { echo "error: $*" >&2; exit 1; }
 catalog_release() { python3 "$HERE/catalog_release.py" "$@"; }
 
+python3 "$ROOT/Tools/Licenses/verify.py" --notices-only --require-clearance
+
 [ -f "$ARCHIVE" ] || fail "$ARCHIVE is missing; build it with Tools/GuestImage/build_image.py $IMAGE."
 command -v gh >/dev/null || fail "the GitHub CLI is missing: brew install gh; gh auth login"
 

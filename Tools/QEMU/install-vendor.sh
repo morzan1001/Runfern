@@ -86,3 +86,9 @@ install_jit () {
 install_platform "sysroot-iOS_Simulator-TCI-arm64" "iphonesimulator"
 install_platform "sysroot-iOS-TCI-arm64" "iphoneos"
 install_jit "sysroot-iOS-arm64" "iphoneos"
+
+# Missing source trees, legal texts or mismatched build/vendor UUIDs must not be
+# silently discarded when installing release dependencies. This is not clearance.
+python3 "$REPO/Tools/Licenses/prepare.py" --utm "$UTM_DIR"
+python3 "$REPO/Tools/Licenses/verify.py"
+echo "License artifact integrity checked; --release verification is still required before distribution."

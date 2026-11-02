@@ -1,0 +1,144 @@
+name: App Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: app-release-${{ github.event.release.tag_name }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    if: startsWith(github.event.release.tag_name, 'v') && !github.event.release.prerelease
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify the release commit and version
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          git merge-base --is-ancestor HEAD origin/main
+          bash Tools/Build/check-version.sh "$RELEASE_TAG"
+          Tools/Catalog/verify-catalog.sh
+      - name: Require license clearance before any release build
+        run: python3 Tools/Licenses/verify.py --notices-only --require-clearance
+
+  build:
+    needs: validate
+    if: vars.ENABLE_RELEASE_BUILDS == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: ${{ vars.ENABLE_TESTFLIGHT_UPLOAD == 'true' && fromJSON('["jit","appstore"]') || fromJSON('["jit"]') }}
+    runs-on: macos-26
+    environment: ${{ matrix.variant == 'appstore' && 'appstore' || 'sideload' }}
+    timeout-minutes: 90
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RUNFERN_RELEASE_TAG: ${{ github.event.release.tag_name }}
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      VARIANT: ${{ matrix.variant }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+      - name: Check deployment prerequisites
+        env:
+          CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE_P12 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          API_KEY: ${{ secrets.ASC_PRIVATE_KEY }}
+          LICENSE_CLEARED: ${{ vars.APP_STORE_LICENSE_CLEARED }}
+          UPLOAD_ENABLED: ${{ vars.ENABLE_TESTFLIGHT_UPLOAD }}
+        run: |
+          if [ "$VARIANT" = appstore ] && { [ "$LICENSE_CLEARED" != true ] || [ "$UPLOAD_ENABLED" != true ]; }; then
+            echo "::error::TestFlight is disabled until App Store licensing is cleared and ENABLE_TESTFLIGHT_UPLOAD is true."
+            exit 1
+          fi
+          for value in "$CERTIFICATE" "$CERTIFICATE_PASSWORD" "$API_KEY" "$ASC_KEY_ID" "$ASC_ISSUER_ID"; do
+            [ -n "$value" ] || { echo "::error::A required Apple signing secret is missing."; exit 1; }
+          done
+          xcodebuild -version
+          xcodebuild -showsdks | grep -E 'iphoneos27\.' \
+            || { echo "::error::This release requires Xcode with the iOS 27 SDK."; exit 1; }
+      - name: Restore the release's audited native runtime
+        run: |
+          gh release download "$RUNFERN_RELEASE_TAG" --repo "$GITHUB_REPOSITORY" \
+            --pattern 'Runfern-native-runtime.tar.gz' --pattern 'Runfern-native-runtime.tar.gz.sha256' --dir "$RUNNER_TEMP/runtime"
+          (cd "$RUNNER_TEMP/runtime" && shasum -a 256 -c Runfern-native-runtime.tar.gz.sha256)
+          python3 - <<'PYTHON'
+          import os, tarfile
+          allowed = ("Vendor", "Vendor/QEMU", "Vendor/JIT", "Runfern", "Runfern/Resources", "Runfern/Resources/Licenses")
+          with tarfile.open(os.environ["RUNNER_TEMP"] + "/runtime/Runfern-native-runtime.tar.gz") as archive:
+              for member in archive.getmembers():
+                  name = member.name.removeprefix("./").rstrip("/")
+                  if name not in allowed and not any(name.startswith(prefix + "/") for prefix in
+                                                     ("Vendor/QEMU", "Vendor/JIT", "Runfern/Resources/Licenses")):
+                      raise SystemExit(f"Unexpected native runtime member: {member.name}")
+              archive.extractall(".", filter="data")
+          PYTHON
+          python3 - <<'PYTHON' > "$RUNNER_TEMP/license-artifacts"
+          import json
+          print("\n".join(json.load(open("Tools/Licenses/release-artifacts.json"))["sha256"]))
+          PYTHON
+          while IFS= read -r name; do
+            gh release download "$RUNFERN_RELEASE_TAG" --repo "$GITHUB_REPOSITORY" \
+              --pattern "$name" --dir build/licenses
+          done < "$RUNNER_TEMP/license-artifacts"
+          python3 Tools/Licenses/verify.py --release
+      - name: Install signing credentials
+        env:
+          CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE_P12 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          API_KEY: ${{ secrets.ASC_PRIVATE_KEY }}
+        run: |
+          umask 077
+          keychain="$RUNNER_TEMP/runfern-signing.keychain-db"
+          password="$(openssl rand -hex 32)"
+          echo "::add-mask::$password"
+          security create-keychain -p "$password" "$keychain"
+          security set-keychain-settings -lut 7200 "$keychain"
+          security unlock-keychain -p "$password" "$keychain"
+          printf '%s' "$CERTIFICATE" | base64 --decode > "$RUNNER_TEMP/signing.p12"
+          security import "$RUNNER_TEMP/signing.p12" -P "$CERTIFICATE_PASSWORD" -k "$keychain" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$password" "$keychain"
+          security list-keychains -d user -s "$keychain" login.keychain-db
+          mkdir -p "$RUNNER_TEMP/private_keys"
+          key="$RUNNER_TEMP/private_keys/AuthKey_$ASC_KEY_ID.p8"
+          printf '%s' "$API_KEY" > "$key"
+          echo "ASC_KEY_PATH=$key" >> "$GITHUB_ENV"
+      - name: Build and verify the signed variant
+        run: |
+          Tools/Build/build.sh "$VARIANT" "build/$VARIANT"
+          bash Tools/Build/check-version.sh "$RUNFERN_RELEASE_TAG"
+      - name: Publish the JIT IPA
+        if: matrix.variant == 'jit'
+        run: |
+          bash Tools/Build/package-sideload.sh build/jit/Runfern.xcarchive "build/Runfern-$RUNFERN_RELEASE_TAG-jit.ipa"
+          gh release upload "$RUNFERN_RELEASE_TAG" "build/Runfern-$RUNFERN_RELEASE_TAG-jit.ipa" --repo "$GITHUB_REPOSITORY"
+      - name: Upload the interpreter build to TestFlight
+        if: matrix.variant == 'appstore'
+        run: |
+          API_PRIVATE_KEYS_DIR="$RUNNER_TEMP/private_keys" xcrun altool --upload-app --type ios \
+            --file build/appstore/Runfern.ipa --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
+      - name: Remove signing credentials
+        if: always()
+        run: |
+          keychain="$RUNNER_TEMP/runfern-signing.keychain-db"
+          if [ -f "$keychain" ]; then security delete-keychain "$keychain"; fi
+          rm -f "$RUNNER_TEMP/signing.p12" "$RUNNER_TEMP/private_keys/AuthKey_$ASC_KEY_ID.p8"

@@ -72,7 +72,7 @@ struct SettingsView: View {
                 Section {
                     NavigationLink { ComponentsView() } label: { Label("Components and Licenses", systemImage: "doc.text") }
                     NavigationLink { DiagnosticsView() } label: { Label("Diagnostics", systemImage: "stethoscope") }
-                    LabeledContent("Version", value: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "–")
+                    LabeledContent("Version", value: AppVersion.display)
                 } header: {
                     Text("About")
                 } footer: {
