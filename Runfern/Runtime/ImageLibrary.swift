@@ -48,12 +48,16 @@ final class ImageLibrary {
     private let offersUnpublished: Bool
     private var transient: [String: Status] = [:]
     private var tasks: [String: URLSessionDownloadTask] = [:]
+    /// Changes whenever a base is installed or removed. `status(of:)` reads it, so screens that
+    /// show a base's state re-render once the files on disk have changed, not before.
+    private var installRevision = 0
 
     init(offersUnpublished: Bool = false) {
         self.offersUnpublished = offersUnpublished
     }
 
     func status(of image: BaseImage) -> Status {
+        _ = installRevision
         if let status = transient[image.id] { return status }
         if Self.isInstalled(image) { return .available }
         guard image.source != nil else { return .notPublished }
@@ -104,6 +108,7 @@ final class ImageLibrary {
                 defer { try? FileManager.default.removeItem(at: downloaded) }
                 try ImageBundle.install(archive: downloaded, to: AppPaths.image(image.id, version: image.catalogVersion))
             }.value
+            installRevision += 1
             transient[image.id] = nil
         } catch {
             transient[image.id] = (error as? URLError)?.code == .cancelled ? nil : .failed(error.localizedDescription)
@@ -111,13 +116,17 @@ final class ImageLibrary {
         }
     }
 
-    /// Deletes an installed base and any partial download of it. Callers make sure no environment
-    /// builds on it (`ProjectStore.referencedImageDirectories`). The directory moves aside at once,
-    /// so the base reads as not downloaded right away; its files go in the background.
+    /// Removes an installed base and any partial download of it. Callers make sure no environment
+    /// builds on it (`ProjectStore.referencedImageDirectories`). The directory moves aside, so the
+    /// base reads as not downloaded once this returns; its files go in the background.
     func remove(_ image: BaseImage) async throws {
         let directory = AppPaths.image(image.id, version: image.catalogVersion)
         let resumeData = resumeDataURL(image)
-        transient[image.id] = nil
+        // Also when the move fails: the resume data may be gone already.
+        defer {
+            transient[image.id] = nil
+            installRevision += 1
+        }
         try await Task.detached(priority: .userInitiated) {
             let fm = FileManager.default
             try? fm.removeItem(at: resumeData)

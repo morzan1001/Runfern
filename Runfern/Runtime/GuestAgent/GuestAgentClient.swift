@@ -18,7 +18,7 @@ actor GuestAgentClient {
             case .disconnected: String(localized: "The connection to the Linux environment was lost.")
             case .rejected(let reason): String(localized: "The Linux environment reported an error: \(reason)")
             case .unsupported(let command):
-                String(localized: "This Linux base was built for an older version of Runfern and doesn’t support “\(command)”. Install a current build of the base.")
+                String(localized: "This Linux base was built for an older version of Runfern and doesn’t support “\(command)”. Create a new project with the current base.")
             case .protocolMismatch(let version): String(localized: "The Linux environment uses an incompatible agent (protocol \(version)).")
             case .frameTooLarge: String(localized: "The Linux environment sent an oversized message.")
             }

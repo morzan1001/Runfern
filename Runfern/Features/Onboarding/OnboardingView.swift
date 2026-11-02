@@ -7,6 +7,7 @@ struct OnboardingView: View {
     @Environment(Provisioner.self) private var provisioner
     @Environment(ImageLibrary.self) private var images
     @Environment(CatalogStore.self) private var catalog
+    @Environment(Connectivity.self) private var connectivity
 
     let finish: (_ createOwnProject: Bool) -> Void
     let createdSample: (Project) -> Void
@@ -72,8 +73,10 @@ struct OnboardingView: View {
                         Group {
                             if catalog.isChecking {
                                 Text("Looking for Linux bases…")
+                            } else if !connectivity.isOnline {
+                                Text("Runfern looks for Linux bases once this iPad is online.")
                             } else {
-                                Text("No Linux base has been published yet. Runfern looks for new ones by itself.")
+                                Text("No Linux base is available yet. Runfern looks for new ones by itself.")
                             }
                         }
                         .font(.footnote)

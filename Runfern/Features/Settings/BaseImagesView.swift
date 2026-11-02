@@ -2,15 +2,15 @@ import SwiftUI
 
 /// The Linux bases this iPad can use: published in the signed catalog or already installed. They
 /// download by themselves when a project needs one; here they can be fetched ahead for offline
-/// setup (OFF04) or deleted when no project uses them.
+/// setup (OFF04) or removed when no project uses them.
 struct BaseImagesView: View {
     @Environment(ImageLibrary.self) private var images
     @Environment(CatalogStore.self) private var catalog
     @Environment(ProjectStore.self) private var store
     @Environment(Connectivity.self) private var connectivity
     @State private var downloadError: String?
-    @State private var deletionError: String?
-    @State private var confirmingDeletion: BaseImage?
+    @State private var removalError: String?
+    @State private var confirmingRemoval: BaseImage?
 
     var body: some View {
         // Read once per pass: every lookup checks the file system.
@@ -35,16 +35,41 @@ struct BaseImagesView: View {
         }
         .overlay {
             if offered.isEmpty {
-                ContentUnavailableView {
-                    Label("No Linux Bases", systemImage: "shippingbox")
-                } description: {
-                    Text("None has been published yet. New Linux bases arrive with catalog updates.")
-                }
+                emptyState
             }
         }
         .navigationTitle("Linux Bases")
         .errorAlert("Couldn’t Download Linux Base", message: $downloadError)
-        .errorAlert("Couldn’t Delete Linux Base", message: $deletionError)
+        .errorAlert("Couldn’t Remove Linux Base", message: $removalError)
+    }
+
+    /// No base can be set up on this iPad yet (A8). Whether none is published or the catalog
+    /// couldn’t be fetched isn’t known here, so the text speaks from the iPad’s point of view.
+    @ViewBuilder
+    private var emptyState: some View {
+        if catalog.isChecking {
+            ContentUnavailableView {
+                ProgressView("Looking for Linux bases…")
+            }
+        } else {
+            ContentUnavailableView {
+                Label("No Linux Bases", systemImage: "shippingbox")
+            } description: {
+                if connectivity.isOnline {
+                    Text("No Linux base is available on this iPad yet. New ones arrive with catalog updates.")
+                } else {
+                    Text("Runfern looks for Linux bases once this iPad is online.")
+                }
+            } actions: {
+                if CatalogStore.updateURL != nil {
+                    Button("Check for Catalog Update") {
+                        Task { await catalog.checkForUpdate(isOnline: connectivity.isOnline) }
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(!connectivity.isOnline)
+                }
+            }
+        }
     }
 
     private func row(for image: BaseImage, status: ImageLibrary.Status, isInUse: Bool) -> some View {
@@ -86,30 +111,35 @@ struct BaseImagesView: View {
             }
             .disabled(!connectivity.isOnline)
         case .available where !isInUse:
-            Button("Delete…", systemImage: "trash", role: .destructive) { confirmingDeletion = image }
-                // On the button, so on iPad the dialog points at it.
-                .confirmationDialog("Delete \(image.displayName)?", isPresented: deletionBinding(for: image),
+            Button("Remove…", systemImage: "trash", role: .destructive) { confirmingRemoval = image }
+                // On the button, so on iPad the dialog points at it (A4).
+                .confirmationDialog("Remove \(image.displayName)?", isPresented: removalBinding(for: image),
                                     titleVisibility: .visible) {
-                    Button("Delete", role: .destructive) { delete(image) }
+                    Button("Remove", role: .destructive) { remove(image) }
                 } message: {
-                    Text("It downloads again when a project needs it.")
+                    // What is lost (A4): an installed base the catalog doesn't publish is gone for good.
+                    if image.source == nil {
+                        Text("It isn’t published for download, so it can’t be downloaded again.")
+                    } else {
+                        Text("It must be downloaded again before an offline setup.")
+                    }
                 }
         case .available, .notPublished:
             EmptyView()
         }
     }
 
-    private func deletionBinding(for image: BaseImage) -> Binding<Bool> {
-        Binding(get: { confirmingDeletion?.id == image.id },
-                set: { if !$0 { confirmingDeletion = nil } })
+    private func removalBinding(for image: BaseImage) -> Binding<Bool> {
+        Binding(get: { confirmingRemoval?.id == image.id },
+                set: { if !$0 { confirmingRemoval = nil } })
     }
 
-    private func delete(_ image: BaseImage) {
+    private func remove(_ image: BaseImage) {
         Task {
             do {
                 try await images.remove(image)
             } catch {
-                deletionError = error.localizedDescription
+                removalError = error.localizedDescription
             }
         }
     }
