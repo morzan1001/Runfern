@@ -29,6 +29,8 @@ fail () { echo "error: $1" >&2; exit 1; }
 [ -d "$REPO/Vendor/QEMU/iphoneos" ] || fail "Vendor/QEMU/iphoneos is missing; see Tools/QEMU/README.md."
 if [ "$VARIANT" = jit ]; then
     [ -d "$REPO/Vendor/JIT/StikJIT.xcframework" ] || fail "Vendor/JIT/StikJIT.xcframework is missing; run Tools/JIT/build-jit-vendor.sh."
+    [ -d "$REPO/Vendor/JIT/IDevice.xcframework" ] \
+        || echo "warning: Vendor/JIT/IDevice.xcframework is missing; this build cannot create pairing files on the iPad." >&2
 fi
 
 ARCHIVE="$OUTPUT/Runfern.xcarchive"
@@ -64,6 +66,25 @@ expect_jit "$wanted" "The VPN extension" "$(yes_if has PlugIns/RunfernTunnel.app
 expect_jit "$wanted" "The VPN entitlement" "$(yes_if grep -q networkextension <<< "$entitlements")"
 expect_jit "$wanted" "The JIT code" "$(yes_if grep -q cancelExtensionRequestWithIdentifier "$binary")"
 has Frameworks/qemu-aarch64-softmmu.framework || fail "The QEMU interpreter is missing."
+plist_value () { plutil -extract "$2" raw -o - "$1" 2>/dev/null || true; }
+info="$APP/Info.plist"
+expect_jit "$wanted" "Local Network access for pairing" "$(yes_if [ -n "$(plist_value "$info" NSLocalNetworkUsageDescription)" ])"
+expect_jit "$wanted" "The pairable host Bonjour type" "$(yes_if [ -n "$(plist_value "$info" NSBonjourServices.0)" ])"
+[ -n "$(plist_value "$info" BGTaskSchedulerPermittedIdentifiers.0)" ] || fail "BGTaskSchedulerPermittedIdentifiers is missing."
+if [ "$VARIANT" = jit ]; then
+    [ "$(plist_value "$APP/Frameworks/StikJIT.framework/Info.plist" CFBundleShortVersionString)" = 2.0.1 ] \
+        || fail "StikJIT is not version 2.0.1."
+    otool -L "$APP/PlugIns/RunfernJITHelper.appex/RunfernJITHelper" | grep -q "@rpath/StikJIT.framework/StikJIT" \
+        || fail "The JIT helper does not load StikJIT."
+    [ "$(plist_value "$APP/PlugIns/RunfernJITHelper.appex/Info.plist" NSExtension.NSExtensionContextClass)" = NSExtensionContext ] \
+        || fail "The JIT helper's Info.plist lacks NSExtensionContextClass."
+    jit_qemu="$APP/Frameworks/qemu-aarch64-softmmu-jit.framework/qemu-aarch64-softmmu-jit"
+    perl -0777 -ne 'my $at = -1; while (($at = index($_, "\x20\x0d\x20\xd4", $at + 1)) >= 0) { exit 0 if $at % 4 == 0 } exit 1' \
+        "$jit_qemu" || fail "The JIT QEMU lacks the handshake with the debugger (brk #0x69); build it from UTM 5.0.4 or later."
+    if [ -d "$REPO/Vendor/JIT/IDevice.xcframework" ]; then
+        grep -q "_remotepairing-pairable-host" "$binary" || fail "The pairing code is missing although idevice is vendored."
+    fi
+fi
 echo "Contents match the $VARIANT variant."
 
 echo "=== Exporting ==="

@@ -8,11 +8,15 @@ struct JITSection: View {
     @AppStorage(JITSupport.enabledKey) private var isEnabled = true
     @AppStorage(JITAcquisition.methodKey) private var storedMethod: JITMethod?
     var isIncluded = JITSupport.isIncluded
-    var isBuiltInAvailable = BuiltInJIT.isAvailable
+    var builtInUnavailableReason = BuiltInJIT.unavailableReason
+    var canCreatePairingFile = OnDevicePairing.isSupported
 
     @State private var isImporting = false
+    @State private var isCreatingPairingFile = false
     @State private var pairingState = PairingFile.state
     @State private var message: String?
+
+    private var isBuiltInAvailable: Bool { builtInUnavailableReason == nil }
 
     private var method: Binding<JITMethod> {
         Binding(get: { storedMethod ?? (isBuiltInAvailable ? .builtIn : .stikDebug) },
@@ -27,15 +31,19 @@ struct JITSection: View {
                 }
                 if isEnabled {
                     Picker(selection: method) {
+                        // A choice that is no longer available stays visible, so it is never
+                        // replaced without the person noticing.
                         if isBuiltInAvailable {
                             Text("Built-In").tag(JITMethod.builtIn)
+                        } else if method.wrappedValue == .builtIn {
+                            Text("Built-In (Unavailable)").tag(JITMethod.builtIn)
                         }
                         Text("StikDebug").tag(JITMethod.stikDebug)
                         Text("External Debugger").tag(JITMethod.externalDebugger)
                     } label: {
                         Label("Method", systemImage: "ladybug")
                     }
-                    if method.wrappedValue == .builtIn {
+                    if method.wrappedValue == .builtIn, isBuiltInAvailable {
                         builtInRows
                     }
                 }
@@ -47,11 +55,7 @@ struct JITSection: View {
             } header: {
                 Text("Performance")
             } footer: {
-                if let message = message ?? (method.wrappedValue == .builtIn ? BuiltInJIT.lastError : nil) {
-                    Text(message)
-                } else {
-                    Text("Takes effect after Runfern restarts.")
-                }
+                footer
             }
             .fileImporter(isPresented: $isImporting, allowedContentTypes: [.propertyList, .data]) { result in
                 do {
@@ -62,6 +66,24 @@ struct JITSection: View {
                 }
                 pairingState = PairingFile.state
             }
+            .sheet(isPresented: $isCreatingPairingFile, onDismiss: { pairingState = PairingFile.state }) {
+                PairingCreationView()
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var footer: some View {
+        if let message {
+            Text(message)
+        } else if isEnabled, method.wrappedValue == .builtIn, let builtInUnavailableReason {
+            Text(builtInUnavailableReason)
+        } else if isEnabled, method.wrappedValue == .builtIn, let lastError = BuiltInJIT.lastError {
+            Text(lastError)
+        } else if isEnabled, method.wrappedValue == .builtIn, pairingState != .ready {
+            Text("Built-In needs a pairing file of this iPad. Create it here (iPadOS 27) or on a computer, as described in How Runfern Works.")
+        } else if QEMULauncher.launchedBackend != nil {
+            Text("Takes effect after Runfern restarts.")
         }
     }
 
@@ -75,6 +97,12 @@ struct JITSection: View {
             }
         } label: {
             Label("Pairing File", systemImage: "key")
+        }
+        if canCreatePairingFile {
+            Button("Create on This iPad…", systemImage: "ipad") {
+                message = nil
+                isCreatingPairingFile = true
+            }
         }
         Button("Import Pairing File…", systemImage: "square.and.arrow.down") { isImporting = true }
         if pairingState != .missing {
@@ -100,10 +128,14 @@ struct JITSection: View {
             } else {
                 switch method.wrappedValue {
                 case .builtIn:
-                    switch pairingState {
-                    case .ready: "On Next Linux Start"
-                    case .missing: "Pairing File Missing"
-                    case .unusable: "Pairing File Unusable"
+                    if !isBuiltInAvailable {
+                        "Unavailable"
+                    } else {
+                        switch pairingState {
+                        case .ready: "On Next Linux Start"
+                        case .missing: "Pairing File Missing"
+                        case .unusable: "Pairing File Unusable"
+                        }
                     }
                 case .stikDebug: "On Next Linux Start"
                 case .externalDebugger: "No Debugger Attached"
@@ -114,6 +146,6 @@ struct JITSection: View {
 }
 
 #Preview {
-    Form { JITSection(isIncluded: true, isBuiltInAvailable: true) }
+    Form { JITSection(isIncluded: true, builtInUnavailableReason: nil, canCreatePairingFile: true) }
 }
 #endif

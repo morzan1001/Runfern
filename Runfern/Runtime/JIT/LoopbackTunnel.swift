@@ -4,7 +4,9 @@ import NetworkExtension
 
 /// Runfern's own loopback VPN (PlugIns/RunfernTunnel.appex), through which the JIT helper reaches
 /// this iPad's developer services. It is connected only while JIT is being enabled, never on
-/// demand, and disconnects when the device sleeps.
+/// demand. It stays connected while the iPad sleeps, because a sleeping iPad would otherwise cut
+/// the debugger's connection while QEMU waits at its breakpoint; the VPN stops itself after a
+/// while (`PacketTunnelProvider`). Connecting it deselects any other VPN, as iPadOS allows only one.
 @MainActor
 enum LoopbackTunnel {
     enum TunnelError: LocalizedError {
@@ -15,7 +17,8 @@ enum LoopbackTunnel {
         }
     }
 
-    static var isAvailable: Bool { JITSupport.allowsTunnel && providerIdentifier != nil }
+    /// The VPN extension is part of this installation.
+    static var isInstalled: Bool { providerIdentifier != nil }
 
     private static var providerIdentifier: String? {
         Bundle.main.builtInPlugInsURL.flatMap { Bundle(url: $0.appending(path: "RunfernTunnel.appex"))?.bundleIdentifier }
@@ -53,7 +56,7 @@ enum LoopbackTunnel {
         let configuration = (manager.protocolConfiguration as? NETunnelProviderProtocol) ?? NETunnelProviderProtocol()
         configuration.providerBundleIdentifier = providerIdentifier
         configuration.serverAddress = JITProtocol.Tunnel.deviceAddress
-        configuration.disconnectOnSleep = true
+        configuration.disconnectOnSleep = false
         configuration.includeAllNetworks = false
         manager.protocolConfiguration = configuration
         manager.localizedDescription = "Runfern"

@@ -1,4 +1,5 @@
 #if RUNFERN_JIT
+import CryptoKit
 import Foundation
 
 /// The iPad's Remote Pairing record for its developer services, which the built-in JIT needs.
@@ -6,21 +7,30 @@ import Foundation
 /// StikJIT reaches the developer services through Remote Pairing (the protocol Xcode uses since
 /// iOS 17), so it reads an RPPairing file: a property list with the host's Ed25519 key pair
 /// (`public_key`, `private_key`), its `identifier`, and optionally `alt_irk`. That is not the
-/// lockdown pairing record that Finder or `idevicepair` keep (`HostID`, `HostCertificate`, …); the
-/// iPad never accepts such a record for Remote Pairing. The file is created once, for example by
-/// iloader or idevice's `remotepairing_lockdown pair` on a computer; Runfern keeps the imported
-/// copy in its own container, protected and excluded from backups, and never logs or exports it.
+/// lockdown pairing record that Finder or libimobiledevice keep (`HostID`, `HostCertificate`, …);
+/// the iPad never accepts such a record for Remote Pairing.
+///
+/// The file is created once: on this iPad (`OnDevicePairing`, iPadOS 27), or on a computer with
+/// `Tools/JIT/create-pairing-file.sh`, idevice_pair, or iloader, and then imported. Runfern keeps
+/// only the four keys StikJIT reads, in its own container, protected and excluded from backups, and
+/// never logs or exports it.
 nonisolated enum PairingFile {
     enum ImportError: LocalizedError, Equatable {
         case invalid
         case lockdownRecord
+        case pymobiledevice3Record
+        case mismatchedKeys
 
         var errorDescription: String? {
             switch self {
             case .invalid:
                 String(localized: "The file is not a pairing file.")
             case .lockdownRecord:
-                String(localized: "This is a lockdown pairing record, as Finder or idevicepair create it. The built-in JIT needs a Remote Pairing file instead; see How Runfern Works for how to create one.")
+                String(localized: "This is a lockdown pairing record, as Finder or libimobiledevice create it. The built-in JIT needs a Remote Pairing file instead: create one on this iPad, or on a computer as described in How Runfern Works.")
+            case .pymobiledevice3Record:
+                String(localized: "This Remote Pairing record comes from pymobiledevice3, which the built-in JIT cannot use. Create a pairing file on this iPad, or on a computer as described in How Runfern Works.")
+            case .mismatchedKeys:
+                String(localized: "The keys in this pairing file do not belong together. Create a new pairing file.")
             }
         }
     }
@@ -47,22 +57,25 @@ nonisolated enum PairingFile {
         }
     }
 
-    /// The pairing record, if a usable one was imported.
+    /// The pairing record, if a usable one was imported, reduced to the keys StikJIT reads.
     static func load() throws(ImportError) -> Data? {
         guard let data = try? Data(contentsOf: url) else { return nil }
-        try validate(data)
-        return data
+        return try normalized(data)
     }
 
     /// Copies the file at `source` (from the document picker) into Runfern, replacing an earlier one.
     static func importFile(at source: URL) throws {
         let accessing = source.startAccessingSecurityScopedResource()
         defer { if accessing { source.stopAccessingSecurityScopedResource() } }
-        let data = try read(source)
-        try validate(data)
+        try store(read(source))
+    }
+
+    /// Checks `data`, reduces it to the keys StikJIT reads, and stores it, replacing an earlier file.
+    static func store(_ data: Data) throws {
+        let reduced = try normalized(data)
         var destination = url
         try FileManager.default.createDirectory(at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
-        try data.write(to: destination, options: [.atomic, .completeFileProtection])
+        try reduced.write(to: destination, options: [.atomic, .completeFileProtection])
         var values = URLResourceValues()
         values.isExcludedFromBackup = true
         try destination.setResourceValues(values)
@@ -70,18 +83,42 @@ nonisolated enum PairingFile {
 
     /// Checks `data` the way StikJIT's reader (idevice `RpPairingFile::from_bytes`) does: an XML or
     /// binary property list with a 32-byte `public_key`, a 32-byte `private_key`, and an
-    /// `identifier` string. `alt_irk` is optional.
+    /// `identifier` string. `alt_irk` is optional. Also checks that the public key belongs to the
+    /// private key (both are Ed25519 in their 32-byte RFC 8032 form), because the iPad would
+    /// otherwise reject the file only when JIT is first needed.
     static func validate(_ data: Data) throws(ImportError) {
+        _ = try normalized(data)
+    }
+
+    /// `data` as an XML property list with only the keys StikJIT reads. Some tools, iloader among
+    /// them, add lockdown secrets to the same file; those never reach the helper.
+    static func normalized(_ data: Data) throws(ImportError) -> Data {
         guard let record = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any] else {
             throw .invalid
         }
-        if let publicKey = record["public_key"] as? Data, publicKey.count == 32,
-           let privateKey = record["private_key"] as? Data, privateKey.count == 32,
-           let identifier = record["identifier"] as? String, !identifier.isEmpty {
-            return
+        guard let publicKey = record["public_key"] as? Data, publicKey.count == 32,
+              let privateKey = record["private_key"] as? Data, privateKey.count == 32 else {
+            let lockdownKeys = ["HostID", "HostCertificate", "HostPrivateKey", "SystemBUID", "DeviceCertificate"]
+            let isLockdownRecord = lockdownKeys.contains { record[$0] != nil }
+            throw isLockdownRecord ? ImportError.lockdownRecord : ImportError.invalid
         }
-        let lockdownKeys = ["HostID", "HostCertificate", "HostPrivateKey", "SystemBUID", "DeviceCertificate"]
-        throw lockdownKeys.contains { record[$0] != nil } ? .lockdownRecord : .invalid
+        guard let identifier = record["identifier"] as? String, !identifier.isEmpty else {
+            // pymobiledevice3 keeps the key pair without the identifier it paired with.
+            let isPymobiledevice3Record = record["remote_unlock_host_key"] != nil || record["peer_alt_irk"] != nil
+            throw isPymobiledevice3Record ? ImportError.pymobiledevice3Record : ImportError.invalid
+        }
+        guard let signingKey = try? Curve25519.Signing.PrivateKey(rawRepresentation: privateKey),
+              signingKey.publicKey.rawRepresentation == publicKey else {
+            throw .mismatchedKeys
+        }
+        var kept: [String: Any] = ["public_key": publicKey, "private_key": privateKey, "identifier": identifier]
+        if let altIRK = record["alt_irk"] as? Data, altIRK.count == 16 {
+            kept["alt_irk"] = altIRK
+        }
+        guard let reduced = try? PropertyListSerialization.data(fromPropertyList: kept, format: .xml, options: 0) else {
+            throw .invalid
+        }
+        return reduced
     }
 
     /// Pairing records are small property lists, so at most `maximumSize` bytes are read. The read
