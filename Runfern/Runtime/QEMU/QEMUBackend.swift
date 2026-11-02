@@ -82,10 +82,23 @@ nonisolated enum JITSupport {
 
     /// The backend for QEMU's start in this session. JIT builds first attach the debugger with
     /// the chosen method (`JITAcquisition`); App Store builds always interpret.
+    ///
+    /// A debugger that is already attached is used only if the method accepts it: QEMU stops at
+    /// its code-region breakpoint, and a debugger that does not answer it, such as Xcode's, would
+    /// leave Linux stopped there.
     static func backendForLaunch() async -> QEMUBackend {
         #if RUNFERN_JIT
-        if isIncluded, isEnabled, !isDebuggerAttached {
-            await JITAcquisition.attachDebugger()
+        if isIncluded, isEnabled {
+            if !isDebuggerAttached {
+                await JITAcquisition.attachDebugger()
+            } else {
+                let accepted = await JITAcquisition.acceptsAttachedDebugger
+                if !accepted {
+                    DiagnosticsLog.record(.warning, .runtime,
+                                          "Another debugger is attached (for example Xcode); using the interpreter")
+                    return .interpreter
+                }
+            }
         }
         #endif
         return QEMUBackend.preferred

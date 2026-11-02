@@ -23,6 +23,19 @@ enum JITAcquisition {
             ?? (BuiltInJIT.isAvailable ? .builtIn : .stikDebug)
     }
 
+    /// Runfern's own request attached the debugger in this process.
+    private(set) static var attachedByRunfern = false
+
+    /// Whether a debugger that is attached can be trusted to answer QEMU's code-region breakpoint.
+    /// Built-in: only the helper's own. StikDebug: also one that attached before Runfern asked,
+    /// as StikDebug's own “Enable JIT” does. External: whatever the person attached.
+    static var acceptsAttachedDebugger: Bool {
+        switch method {
+        case .builtIn: attachedByRunfern
+        case .stikDebug, .externalDebugger: true
+        }
+    }
+
     static func attachDebugger() async {
         let method = method
         let attached: Bool
@@ -31,6 +44,7 @@ enum JITAcquisition {
         case .stikDebug: attached = await StikDebug.attachDebugger()
         case .externalDebugger: return
         }
+        if attached { attachedByRunfern = true }
         DiagnosticsLog.record(attached ? .info : .warning, .runtime,
                               attached ? "Debugger attached (\(method.rawValue))"
                                        : "No debugger attached (\(method.rawValue)); using the interpreter")
