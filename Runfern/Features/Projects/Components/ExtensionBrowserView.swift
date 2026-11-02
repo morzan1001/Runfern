@@ -1,42 +1,51 @@
 import SwiftUI
 
-/// Searches Open VSX for VS Code extensions. Without a search term it lists the most downloaded ones.
+/// Searches Open VSX for VS Code extensions, pushed onto the host's navigation stack. Without a
+/// search term it lists the most downloaded ones.
 struct ExtensionBrowserView: View {
-    @Environment(\.dismiss) private var dismiss
     @Binding var selection: SoftwareSelection
 
     @State private var query = ""
     @State private var results: [OpenVSXClient.Summary] = []
-    @State private var isLoading = false
+    /// Starts true: the first frame shows a spinner, not "No Results".
+    @State private var isLoading = true
     @State private var errorMessage: String?
+    /// Bumped by Try Again, so the same query loads again.
+    @State private var attempt = 0
 
     var body: some View {
-        NavigationStack {
-            List {
-                if let errorMessage {
-                    ContentUnavailableView("Open VSX Not Reachable", systemImage: "wifi.exclamationmark",
-                                           description: Text(errorMessage))
-                } else if results.isEmpty, !isLoading {
-                    ContentUnavailableView.search(text: query)
-                }
-                if !results.isEmpty {
-                    Section(query.isEmpty ? String(localized: "Popular") : String(localized: "Results")) {
-                        extensionRows
-                    }
-                }
-            }
-            .overlay { if isLoading && results.isEmpty { ProgressView() } }
-
-            .searchable(text: $query, prompt: Text("Search Open VSX"))
-            .task(id: query) { await load() }
-            .navigationTitle("VS Code Extensions")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done", role: .confirm) { dismiss() }
+        List {
+            if !results.isEmpty {
+                Section(query.isEmpty ? String(localized: "Popular") : String(localized: "Results")) {
+                    extensionRows
                 }
             }
         }
+        .overlay {
+            if results.isEmpty {
+                if let errorMessage {
+                    ContentUnavailableView {
+                        Label("Open VSX Not Reachable", systemImage: "wifi.exclamationmark")
+                    } description: {
+                        Text(errorMessage)
+                    } actions: {
+                        Button("Try Again") { attempt += 1 }
+                            .buttonStyle(.borderedProminent)
+                    }
+                } else if isLoading {
+                    ProgressView()
+                } else {
+                    ContentUnavailableView.search(text: query)
+                }
+            }
+        }
+        .searchable(text: $query, prompt: Text("Search Open VSX"))
+        // Extension names and identifiers, not words.
+        .autocorrectionDisabled()
+        .textInputAutocapitalization(.never)
+        .task(id: "\(attempt)|\(query)") { await load() }
+        .navigationTitle("VS Code Extensions")
+        .navigationBarTitleDisplayMode(.inline)
     }
 
     private var extensionRows: some View {
@@ -50,16 +59,19 @@ struct ExtensionBrowserView: View {
     }
 
     private func load() async {
+        isLoading = true
+        errorMessage = nil
+        // A newer load has taken over; it sets the flag itself.
+        defer { if !Task.isCancelled { isLoading = false } }
         // Waits briefly while typing, so not every keystroke starts a request.
         if !query.isEmpty { try? await Task.sleep(for: .milliseconds(300)) }
         guard !Task.isCancelled else { return }
-        isLoading = true
-        defer { isLoading = false }
         do {
             results = try await OpenVSXClient().search(query)
-            errorMessage = nil
-        } catch is CancellationError {
         } catch {
+            // A cancelled request throws URLError.cancelled, not CancellationError.
+            guard !Task.isCancelled else { return }
+            results = []
             errorMessage = error.localizedDescription
         }
     }
@@ -99,9 +111,12 @@ struct ExtensionRow: View {
     }
 }
 
+/// An extension's icon. It grows with Dynamic Type and is decorative: the name beside it is read.
 struct ExtensionIcon: View {
     let url: URL?
     var size: CGFloat = 40
+
+    @ScaledMetric(relativeTo: .body) private var scale: CGFloat = 1
 
     var body: some View {
         AsyncImage(url: url) { image in
@@ -109,12 +124,15 @@ struct ExtensionIcon: View {
         } placeholder: {
             Image(systemName: "puzzlepiece.extension").font(.title2).foregroundStyle(.secondary)
         }
-        .frame(width: size, height: size)
-        .clipShape(.rect(cornerRadius: size / 5))
+        .frame(width: size * scale, height: size * scale)
+        .clipShape(.rect(cornerRadius: size * scale / 5))
+        .accessibilityHidden(true)
     }
 }
 
 #Preview {
     @Previewable @State var selection = SoftwareSelection(toolchainIds: ["python-3"])
-    ExtensionBrowserView(selection: $selection)
+    NavigationStack {
+        ExtensionBrowserView(selection: $selection)
+    }
 }

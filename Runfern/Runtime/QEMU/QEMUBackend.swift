@@ -46,7 +46,8 @@ nonisolated enum JITSupport {
 
     /// JIT is possible in this installation: the JIT backend is embedded (builds for sideloading) and
     /// the app is signed so that a debugger may attach. App Store installations offer neither.
-    static var isIncluded: Bool { QEMUBackend.jit.library != nil && allowsDebugger }
+    /// Neither changes while Runfern runs, so it is looked up once (`JITInstallation.warmUp()`).
+    static let isIncluded: Bool = QEMUBackend.jit.library != nil && allowsDebugger
 
     /// Development signing carries `get-task-allow`; App Store and other distribution signing don't.
     static var allowsDebugger: Bool { provisionedEntitlements["get-task-allow"] as? Bool == true }

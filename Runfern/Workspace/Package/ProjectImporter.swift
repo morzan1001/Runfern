@@ -18,6 +18,7 @@ nonisolated enum ProjectImporter {
         case missingManifest
         case contentMismatch(String)
         case missingRecipe
+        case folderNotEmpty
 
         var errorDescription: String? {
             switch self {
@@ -27,6 +28,8 @@ nonisolated enum ProjectImporter {
                 String(localized: "The package content does not match its checksum list at “\(path)”.")
             case .missingRecipe:
                 String(localized: "The package has no usable environment recipe for this catalog.")
+            case .folderNotEmpty:
+                String(localized: "Choose an empty folder to import the project into.")
             }
         }
     }
@@ -45,19 +48,36 @@ nonisolated enum ProjectImporter {
         }
     }
 
-    /// Registers the project and moves the verified files into its new working copy.
+    /// Registers the project and moves the verified files to where it keeps them: into the chosen
+    /// folder for a folder on the device or a drive, otherwise into its new working copy.
     @MainActor
     static func commit(_ preview: Preview, store: ProjectStore, binding: WorkspaceBinding) throws -> Project {
         guard let recipe = preview.recipe, let image = Catalog.baseImage(id: recipe.base.id) else {
             throw ImportError.missingRecipe
         }
+        // A folder on the device or a drive is used in place, so the files go there; it must be empty,
+        // so nothing is overwritten and no move fails halfway on a name that already exists.
+        var target: WorkspaceFiles?
+        if binding.storageMode == .mountedFolder {
+            let files = try WorkspaceFiles(binding)   // keeps the security scope while alive
+            guard try FileManager.default.contentsOfDirectory(at: files.url, includingPropertiesForKeys: nil).isEmpty else {
+                throw ImportError.folderNotEmpty
+            }
+            target = files
+        }
         let toolchains = recipe.toolchains.compactMap { Catalog.toolchain(id: $0.id) }
         let project = try store.createProject(name: preview.projectName, details: "", source: .empty,
                                               baseImage: image, toolchains: toolchains, binding: binding)
-        let workingCopy = AppPaths.workingCopy(binding.id)
         do {
-            try FileManager.default.createDirectory(at: workingCopy.deletingLastPathComponent(), withIntermediateDirectories: true)
-            try FileManager.default.moveItem(at: preview.filesRoot, to: workingCopy)
+            if let target {
+                for item in try FileManager.default.contentsOfDirectory(at: preview.filesRoot, includingPropertiesForKeys: nil) {
+                    try FileManager.default.moveItem(at: item, to: target.url.appending(path: item.lastPathComponent))
+                }
+            } else {
+                let workingCopy = AppPaths.workingCopy(binding.id)
+                try FileManager.default.createDirectory(at: workingCopy.deletingLastPathComponent(), withIntermediateDirectories: true)
+                try FileManager.default.moveItem(at: preview.filesRoot, to: workingCopy)
+            }
         } catch {
             store.remove(project)
             throw error
@@ -66,8 +86,10 @@ nonisolated enum ProjectImporter {
         return project
     }
 
+    /// The staging folder has a unique name in the temporary directory, so it is deleted in the background.
     static func discard(_ preview: Preview) {
-        try? FileManager.default.removeItem(at: preview.staging)
+        let staging = preview.staging
+        Task.detached(priority: .background) { try? FileManager.default.removeItem(at: staging) }
     }
 
     // MARK: Private

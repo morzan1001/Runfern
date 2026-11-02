@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 import WebKit
 
 /// Details of one Open VSX extension with its README, like the extension page in VS Code.
@@ -7,7 +8,8 @@ struct ExtensionDetailView: View {
     @Binding var selection: SoftwareSelection
 
     @State private var details: OpenVSXClient.Details?
-    @State private var readme: String?
+    /// Converted once, off the main thread; `body` re-runs on every Add or Remove.
+    @State private var readmeHTML: String?
     @State private var errorMessage: String?
 
     private var isAdded: Bool { selection.extensions.contains(id) }
@@ -17,8 +19,8 @@ struct ExtensionDetailView: View {
             header
                 .padding(20)
             Divider()
-            if let readme {
-                ReadmeView(html: MarkdownHTML.document(readme, baseURL: details?.files?.readme))
+            if let readmeHTML {
+                ReadmeView(html: readmeHTML)
             } else if let errorMessage {
                 ContentUnavailableView("README Not Available", systemImage: "doc.text", description: Text(errorMessage))
             } else {
@@ -32,9 +34,7 @@ struct ExtensionDetailView: View {
 
     private var header: some View {
         HStack(alignment: .top, spacing: 16) {
-            ExtensionIcon(url: details?.files?.icon)
-                .scaleEffect(1.4)
-                .frame(width: 56, height: 56)
+            ExtensionIcon(url: details?.files?.icon, size: 56)
             VStack(alignment: .leading, spacing: 4) {
                 Text(details?.displayName ?? id).font(.title2.weight(.semibold))
                 HStack(spacing: 4) {
@@ -53,14 +53,16 @@ struct ExtensionDetailView: View {
             }
             Spacer()
             if isAdded {
+                // Content, not the floating layer, so bordered styles rather than glass (A9).
                 Button("Remove", systemImage: "minus.circle", role: .destructive) {
                     selection.setExtension(id, selected: false)
                 }
-                .buttonStyle(.glass)
+                .buttonStyle(.bordered)
+                .buttonBorderShape(.capsule)
             } else {
                 Button("Add", systemImage: "plus") { selection.setExtension(id, selected: true) }
-                    .buttonStyle(.glassProminent)
-                    .foregroundStyle(.white)
+                    .buttonStyle(.borderedProminent)
+                    .buttonBorderShape(.capsule)
             }
         }
     }
@@ -83,7 +85,10 @@ struct ExtensionDetailView: View {
                 errorMessage = String(localized: "This extension has no README.")
                 return
             }
-            readme = try await OpenVSXClient().readme(at: url)
+            let markdown = try await OpenVSXClient().readme(at: url)
+            readmeHTML = await Task.detached(priority: .userInitiated) {
+                MarkdownHTML.document(markdown, baseURL: url)
+            }.value
         } catch {
             errorMessage = error.localizedDescription
         }

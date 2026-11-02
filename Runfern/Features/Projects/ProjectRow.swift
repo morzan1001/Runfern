@@ -7,6 +7,9 @@ struct ProjectRow: View {
     let project: Project
     let isActive: Bool
 
+    /// Grows with the name, so the symbol inside keeps fitting at larger text sizes.
+    @ScaledMetric(relativeTo: .headline) private var tile: CGFloat = 36
+
     var body: some View {
         let env = store.environment(for: project)
         let image = env.flatMap { Catalog.baseImage(id: $0.baseImageId) }
@@ -17,9 +20,11 @@ struct ProjectRow: View {
             Image(systemName: isActive ? "play.fill" : "chevron.left.forwardslash.chevron.right")
                 .font(.body.weight(.semibold))
                 .foregroundStyle(isActive ? .white : state.tint)
-                .frame(width: 36, height: 36)
+                .frame(width: tile, height: tile)
                 .background(isActive ? AnyShapeStyle(.green) : AnyShapeStyle(state.tint.opacity(0.15)),
-                            in: .rect(cornerRadius: 9))
+                            in: .rect(cornerRadius: tile / 4))
+                // Decorative: VoiceOver reads the name and the status line instead of the symbol name.
+                .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(project.name)

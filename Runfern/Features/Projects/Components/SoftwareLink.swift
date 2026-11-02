@@ -1,7 +1,9 @@
 import SwiftUI
 
-/// A form row that summarizes the selected software and opens its own page to change it, the same
-/// way “Installed Software” works for an existing project.
+/// A form row that summarizes the selected software and pushes its own page to change it, in new
+/// projects and presets. Languages and extensions are pushed from there onto the same stack, so the
+/// host must provide a `NavigationStack`. “Installed Software” of an existing project shows the
+/// same sections in a sheet instead, since it applies its changes with Apply.
 struct SoftwareLink: View {
     let base: BaseImage?
     @Binding var selection: SoftwareSelection

@@ -137,14 +137,22 @@ nonisolated struct SoftwareSelection: Codable, Hashable, Sendable {
         family.versions.first { toolchainIds.contains($0.id) }?.id
     }
 
+    /// Selects or deselects an extension. Both lists are cleared first, so an extension that was
+    /// added from Open VSX and is later suggested by a language can still be turned off.
     mutating func setExtension(_ id: String, selected: Bool) {
+        excludedExtensions.removeAll { $0 == id }
+        customExtensions.removeAll { $0 == id }
         if suggestedExtensions.contains(id) {
-            excludedExtensions.removeAll { $0 == id }
             if !selected { excludedExtensions.append(id) }
-        } else {
-            customExtensions.removeAll { $0 == id }
-            if selected { customExtensions.append(id) }
+        } else if selected {
+            customExtensions.append(id)
         }
+    }
+
+    /// Extensions added from Open VSX that no chosen language suggests.
+    var additionalExtensions: [String] {
+        let suggested = Set(suggestedExtensions)
+        return customExtensions.filter { !suggested.contains($0) }
     }
 }
 

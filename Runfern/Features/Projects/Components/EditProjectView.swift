@@ -6,37 +6,43 @@ struct EditProjectView: View {
     @Environment(\.dismiss) private var dismiss
     let project: Project
 
-    @State private var name = ""
-    @State private var details = ""
+    @State private var name: String
+    @State private var details: String
+
+    /// Filled here, not in `onAppear`, so `hasChanges` is right from the first frame.
+    init(project: Project) {
+        self.project = project
+        _name = State(initialValue: project.name)
+        _details = State(initialValue: project.details)
+    }
+
+    /// Edits the person would lose by dismissing the sheet (A2).
+    private var hasChanges: Bool { name != project.name || details != project.details }
 
     var body: some View {
         NavigationStack {
             Form {
                 Section {
                     TextField("Name", text: $name)
-                    TextField("Description", text: $details, axis: .vertical)
+                    TextField("Description (Optional)", text: $details, axis: .vertical)
                         .lineLimit(3...6)
                 }
             }
             .navigationTitle("Edit Project")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel", role: .cancel) { dismiss() }
-                }
+                ToolbarItem(placement: .cancellationAction) { CancelButton(hasChanges: hasChanges) }
                 ToolbarItem(placement: .confirmationAction) {
+                    // ⌘↩, not ↩: Description is a multi-line field.
                     Button("Save", role: .confirm) {
                         store.rename(project, name: name, details: details)
                         dismiss()
                     }
-                    .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty
-                              || (name == project.name && details == project.details))
+                    .keyboardShortcut(.return, modifiers: .command)
+                    .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !hasChanges)
                 }
             }
-            .onAppear {
-                name = project.name
-                details = project.details
-            }
+            .interactiveDismissDisabled(hasChanges)
         }
     }
 }

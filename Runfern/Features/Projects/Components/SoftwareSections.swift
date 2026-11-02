@@ -1,19 +1,17 @@
 import SwiftUI
 
-/// Tools and VS Code extensions of an environment, edited the same way everywhere: new projects,
+/// Languages and VS Code extensions of an environment, edited the same way everywhere: new projects,
 /// presets, and the installed software of an existing project.
 ///
-/// Languages are chosen in a list with checkmarks and can also be swiped away here. Selecting a
-/// tool also selects the extensions it suggests; each of them can be turned off. Further
-/// extensions come from Open VSX and are named `publisher.name`.
+/// Languages are chosen on a pushed page with checkmarks and can also be swiped away here. Selecting a
+/// language also selects the extensions it suggests; each of them can be turned off. Further
+/// extensions come from Open VSX, also on a pushed page, are named `publisher.name`, and are
+/// swiped away here. The host must provide the `NavigationStack`.
 struct SoftwareSections: View {
     let base: BaseImage?
     @Binding var selection: SoftwareSelection
-    /// Tools and extensions can't change, for example while the environment runs; the editor can.
+    /// Languages and extensions can't change, for example while the environment runs; the editor can.
     var softwareLocked = false
-
-    @State private var browsing = false
-    @State private var addingLanguage = false
 
     private var tools: [ToolchainProfile] { base.map(Catalog.toolchains(for:)) ?? [] }
     private var families: [ToolchainFamily] { base.map(Catalog.toolchainFamilies(for:)) ?? [] }
@@ -25,21 +23,21 @@ struct SoftwareSections: View {
             }
         } header: {
             Text("Editor")
+        } footer: {
+            Text("More spacing, wider scroll bars, word wrap, and a key bar above the on-screen keyboard.")
         }
 
-        Section("Tools") {
+        Section("Languages") {
             ForEach(selection.toolchains) { tool in
                 toolRow(tool)
-                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                        Button("Remove", systemImage: "trash", role: .destructive) {
-                            withAnimation { selection.setTool(tool.id, selected: false) }
-                        }
-                    }
+                    .swipeActions(edge: .trailing, allowsFullSwipe: true) { removeToolButton(tool) }
+                    .contextMenu { if !softwareLocked { removeToolButton(tool) } }
             }
-            Button("Choose Languages…", systemImage: "plus") { addingLanguage = true }
-                .sheet(isPresented: $addingLanguage) {
-                    ToolchainCatalogView(base: base, selection: $selection)
-                }
+            NavigationLink {
+                ToolchainCatalogView(base: base, selection: $selection)
+            } label: {
+                Label("Choose Languages", systemImage: "plus")
+            }
         }
         .disabled(softwareLocked)
 
@@ -47,15 +45,17 @@ struct SoftwareSections: View {
             ForEach(selection.suggestedExtensions, id: \.self) { id in
                 extensionToggle(id, source: tools.first { $0.extensions.contains(id) && selection.toolchainIds.contains($0.id) }?.name)
             }
-            ForEach(selection.customExtensions, id: \.self) { id in
-                extensionToggle(id, source: nil)
+            // Added by hand, so removed by hand: a switch would make the row disappear.
+            ForEach(selection.additionalExtensions, id: \.self) { id in
+                ExtensionLabel(id: id, source: nil)
+                    .swipeActions(edge: .trailing, allowsFullSwipe: true) { removeExtensionButton(id) }
+                    .contextMenu { if !softwareLocked { removeExtensionButton(id) } }
             }
-            // The sheet belongs to the button alone: on a section it would apply to every row, and
-            // rows updating with loaded extension details dismissed it again.
-            Button("Browse Extensions…", systemImage: "magnifyingglass") { browsing = true }
-                .sheet(isPresented: $browsing) {
-                    ExtensionBrowserView(selection: $selection)
-                }
+            NavigationLink {
+                ExtensionBrowserView(selection: $selection)
+            } label: {
+                Label("Browse Extensions", systemImage: "magnifyingglass")
+            }
         } header: {
             Text("VS Code Extensions")
         } footer: {
@@ -65,9 +65,26 @@ struct SoftwareSections: View {
     }
 
     /// A chosen language: its version can be changed in place; swiping or the language list removes it.
+    /// The row content is the control's label, so VoiceOver names the language with its version.
     @ViewBuilder
     private func toolRow(_ tool: ToolchainProfile) -> some View {
         let family = families.first { $0.id == tool.family }
+        if let family, family.versions.count > 1 {
+            Picker(selection: Binding(get: { tool.id }, set: { selection.setTool($0, selected: true) })) {
+                ForEach(family.versions) { Text($0.version).tag($0.id) }
+            } label: {
+                toolLabel(tool)
+            }
+        } else {
+            LabeledContent {
+                Text(tool.version)
+            } label: {
+                toolLabel(tool)
+            }
+        }
+    }
+
+    private func toolLabel(_ tool: ToolchainProfile) -> some View {
         HStack(spacing: 12) {
             ToolchainIcon(family: tool.family, name: tool.familyName)
             VStack(alignment: .leading, spacing: 2) {
@@ -76,19 +93,22 @@ struct SoftwareSections: View {
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
-            Spacer()
-            if let family, family.versions.count > 1 {
-                Picker("Version", selection: Binding(get: { tool.id }, set: { selection.setTool($0, selected: true) })) {
-                    ForEach(family.versions) { Text($0.version).tag($0.id) }
-                }
-                .labelsHidden()
-                .fixedSize()
-            } else {
-                Text(tool.version).foregroundStyle(.secondary)
-            }
         }
     }
 
+    private func removeToolButton(_ tool: ToolchainProfile) -> some View {
+        Button("Remove", systemImage: "trash", role: .destructive) {
+            withAnimation { selection.setTool(tool.id, selected: false) }
+        }
+    }
+
+    private func removeExtensionButton(_ id: String) -> some View {
+        Button("Remove", systemImage: "trash", role: .destructive) {
+            withAnimation { selection.setExtension(id, selected: false) }
+        }
+    }
+
+    /// A suggested extension: it stays in the list when turned off, so it can be turned on again.
     private func extensionToggle(_ id: String, source: String?) -> some View {
         Toggle(isOn: Binding(get: { selection.extensions.contains(id) },
                              set: { selection.setExtension(id, selected: $0) })) {

@@ -5,7 +5,8 @@ import SwiftUI
 /// extension inside VS Code (`runfern://` links).
 struct EditorActions {
     let showOverview: () -> Void
-    let showPreview: () -> Void
+    /// `nil` where no preview can be opened (no running editor).
+    let showPreview: (() -> Void)?
 
     /// Handles a link opened by the Runfern VS Code extension. Returns `false` for unknown actions.
     @discardableResult
@@ -13,7 +14,9 @@ struct EditorActions {
         guard url.scheme == "runfern" else { return false }
         switch url.host() {
         case "overview": showOverview()
-        case "preview": showPreview()
+        case "preview":
+            guard let showPreview else { return false }
+            showPreview()
         default: return false
         }
         return true
@@ -27,15 +30,20 @@ extension FocusedValues {
 /// The "Project" menu in the iPadOS menu bar.
 struct EditorCommands: Commands {
     @FocusedValue(\.editorActions) private var actions
+    @FocusedValue(\.overviewActions) private var overview
 
     var body: some Commands {
         CommandMenu("Project") {
+            Button("Back to Editor", systemImage: "arrow.uturn.forward") { overview?.returnToEditor?() }
+                .keyboardShortcut(.return, modifiers: [.command, .shift])
+                .disabled(overview?.returnToEditor == nil)
             Button("Back to Overview", systemImage: "square.grid.2x2") { actions?.showOverview() }
-                .keyboardShortcut("o", modifiers: [.command, .shift])
+                // ⇧⌘O is VS Code's Go to Symbol; menu shortcuts win over the web view.
+                .keyboardShortcut("o", modifiers: [.command, .control])
                 .disabled(actions == nil)
-            Button("Development Server Preview", systemImage: "safari") { actions?.showPreview() }
+            Button("Open Preview…", systemImage: "safari") { actions?.showPreview?() }
                 .keyboardShortcut("p", modifiers: [.command, .option])
-                .disabled(actions == nil)
+                .disabled(actions?.showPreview == nil)
         }
     }
 }

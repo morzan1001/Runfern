@@ -20,7 +20,7 @@ struct DiagnosticsView: View {
                 } else {
                     Button("Create Support Report", systemImage: "doc.text.magnifyingglass", action: createReport)
                 }
-                if let errorMessage { Text(errorMessage).foregroundStyle(.red) }
+                if let errorMessage { StatusLabel(errorMessage, tint: .red) }
             } footer: {
                 Text("Contains no project names, file contents, or credentials. Nothing is sent automatically.")
             }
@@ -36,9 +36,9 @@ struct DiagnosticsView: View {
                         } icon: {
                             Image(systemName: icon(for: entry.level))
                                 .foregroundStyle(color(for: entry.level))
-                                .accessibilityLabel(entry.level.rawValue)
+                                .accessibilityLabel(entry.level.title)
                         }
-                        Text("\(entry.date.formatted(date: .abbreviated, time: .standard)) · \(entry.category.rawValue)")
+                        Text("\(entry.date.formatted(date: .abbreviated, time: .standard)) · \(entry.category.title)")
                             .font(.caption).foregroundStyle(.secondary)
                     }
                     .accessibilityElement(children: .combine)
@@ -47,14 +47,19 @@ struct DiagnosticsView: View {
         }
         .navigationTitle("Diagnostics")
         .toolbar {
-            Button("Clear", role: .destructive) { confirmingClear = true }
-                .disabled(entries.isEmpty)
-        }
-        .confirmationDialog("Clear Diagnostic Events?", isPresented: $confirmingClear, titleVisibility: .visible) {
-            Button("Clear Events", role: .destructive) {
-                DiagnosticsLog.shared.clear()
-                reportURL = nil
-                Task { await reload() }
+            ToolbarItem(placement: .primaryAction) {
+                Button("Clear", role: .destructive) { confirmingClear = true }
+                    .disabled(entries.isEmpty)
+                    // On the button, so on iPad the dialog points at it.
+                    .confirmationDialog("Clear Diagnostic Events?", isPresented: $confirmingClear, titleVisibility: .visible) {
+                        Button("Clear Events", role: .destructive) {
+                            DiagnosticsLog.shared.clear()
+                            reportURL = nil
+                            Task { await reload() }
+                        }
+                    } message: {
+                        Text("This can't be undone.")
+                    }
             }
         }
         .task { await reload() }

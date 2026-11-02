@@ -77,7 +77,7 @@ enum EndToEndTest {
             store.resetEnvironment(of: mounted)
             try check(store.environment(for: mounted)?.state == .provisioning, "reset marks the environment for setup")
             for project in [mounted, inApp] {
-                sync.removeData(for: project.workspaceBindingId)
+                sync.forgetStatus(for: project.workspaceBindingId)
                 store.remove(project)
                 await IDEWebViewCache.shared.removeData(for: project.id)
             }

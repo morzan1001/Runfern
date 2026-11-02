@@ -64,9 +64,8 @@ struct ProjectPreviewFixture {
 #Preview("Installed software") {
     let fixture = ProjectPreviewFixture()
     let project = fixture.project(.ready)
-    return fixture.environment(NavigationStack {
-        InstalledSoftwareView(project: project, environment: fixture.store.environment(for: project)!)
-    })
+    // The view brings its own NavigationStack: it is a sheet.
+    return fixture.environment(InstalledSoftwareView(project: project, environment: fixture.store.environment(for: project)!))
 }
 
 #Preview("Start failed") {

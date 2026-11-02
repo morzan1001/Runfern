@@ -1,14 +1,13 @@
 import SwiftUI
 
-/// The languages and tools a base offers, searchable, as a list with checkmarks: tapping a language
-/// adds or removes it, and the list stays open until Done. For a language with several versions,
-/// the version is chosen on the next page, where tapping the chosen one removes the language.
-/// Changes apply to the selection right away.
+/// The languages and tools a base offers, searchable, as a list with checkmarks, pushed onto the
+/// host's navigation stack. Tapping a language with one version adds or removes it. For a language
+/// with several versions, the version is chosen on the next page, in an inline picker that also
+/// offers None to remove the language. Changes apply to the selection right away.
 struct ToolchainCatalogView: View {
     let base: BaseImage?
     @Binding var selection: SoftwareSelection
 
-    @Environment(\.dismiss) private var dismiss
     @State private var query = ""
 
     private var families: [ToolchainFamily] {
@@ -20,39 +19,42 @@ struct ToolchainCatalogView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            List(families) { family in
-                if family.versions.count == 1, let only = family.versions.first {
-                    Button {
-                        toggle(only)
-                    } label: {
-                        row(family, detail: only.summary)
-                    }
-                    .foregroundStyle(.primary)
-                    .accessibilityAddTraits(selection.toolchainIds.contains(only.id) ? .isSelected : [])
-                } else {
-                    NavigationLink {
-                        versions(of: family)
-                    } label: {
-                        row(family, detail: family.versions.map(\.version).formatted(.list(type: .and, width: .narrow)))
-                    }
+        List(families) { family in
+            if family.versions.count == 1, let only = family.versions.first {
+                Button {
+                    toggle(only)
+                } label: {
+                    row(family, detail: "\(only.summary) · \(only.estimatedSizeBytes.formattedBytes)", announcesSelection: false)
                 }
-            }
-            .overlay {
-                if families.isEmpty { ContentUnavailableView.search(text: query) }
-            }
-            .searchable(text: $query, prompt: Text("Search Languages"))
-            .navigationTitle("Languages")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done", role: .confirm) { dismiss() }
+                .foregroundStyle(.primary)
+                .accessibilityAddTraits(selection.toolchainIds.contains(only.id) ? .isSelected : [])
+            } else {
+                NavigationLink {
+                    versions(of: family)
+                } label: {
+                    row(family, detail: family.versions.map(\.version).formatted(.list(type: .and, width: .narrow)),
+                        announcesSelection: true)
                 }
             }
         }
+        .overlay {
+            if families.isEmpty {
+                if query.isEmpty {
+                    ContentUnavailableView("No Languages Available", systemImage: "shippingbox",
+                                           description: Text("This Linux base offers no languages in the current catalog."))
+                } else {
+                    ContentUnavailableView.search(text: query)
+                }
+            }
+        }
+        .searchable(text: $query, prompt: Text("Search Languages"))
+        .navigationTitle("Languages")
+        .navigationBarTitleDisplayMode(.inline)
     }
 
-    private func row(_ family: ToolchainFamily, detail: String) -> some View {
+    /// `announcesSelection`: rows that are Buttons already carry the selected trait, so their
+    /// checkmark stays silent; navigation rows say "Added".
+    private func row(_ family: ToolchainFamily, detail: String, announcesSelection: Bool) -> some View {
         HStack(spacing: 12) {
             ToolchainIcon(family: family.id, name: family.name)
             VStack(alignment: .leading, spacing: 2) {
@@ -62,41 +64,47 @@ struct ToolchainCatalogView: View {
                     .foregroundStyle(.secondary)
             }
             Spacer()
+            if family.versions.count > 1, let id = selection.selectedTool(in: family),
+               let chosen = family.versions.first(where: { $0.id == id }) {
+                Text(chosen.version).foregroundStyle(.secondary)
+            }
             if selection.selectedTool(in: family) != nil {
                 Image(systemName: "checkmark")
                     .foregroundStyle(.tint)
                     .accessibilityLabel("Added")
+                    .accessibilityHidden(!announcesSelection)
             }
         }
     }
 
+    /// A single choice with None, like the pickers in Settings.
     private func versions(of family: ToolchainFamily) -> some View {
-        List {
+        Form {
             Section {
-                ForEach(family.versions) { version in
-                    Button {
-                        toggle(version)
-                    } label: {
-                        HStack {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(version.version)
-                                Text("\(version.summary) · \(version.estimatedSizeBytes.formattedBytes)")
-                                    .font(.footnote)
-                                    .foregroundStyle(.secondary)
-                            }
-                            Spacer()
-                            if selection.toolchainIds.contains(version.id) {
-                                Image(systemName: "checkmark")
-                                    .foregroundStyle(.tint)
-                                    .accessibilityHidden(true)
-                            }
+                Picker("Version", selection: Binding<String?>(
+                    get: { selection.selectedTool(in: family) },
+                    set: { id in
+                        if let id {
+                            selection.setTool(id, selected: true)
+                        } else if let current = selection.selectedTool(in: family) {
+                            selection.setTool(current, selected: false)
                         }
+                    })) {
+                    Text("None").tag(String?.none)
+                    ForEach(family.versions) { version in
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(version.version)
+                            Text("\(version.summary) · \(version.estimatedSizeBytes.formattedBytes)")
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                        }
+                        .tag(String?.some(version.id))
                     }
-                    .foregroundStyle(.primary)
-                    .accessibilityAddTraits(selection.toolchainIds.contains(version.id) ? .isSelected : [])
                 }
+                .pickerStyle(.inline)
+                .labelsHidden()
             } footer: {
-                Text("One version of a language can be installed at a time. Tap the chosen version again to remove the language.")
+                Text("Only one version of a language can be installed at a time.")
             }
         }
         .navigationTitle(family.name)
@@ -115,6 +123,9 @@ struct ToolchainIcon: View {
     let family: String
     let name: String
 
+    /// Grows with the text beside it, so the initials don't clip at large sizes.
+    @ScaledMetric(relativeTo: .body) private var size: CGFloat = 32
+
     private static let bundled: Set = ["python", "nodejs", "java", "go", "rust", "dotnet", "bun", "deno", "zig", "swift"]
 
     private var fallback: (Color, String) {
@@ -131,17 +142,19 @@ struct ToolchainIcon: View {
                     .scaledToFit()
                     .padding(2)
             } else {
-                RoundedRectangle(cornerRadius: 8)
+                RoundedRectangle(cornerRadius: size / 4)
                     .fill(fallback.0.gradient)
                     .overlay { Text(fallback.1).font(.footnote.weight(.semibold)).foregroundStyle(.white) }
             }
         }
-        .frame(width: 32, height: 32)
+        .frame(width: size, height: size)
         .accessibilityHidden(true)
     }
 }
 
 #Preview {
     @Previewable @State var selection = SoftwareSelection(toolchainIds: ["python-3"])
-    ToolchainCatalogView(base: Catalog.baseImages.first, selection: $selection)
+    NavigationStack {
+        ToolchainCatalogView(base: Catalog.baseImages.first, selection: $selection)
+    }
 }

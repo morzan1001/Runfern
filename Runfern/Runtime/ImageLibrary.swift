@@ -88,25 +88,6 @@ final class ImageLibrary {
         }
     }
 
-    /// Removes bases no environment references anymore (PRJ06, DAT07). Returns the space freed.
-    @discardableResult
-    func removeUnreferenced(keeping referenced: Set<String>) -> Int64 {
-        let fm = FileManager.default
-        guard let files = try? fm.contentsOfDirectory(at: AppPaths.images, includingPropertiesForKeys: nil) else { return 0 }
-        var freed: Int64 = 0
-        for bundle in files where !referenced.contains(bundle.lastPathComponent) {
-            freed += DiskUsage.allocatedSize(of: bundle)
-            try? ImageBundle.remove(bundle)
-        }
-        if let partials = try? fm.contentsOfDirectory(at: AppPaths.downloads, includingPropertiesForKeys: nil) {
-            for file in partials where !referenced.contains(file.deletingPathExtension().lastPathComponent) {
-                freed += DiskUsage.allocatedSize(of: file)
-                try? fm.removeItem(at: file)
-            }
-        }
-        return freed
-    }
-
     // MARK: Download
 
     private func download(_ image: BaseImage, from url: URL) async throws -> URL {
@@ -155,6 +136,8 @@ final class ImageLibrary {
 private nonisolated final class DownloadDelegate: NSObject, URLSessionDownloadDelegate, @unchecked Sendable {
     private let onProgress: @Sendable (Double) -> Void
     private var continuation: CheckedContinuation<URL, Error>?
+    /// The last whole percent reported, so progress is forwarded at most once per step.
+    private var lastPercent = -1   // guarded by `lock`
     private let lock = NSLock()
 
     init(onProgress: @escaping @Sendable (Double) -> Void) {
@@ -183,7 +166,15 @@ private nonisolated final class DownloadDelegate: NSObject, URLSessionDownloadDe
     func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didWriteData bytesWritten: Int64,
                     totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64) {
         guard totalBytesExpectedToWrite > 0 else { return }
-        onProgress(Double(totalBytesWritten) / Double(totalBytesExpectedToWrite))
+        let fraction = Double(totalBytesWritten) / Double(totalBytesExpectedToWrite)
+        // The UI shows whole percent, so finer steps would only flood the main actor with updates.
+        let percent = Int(fraction * 100)
+        let isNewStep = lock.withLock { () -> Bool in
+            guard percent != self.lastPercent else { return false }
+            self.lastPercent = percent
+            return true
+        }
+        if isNewStep { onProgress(fraction) }
     }
 
     func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {

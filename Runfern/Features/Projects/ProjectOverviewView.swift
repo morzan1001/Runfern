@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 /// Entry point of the app: the project overview (PRJ01, PRJ02, PRJ05, RUN04).
 struct ProjectOverviewView: View {
@@ -24,10 +25,13 @@ struct ProjectOverviewView: View {
     @AppStorage("projectSortOrder") private var sortOrder = SortOrder.lastUsed
 
     @State private var showingNewProject = false
+    /// Import starts with the document picker; the sheet opens only once there is a package to check.
     @State private var showingImport = false
+    @State private var importArchive: ImportArchive?
     @State private var showingSettings = false
-    @State private var showingArchive = false
-    @State private var selection: UUID?
+    // Per window, so each window comes back to its own project and list after iPadOS ends the app.
+    @SceneStorage("showingArchive") private var showingArchive = false
+    @SceneStorage("selectedProject") private var selectedProjectID: String?
     @State private var ideProjectID: UUID?
     @State private var projectToRemove: Project?
     @State private var projectToDuplicate: Project?
@@ -35,6 +39,28 @@ struct ProjectOverviewView: View {
     @Environment(\.supportsMultipleWindows) private var supportsMultipleWindows
     @State private var searchText = ""
     @State private var wantsNewProjectAfterOnboarding = false
+
+    /// A package picked for import; presenting it opens the import sheet.
+    private struct ImportArchive: Identifiable {
+        let id = UUID()
+        let url: URL
+    }
+
+    private var selection: UUID? {
+        get { selectedProjectID.flatMap(UUID.init(uuidString:)) }
+        nonmutating set { selectedProjectID = newValue?.uuidString }
+    }
+
+    /// The selected project left the visible list (archived, restored, or Show Archive toggled).
+    private var selectionIsHidden: Bool {
+        selection.flatMap { store.project(id: $0) }.map { $0.isArchived != showingArchive } ?? false
+    }
+
+    /// Selects a project that a sheet just created, switching to the list it belongs to.
+    private func show(_ project: Project) {
+        if project.isArchived != showingArchive { showingArchive = project.isArchived }
+        selection = project.id
+    }
 
     private var visibleProjects: [Project] {
         let source = showingArchive ? store.archivedProjects : store.activeProjects
@@ -47,7 +73,7 @@ struct ProjectOverviewView: View {
 
     var body: some View {
         NavigationSplitView {
-            List(selection: $selection) {
+            List(selection: Binding<UUID?>(get: { selection }, set: { selection = $0 })) {
                 if let activeID = runtime.activeProjectID, let active = store.project(id: activeID) {
                     Section("Active Session") {
                         Button {
@@ -55,7 +81,6 @@ struct ProjectOverviewView: View {
                         } label: {
                             Label("Back to “\(active.name)”", systemImage: "arrow.uturn.forward.circle.fill")
                         }
-                        .keyboardShortcut(.return, modifiers: [.command, .shift])
                     }
                 }
                 Section(showingArchive ? String(localized: "Archive") : String(localized: "Projects")) {
@@ -67,10 +92,8 @@ struct ProjectOverviewView: View {
                                 // while removal only starts after the confirmation sheet.
                                 Button("Remove", systemImage: "trash") { projectToRemove = project }
                                     .tint(.red)
-                                Button(project.isArchived ? String(localized: "Restore") : String(localized: "action.archive", defaultValue: "Archive")) {
-                                    store.setArchived(!project.isArchived, for: project)
-                                }
-                                .tint(.indigo)
+                                ArchiveButton(project: project)
+                                    .tint(.indigo)
                             }
                             .contextMenu {
                                 if supportsMultipleWindows {
@@ -79,9 +102,8 @@ struct ProjectOverviewView: View {
                                     }
                                 }
                                 Button("Duplicate…", systemImage: "plus.square.on.square") { projectToDuplicate = project }
-                                Button(project.isArchived ? String(localized: "Restore") : String(localized: "action.archive", defaultValue: "Archive"), systemImage: "archivebox") {
-                                    store.setArchived(!project.isArchived, for: project)
-                                }
+                                Divider()
+                                ArchiveButton(project: project)
                                 Button("Remove…", systemImage: "trash", role: .destructive) { projectToRemove = project }
                             }
                     }
@@ -101,7 +123,7 @@ struct ProjectOverviewView: View {
                         } description: {
                             Text("Create a project or import one.")
                         } actions: {
-                            Button("New Project") { showingNewProject = true }.buttonStyle(.glassProminent)
+                            Button("New Project") { showingNewProject = true }.buttonStyle(.borderedProminent)
                             Button("Import Project…") { showingImport = true }
                         }
                     }
@@ -118,19 +140,15 @@ struct ProjectOverviewView: View {
                     } primaryAction: {
                         showingNewProject = true
                     }
-                    .keyboardShortcut("n", modifiers: .command)
                 }
-                ToolbarItem(placement: .secondaryAction) {
-                    Menu("View Options", systemImage: "line.3.horizontal.decrease.circle") {
-                        Picker("Sort By", selection: $sortOrder) {
-                            ForEach(SortOrder.allCases, id: \.self) { Text($0.title).tag($0) }
-                        }
-                        Toggle("Show Archive", systemImage: "archivebox", isOn: $showingArchive)
+                // Straight in the "…" menu, like Files and Notes; the picker's submenu shows the current order.
+                ToolbarItemGroup(placement: .secondaryAction) {
+                    Picker("Sort By", systemImage: "arrow.up.arrow.down", selection: $sortOrder) {
+                        ForEach(SortOrder.allCases, id: \.self) { Text($0.title).tag($0) }
                     }
-                }
-                ToolbarItem(placement: .secondaryAction) {
+                    .pickerStyle(.menu)
+                    Toggle("Show Archive", systemImage: "archivebox", isOn: $showingArchive)
                     Button("Settings", systemImage: "gearshape") { showingSettings = true }
-                        .keyboardShortcut(",", modifiers: .command)
                 }
             }
             .safeAreaInset(edge: .bottom) { statusBanners }
@@ -148,11 +166,21 @@ struct ProjectOverviewView: View {
                                        description: Text("Select a project in the sidebar."))
             }
         }
-        .sheet(isPresented: $showingImport) {
-            ImportProjectView { selection = $0.id }
+        // The detail always matches the sidebar: a project that leaves the visible list is deselected,
+        // as in Mail when a message is archived.
+        .onChange(of: selectionIsHidden) { _, hidden in
+            if hidden { selection = nil }
+        }
+        // The menu bar reaches the overview from anywhere in the window, also with the sidebar hidden.
+        .focusedSceneValue(\.overviewActions, menuActions)
+        .fileImporter(isPresented: $showingImport, allowedContentTypes: [.zip]) { result in
+            if case .success(let url) = result { importArchive = ImportArchive(url: url) }
+        }
+        .sheet(item: $importArchive) { archive in
+            ImportProjectView(archive: archive.url) { show($0) }
         }
         .sheet(isPresented: $showingNewProject) {
-            NewProjectView { selection = $0.id }
+            NewProjectView { show($0) }
         }
         .sheet(isPresented: $showingSettings) {
             // Settings has several levels of navigation; a page-sized sheet keeps them readable.
@@ -164,23 +192,46 @@ struct ProjectOverviewView: View {
             OnboardingView { createOwnProject in
                 wantsNewProjectAfterOnboarding = createOwnProject
                 didCompleteOnboarding = true
-            } createdSample: { selection = $0.id }
+            } createdSample: { show($0) }
             .interactiveDismissDisabled()
         }
         .fullScreenCover(item: $ideProjectID) { id in
             if let project = store.project(id: id) {
                 IDEView(project: project) { ideProjectID = nil }
+            } else {
+                // Removed elsewhere (for example in another window): never leave an empty cover.
+                Color.clear.onAppear { ideProjectID = nil }
             }
         }
         .sheet(item: $projectToDuplicate) { project in
-            DuplicateProjectView(project: project) { selection = $0.id }
+            DuplicateProjectView(project: project) { show($0) }
         }
         .sheet(item: $projectToRemove) { project in
             RemoveProjectView(project: project) {
                 if selection == project.id { selection = nil }
             }
         }
-        .task { store.refreshAccess() }
+        .task { await store.refreshAccess() }
+    }
+
+    /// While a sheet or the editor covers the overview, the menu commands are disabled, so they don't
+    /// present a second modal and their keys reach VS Code.
+    private var isPresentingModal: Bool {
+        ideProjectID != nil || showingNewProject || showingImport || importArchive != nil || showingSettings
+            || projectToRemove != nil || projectToDuplicate != nil || !didCompleteOnboarding
+    }
+
+    /// What the menu bar's File, Runfern and Project menus can do in this window.
+    private var menuActions: OverviewActions? {
+        guard !isPresentingModal else { return nil }
+        var returnToEditor: (() -> Void)?
+        if let activeID = runtime.activeProjectID, store.project(id: activeID) != nil {
+            returnToEditor = { ideProjectID = activeID }
+        }
+        return OverviewActions(newProject: { showingNewProject = true },
+                               importProject: { showingImport = true },
+                               showSettings: { showingSettings = true },
+                               returnToEditor: returnToEditor)
     }
 
     @ViewBuilder

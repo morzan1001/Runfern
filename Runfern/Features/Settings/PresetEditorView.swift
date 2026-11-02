@@ -8,13 +8,26 @@ struct PresetEditorView: View {
     @State private var preset: EnvironmentPreset
     @State private var settingsText: String
     @State private var settingsError: String?
+    /// Set when Save adds a new preset, so the title doesn't switch to "Edit Preset" while the sheet closes.
+    @State private var savedAsNew = false
+    private let original: EnvironmentPreset
 
     init(preset: EnvironmentPreset) {
+        original = preset
         _preset = State(initialValue: preset)
         _settingsText = State(initialValue: preset.editorSettings ?? "")
     }
 
     private var base: BaseImage? { Catalog.baseImage(id: preset.baseImageId) }
+
+    /// Edits that Cancel or a swipe down would throw away (A2). A blank new preset closes without asking.
+    private var hasChanges: Bool {
+        preset != original || settingsText != (original.editorSettings ?? "")
+    }
+
+    private var isNew: Bool {
+        savedAsNew || !store.presets.contains { $0.id == preset.id }
+    }
 
     var body: some View {
         NavigationStack {
@@ -28,7 +41,10 @@ struct PresetEditorView: View {
                     SoftwareLink(base: base, selection: $preset.software)
                     Picker("Resources", selection: $preset.resources) {
                         ForEach(ResourceProfile.allCases, id: \.self) { profile in
-                            Text("\(profile.title) – \(profile.memoryMB / 1024) GB, \(profile.cpuCount) CPUs").tag(profile)
+                            // Same as the project screen: only profiles this iPad can run (ProjectDetailView).
+                            Text("\(profile.title) – \(profile.memoryMB / 1024) GB, \(profile.cpuCount) CPUs")
+                                .tag(profile)
+                                .selectionDisabled(!profile.isSupported())
                         }
                     }
                 }
@@ -39,10 +55,10 @@ struct PresetEditorView: View {
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                         .frame(minHeight: 160)
+                        .accessibilityLabel("VS Code Settings")
                     if let settingsError {
-                        Label(settingsError, systemImage: "exclamationmark.triangle.fill")
+                        StatusLabel(settingsError, tint: .red)
                             .font(.footnote)
-                            .foregroundStyle(.red)
                     }
                 } header: {
                     Text("VS Code Settings")
@@ -50,14 +66,16 @@ struct PresetEditorView: View {
                     Text("Contents of settings.json, for example {\"editor.fontSize\": 16}.")
                 }
             }
-            .navigationTitle(preset.name.isEmpty ? String(localized: "New Preset") : preset.name)
+            .navigationTitle(isNew ? Text("New Preset") : Text("Edit Preset"))
             .navigationBarTitleDisplayMode(.inline)
+            .interactiveDismissDisabled(hasChanges)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel", role: .cancel) { dismiss() }
+                    CancelButton(hasChanges: hasChanges)
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save", role: .confirm, action: save)
+                        .keyboardShortcut(.return, modifiers: .command)
                         .disabled(preset.name.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
             }
@@ -75,6 +93,7 @@ struct PresetEditorView: View {
             let trimmed = settingsText.trimmingCharacters(in: .whitespacesAndNewlines)
             preset.editorSettings = trimmed.isEmpty ? nil : trimmed
             preset.name = preset.name.trimmingCharacters(in: .whitespaces)
+            savedAsNew = isNew
             store.savePreset(preset)
             dismiss()
         } catch {

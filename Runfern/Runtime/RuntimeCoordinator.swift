@@ -24,6 +24,10 @@ final class RuntimeCoordinator {
     /// Start of the current start, switch, or stop; shown as elapsed time.
     private(set) var busySince: Date?
     private(set) var lastError: String?
+    /// True while `reconnect()` runs, so the editor shows progress and no second attempt starts.
+    private(set) var isReconnecting = false
+    /// The IDE view that shows the editor; its single web view can be in one window only (UX05).
+    var editorOwner: UUID?
 
     var activeProjectID: UUID? { session?.projectID }
     var endpoint: IDEEndpoint? { session?.endpoint }
@@ -136,7 +140,10 @@ final class RuntimeCoordinator {
 
     /// Bounded reconnect after the editor connection was lost. Never creates a second VM (RUN05).
     func reconnect() async {
-        guard let environmentID = session?.environmentID, session?.endpoint != nil, !isBusy else { return }
+        guard !isReconnecting, let environmentID = session?.environmentID, session?.endpoint != nil, !isBusy else { return }
+        isReconnecting = true
+        defer { isReconnecting = false }
+        lastError = nil
         for attempt in 0..<3 {
             if await adapter.isResponsive(environmentID: environmentID) {
                 session?.isConnected = true

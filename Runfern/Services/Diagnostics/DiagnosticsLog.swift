@@ -78,6 +78,31 @@ nonisolated final class DiagnosticsLog: Sendable {
     private var rotatedURL: URL { fileURL.deletingPathExtension().appendingPathExtension("1.jsonl") }
 }
 
+nonisolated extension DiagnosticEntry.Level {
+    /// The level as the diagnostics page names it; `rawValue` stays in the support report.
+    var title: String {
+        switch self {
+        case .info: String(localized: "diagnostics.level.info", defaultValue: "Information")
+        case .warning: String(localized: "diagnostics.level.warning", defaultValue: "Warning")
+        case .error: String(localized: "diagnostics.level.error", defaultValue: "Error")
+        }
+    }
+}
+
+nonisolated extension DiagnosticEntry.Category {
+    /// The category as the diagnostics page names it; `rawValue` stays in the support report.
+    var title: String {
+        switch self {
+        case .runtime: String(localized: "diagnostics.category.runtime", defaultValue: "Linux")
+        case .provisioning: String(localized: "diagnostics.category.provisioning", defaultValue: "Setup")
+        case .sync: String(localized: "diagnostics.category.sync", defaultValue: "Sync")
+        case .catalog: String(localized: "diagnostics.category.catalog", defaultValue: "Catalog")
+        case .storage: String(localized: "diagnostics.category.storage", defaultValue: "Storage")
+        case .app: String(localized: "diagnostics.category.app", defaultValue: "App")
+        }
+    }
+}
+
 private nonisolated extension DiagnosticEntry {
     /// Dates are stored as ISO 8601 strings so the journal stays human-readable.
     var encodedForStorage: StoredEntry {

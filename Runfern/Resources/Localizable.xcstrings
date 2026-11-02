@@ -726,6 +726,16 @@
         }
       }
     },
+    "Back to Editor" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zurück zum Editor"
+          }
+        }
+      }
+    },
     "Back to “%@”" : {
       "localizations" : {
         "de" : {
@@ -766,16 +776,6 @@
         }
       }
     },
-    "Base Images" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Basisabbilder"
-          }
-        }
-      }
-    },
     "Below the supported device class (iPad with M-series chip)" : {
       "localizations" : {
         "de" : {
@@ -796,12 +796,12 @@
         }
       }
     },
-    "Browse Extensions…" : {
+    "Browse Extensions" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Erweiterungen durchsuchen …"
+            "value" : "Erweiterungen durchsuchen"
           }
         }
       }
@@ -896,12 +896,12 @@
         }
       }
     },
-    "Change Port" : {
+    "Catalog" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Port ändern"
+            "state" : "translated",
+            "value" : "Katalog"
           }
         }
       }
@@ -956,6 +956,26 @@
         }
       }
     },
+    "Checking for updates needs an internet connection." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Für die Suche nach Aktualisierungen brauchst du eine Internetverbindung."
+          }
+        }
+      }
+    },
+    "Checking Package…" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paket wird geprüft …"
+          }
+        }
+      }
+    },
     "Checking the connection" : {
       "localizations" : {
         "de" : {
@@ -1006,12 +1026,22 @@
         }
       }
     },
+    "Choose an empty folder to import the project into." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wähle einen leeren Ordner, in den das Projekt importiert wird."
+          }
+        }
+      }
+    },
     "Choose Another Folder…" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Anderen Ordner wählen …"
+            "state" : "translated",
+            "value" : "Anderen Ordner auswählen …"
           }
         }
       }
@@ -1026,12 +1056,12 @@
         }
       }
     },
-    "Choose Languages…" : {
+    "Choose Languages" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sprachen auswählen …"
+            "value" : "Sprachen auswählen"
           }
         }
       }
@@ -1076,12 +1106,12 @@
         }
       }
     },
-    "Close" : {
+    "Close Window" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Schließen"
+            "state" : "translated",
+            "value" : "Fenster schließen"
           }
         }
       }
@@ -1186,12 +1216,132 @@
         }
       }
     },
+    "Couldn't Create File" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Datei konnte nicht erstellt werden"
+          }
+        }
+      }
+    },
+    "Couldn't Create Project" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Projekt konnte nicht erstellt werden"
+          }
+        }
+      }
+    },
+    "Couldn't Delete File" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Datei konnte nicht gelöscht werden"
+          }
+        }
+      }
+    },
+    "Couldn't Duplicate Project" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Projekt konnte nicht dupliziert werden"
+          }
+        }
+      }
+    },
+    "Couldn't Export Project" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Projekt konnte nicht exportiert werden"
+          }
+        }
+      }
+    },
+    "Couldn't Import Files" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dateien konnten nicht importiert werden"
+          }
+        }
+      }
+    },
+    "Couldn't Import Project" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Projekt konnte nicht importiert werden"
+          }
+        }
+      }
+    },
+    "Couldn't Open Package" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paket konnte nicht geöffnet werden"
+          }
+        }
+      }
+    },
+    "Couldn't Remove Credential" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zugangsdaten konnten nicht entfernt werden"
+          }
+        }
+      }
+    },
+    "Couldn't Remove Project" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Projekt konnte nicht entfernt werden"
+          }
+        }
+      }
+    },
+    "Couldn't Save Credential" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zugangsdaten konnten nicht gesichert werden"
+          }
+        }
+      }
+    },
     "Create" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Erstellen"
+          }
+        }
+      }
+    },
+    "Create a file or drop files here." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erstelle eine Datei oder lege Dateien hier ab."
           }
         }
       }
@@ -1212,16 +1362,6 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Archiv erstellen"
-          }
-        }
-      }
-    },
-    "Create Preset" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vorlage erstellen"
           }
         }
       }
@@ -1306,12 +1446,12 @@
         }
       }
     },
-    "Delete “%@”" : {
+    "Delete Data Anyway" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "„%@“ löschen"
+            "state" : "translated",
+            "value" : "Daten trotzdem löschen"
           }
         }
       }
@@ -1322,16 +1462,6 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Datei löschen?"
-          }
-        }
-      }
-    },
-    "Delete this data anyway" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Diese Daten trotzdem löschen"
           }
         }
       }
@@ -1356,16 +1486,6 @@
         }
       }
     },
-    "Description" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Beschreibung"
-          }
-        }
-      }
-    },
     "Description (Optional)" : {
       "localizations" : {
         "de" : {
@@ -1386,22 +1506,102 @@
         }
       }
     },
-    "Development Server Preview" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vorschau des Entwicklungsservers"
-          }
-        }
-      }
-    },
     "Diagnostics" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Diagnose"
+          }
+        }
+      }
+    },
+    "diagnostics.category.app" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App"
+          }
+        }
+      }
+    },
+    "diagnostics.category.catalog" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Katalog"
+          }
+        }
+      }
+    },
+    "diagnostics.category.provisioning" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einrichtung"
+          }
+        }
+      }
+    },
+    "diagnostics.category.runtime" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Linux"
+          }
+        }
+      }
+    },
+    "diagnostics.category.storage" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speicher"
+          }
+        }
+      }
+    },
+    "diagnostics.category.sync" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abgleich"
+          }
+        }
+      }
+    },
+    "diagnostics.level.error" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fehler"
+          }
+        }
+      }
+    },
+    "diagnostics.level.info" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Info"
+          }
+        }
+      }
+    },
+    "diagnostics.level.warning" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warnung"
           }
         }
       }
@@ -1416,12 +1616,22 @@
         }
       }
     },
-    "Discard Setup" : {
+    "Discard Changes" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Einrichtung verwerfen"
+            "state" : "translated",
+            "value" : "Änderungen verwerfen"
+          }
+        }
+      }
+    },
+    "Discard Changes?" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Änderungen verwerfen?"
           }
         }
       }
@@ -1516,6 +1726,26 @@
         }
       }
     },
+    "Downloading needs an internet connection." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zum Laden ist eine Internetverbindung nötig."
+          }
+        }
+      }
+    },
+    "Downloads about %@." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Download von etwa %@."
+          }
+        }
+      }
+    },
     "dropped" : {
       "localizations" : {
         "de" : {
@@ -1572,6 +1802,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bearbeiten"
+          }
+        }
+      }
+    },
+    "Edit Preset" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorlage bearbeiten"
           }
         }
       }
@@ -1832,6 +2072,16 @@
         }
       }
     },
+    "failed" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "fehlgeschlagen"
+          }
+        }
+      }
+    },
     "File Changed Elsewhere" : {
       "localizations" : {
         "de" : {
@@ -1858,16 +2108,6 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Dateien"
-          }
-        }
-      }
-    },
-    "Files Version" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Version aus „Dateien“"
           }
         }
       }
@@ -2022,6 +2262,16 @@
         }
       }
     },
+    "Host" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Host"
+          }
+        }
+      }
+    },
     "Host, e.g. github.com" : {
       "localizations" : {
         "de" : {
@@ -2038,16 +2288,6 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "So funktioniert Runfern"
-          }
-        }
-      }
-    },
-    "Image" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Abbild"
           }
         }
       }
@@ -2098,6 +2338,16 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Projekt importieren …"
+          }
+        }
+      }
+    },
+    "in progress" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "läuft"
           }
         }
       }
@@ -2323,6 +2573,36 @@
         }
       }
     },
+    "Keep Editing" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weiter bearbeiten"
+          }
+        }
+      }
+    },
+    "Keep Files Version" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version aus „Dateien“ behalten"
+          }
+        }
+      }
+    },
+    "Keep Runfern Version" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version aus Runfern behalten"
+          }
+        }
+      }
+    },
     "Languages" : {
       "localizations" : {
         "de" : {
@@ -2378,7 +2658,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Links"
+            "value" : "Nach links"
           }
         }
       }
@@ -2449,6 +2729,16 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Linux-Basen"
+          }
+        }
+      }
+    },
+    "Linux bases that no project uses are removed too. They must be downloaded again before an offline setup." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Linux-Basen, die kein Projekt verwendet, werden ebenfalls entfernt. Vor einer Einrichtung ohne Internet musst du sie erneut laden."
           }
         }
       }
@@ -2575,6 +2865,16 @@
         }
       }
     },
+    "More spacing, wider scroll bars, word wrap, and a key bar above the on-screen keyboard." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mehr Abstand, breitere Scrollleisten, Zeilenumbruch und eine Tastenleiste über der Bildschirmtastatur."
+          }
+        }
+      }
+    },
     "Name" : {
       "localizations" : {
         "de" : {
@@ -2601,6 +2901,16 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Neue Datei"
+          }
+        }
+      }
+    },
+    "New File…" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neue Datei …"
           }
         }
       }
@@ -2691,6 +3001,26 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Keine Datei geöffnet"
+          }
+        }
+      }
+    },
+    "No Files" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Dateien"
+          }
+        }
+      }
+    },
+    "No Languages Available" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Sprachen verfügbar"
           }
         }
       }
@@ -2791,16 +3121,6 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Nicht geladen"
-          }
-        }
-      }
-    },
-    "Not enough free storage." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Nicht genügend freier Speicher."
           }
         }
       }
@@ -2921,12 +3241,12 @@
         }
       }
     },
-    "On a computer the iPad trusts, create it with Tools/JIT/create-pairing-file.sh from Runfern's source, idevice_pair, or iloader, and import it under Settings › Performance › Built-In JIT. Create a new pairing file after changing or removing the iPad's passcode." : {
+    "On a computer the iPad trusts, create it with Tools/JIT/create-pairing-file.sh from Runfern's source, idevice_pair, or iloader, and import it under Runfern Settings › Performance › Built-In JIT. Create a new pairing file after changing or removing the iPad's passcode." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Auf einem Computer, dem das iPad vertraut, erstellst du sie mit Tools/JIT/create-pairing-file.sh aus dem Quellcode von Runfern, idevice_pair oder iloader und importierst sie unter Einstellungen › Leistung › Eingebauter JIT. Erstelle nach dem Ändern oder Entfernen des iPad-Codes eine neue Pairing-Datei."
+            "value" : "Auf einem Computer, dem das iPad vertraut, erstellst du sie mit Tools/JIT/create-pairing-file.sh aus dem Quellcode von Runfern, idevice_pair oder iloader und importierst sie unter Runfern-Einstellungen › Leistung › Eingebauter JIT. Erstelle nach dem Ändern oder Entfernen des iPad-Codes eine neue Pairing-Datei."
           }
         }
       }
@@ -2961,22 +3281,22 @@
         }
       }
     },
-    "One version of a language can be installed at a time. Tap the chosen version again to remove the language." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Von einer Sprache lässt sich jeweils eine Version installieren. Tippe erneut auf die gewählte Version, um die Sprache zu entfernen."
-          }
-        }
-      }
-    },
     "Only in Runfern" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Nur in Runfern"
+          }
+        }
+      }
+    },
+    "Only one version of a language can be installed at a time." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Von einer Sprache lässt sich jeweils nur eine Version installieren."
           }
         }
       }
@@ -3007,6 +3327,16 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Vorschau öffnen"
+          }
+        }
+      }
+    },
+    "Open Preview…" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorschau öffnen …"
           }
         }
       }
@@ -3461,6 +3791,16 @@
         }
       }
     },
+    "Reload" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neu laden"
+          }
+        }
+      }
+    },
     "Remove" : {
       "localizations" : {
         "de" : {
@@ -3471,12 +3811,52 @@
         }
       }
     },
+    "Remove Credential?" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zugangsdaten entfernen?"
+          }
+        }
+      }
+    },
+    "Remove Data" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daten entfernen"
+          }
+        }
+      }
+    },
     "Remove Pairing File?" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pairing-Datei entfernen?"
+          }
+        }
+      }
+    },
+    "Remove Project…" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Projekt entfernen …"
+          }
+        }
+      }
+    },
+    "Remove Unneeded Data?" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht benötigte Daten entfernen?"
           }
         }
       }
@@ -3537,6 +3917,16 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Token ersetzen"
+          }
+        }
+      }
+    },
+    "Replace Token…" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Token ersetzen …"
           }
         }
       }
@@ -3646,7 +4036,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Rechts"
+            "value" : "Nach rechts"
           }
         }
       }
@@ -3677,6 +4067,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Runfern und sein JIT-Helfer teilen in dieser Installation keine App-Gruppe."
+          }
+        }
+      }
+    },
+    "Runfern can no longer clone from or push to %@ with it." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Runfern kann damit nicht mehr von %@ klonen oder dorthin pushen."
           }
         }
       }
@@ -3771,22 +4171,22 @@
         }
       }
     },
+    "Runfern Settings › Performance › Set Up JIT does everything else: Runfern adds its VPN, appears in the Settings app under Privacy & Security › Developer Mode, where you confirm the pairing with the code Runfern shows, and checks that JIT works." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Runfern-Einstellungen › Leistung › JIT einrichten erledigt den Rest: Runfern richtet sein VPN ein, erscheint in der App „Einstellungen“ unter Datenschutz & Sicherheit › Entwicklermodus, wo du das Koppeln mit dem angezeigten Code bestätigst, und prüft, ob JIT funktioniert."
+          }
+        }
+      }
+    },
     "Runfern Total" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Runfern gesamt"
-          }
-        }
-      }
-    },
-    "Runfern Version" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Version aus Runfern"
           }
         }
       }
@@ -3806,7 +4206,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Speichern"
+            "value" : "Sichern"
           }
         }
       }
@@ -4051,12 +4451,12 @@
         }
       }
     },
-    "Settings › Performance › Set Up JIT does everything else: Runfern adds its VPN, appears under Settings › Privacy & Security › Developer Mode, where you confirm the pairing with the code Runfern shows, and checks that JIT works." : {
+    "Settings…" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Einstellungen › Leistung › JIT einrichten erledigt den Rest: Runfern richtet sein VPN ein, erscheint unter Einstellungen › Datenschutz & Sicherheit › Entwicklermodus, wo du das Koppeln mit dem angezeigten Code bestätigst, und prüft, ob JIT funktioniert."
+            "value" : "Einstellungen …"
           }
         }
       }
@@ -4151,12 +4551,32 @@
         }
       }
     },
+    "Show Here" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hier anzeigen"
+          }
+        }
+      }
+    },
     "Show Introduction Again" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Einführung erneut anzeigen"
+          }
+        }
+      }
+    },
+    "Shown in Another Window" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In einem anderen Fenster geöffnet"
           }
         }
       }
@@ -4197,6 +4617,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Software und Ressourcen lassen sich ändern, solange die Umgebung gestoppt ist."
+          }
+        }
+      }
+    },
+    "Software can be changed once the setup has finished." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Software lässt sich ändern, sobald die Einrichtung abgeschlossen ist."
           }
         }
       }
@@ -4257,6 +4687,16 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Einrichtung starten"
+          }
+        }
+      }
+    },
+    "Start this project's environment from the overview to keep working in the editor." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starte die Umgebung dieses Projekts in der Übersicht, um im Editor weiterzuarbeiten."
           }
         }
       }
@@ -4767,16 +5207,6 @@
         }
       }
     },
-    "The deletion is also applied to the project folder with the next sync." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Die Löschung wird beim nächsten Abgleich auch im Projektordner ausgeführt."
-          }
-        }
-      }
-    },
     "The Developer Disk Image could not be downloaded. Runfern downloads it once, and again after a reset, which needs the internet." : {
       "localizations" : {
         "de" : {
@@ -5165,6 +5595,16 @@
         }
       }
     },
+    "The path must stay inside the project." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Pfad muss innerhalb des Projekts liegen."
+          }
+        }
+      }
+    },
     "The project folder could not be fully synced. See the storage location for details." : {
       "localizations" : {
         "de" : {
@@ -5241,6 +5681,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dieser Build kann die Pairing-Datei nicht auf dem iPad erstellen. Erstelle sie auf einem Computer und importiere sie, wie unter „So funktioniert Runfern“ beschrieben."
+          }
+        }
+      }
+    },
+    "This can't be undone." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Aktion kann nicht widerrufen werden."
           }
         }
       }
@@ -5351,6 +5801,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Diese Linux-Basis unterstützt noch keine Erweiterungen und VS-Code-Einstellungen. Lege ein neues Projekt mit der aktuellen Basis an."
+          }
+        }
+      }
+    },
+    "This Linux base offers no languages in the current catalog." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Linux-Basis bietet im aktuellen Katalog keine Sprachen an."
           }
         }
       }
@@ -5555,12 +6015,12 @@
         }
       }
     },
-    "View Options" : {
+    "VS Code can be shown in one window at a time." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Darstellungsoptionen"
+            "state" : "translated",
+            "value" : "VS Code kann immer nur in einem Fenster angezeigt werden."
           }
         }
       }
@@ -5722,6 +6182,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ja"
+          }
+        }
+      }
+    },
+    "“%@” is also deleted from the project folder with the next sync." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ wird beim nächsten Abgleich auch im Projektordner gelöscht."
           }
         }
       }

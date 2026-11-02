@@ -15,6 +15,7 @@ struct ProjectDetailView: View {
     let openIDE: () -> Void
 
     @State private var editing = false
+    @State private var editingSoftware = false
     @State private var savingPreset = false
     @State private var presetName = ""
     @State private var reassigningFolder = false
@@ -53,10 +54,7 @@ struct ProjectDetailView: View {
                         savingPreset = true
                     }
                     Divider()
-                    Button(project.isArchived ? String(localized: "Restore") : String(localized: "action.archive", defaultValue: "Archive"),
-                           systemImage: "archivebox") {
-                        store.setArchived(!project.isArchived, for: project)
-                    }
+                    ArchiveButton(project: project)
                     if let requestRemoval {
                         Button("Remove…", systemImage: "trash", role: .destructive, action: requestRemoval)
                     }
@@ -76,6 +74,13 @@ struct ProjectDetailView: View {
         }
         .sheet(isPresented: $showingExport) { ExportView(project: project) }
         .sheet(isPresented: $editing) { EditProjectView(project: project) }
+        // On the Form, not the row: the row sits inside `if let env` and would take the sheet with it.
+        .sheet(isPresented: $editingSoftware) {
+            if let env = store.environment(for: project) {
+                InstalledSoftwareView(project: project, environment: env)
+                    .presentationSizing(.page)
+            }
+        }
         .alert("Save as Preset", isPresented: $savingPreset) {
             TextField("Name", text: $presetName)
             Button("Cancel", role: .cancel) {}
@@ -130,10 +135,11 @@ struct ProjectDetailView: View {
                     steps
                 } actions: {
                     Button("Cancel Setup", role: .cancel) { provisioner.cancel(project) }
-                        .buttonStyle(.glass)
+                        .buttonStyle(.bordered)
                 }
             } else {
                 let failed = steps.failedStep != nil
+                let setup = setupAction(for: env, failed: failed)
                 StatusCard(title: failed ? String(localized: "Setup Failed")
                                          : env.completedSteps.isEmpty ? String(localized: "Not Set Up") : String(localized: "Setup Paused")) {
                     Image(systemName: failed ? "xmark.circle.fill" : "pause.circle.fill")
@@ -141,9 +147,9 @@ struct ProjectDetailView: View {
                 } content: {
                     steps
                 } actions: {
-                    PrimaryActionButton(title: env.completedSteps.isEmpty ? String(localized: "Start Setup")
-                                                                           : String(localized: "Resume Setup"),
-                                        systemImage: "arrow.clockwise") { provisioner.start(project) }
+                    PrimaryActionButton(title: setup.title, systemImage: setup.systemImage) {
+                        provisioner.start(project)
+                    }
                 }
             }
         } else if runtime.isBusy, isActive || env.state == .starting || env.state == .stopping {
@@ -159,7 +165,7 @@ struct ProjectDetailView: View {
                                     systemImage: "chevron.left.forwardslash.chevron.right", action: openIDE)
                     .keyboardShortcut(.return, modifiers: .command)
                 Button("Stop", systemImage: "stop.fill") { Task { await runtime.stopActiveProject() } }
-                    .buttonStyle(.glass)
+                    .buttonStyle(.bordered)
                     .disabled(runtime.isBusy)
             }
         } else if let error = runtime.activeProjectID == nil ? (runtime.lastError ?? env.lastError) : env.lastError,
@@ -174,7 +180,7 @@ struct ProjectDetailView: View {
                 PrimaryActionButton(title: String(localized: "Try Again"), systemImage: "arrow.clockwise", action: start)
                     .disabled(runtime.isBusy || provisioner.isUsingVM(otherThan: project))
                 Button("Reset Environment…", systemImage: "arrow.counterclockwise") { confirmingCardReset = true }
-                    .buttonStyle(.glass)
+                    .buttonStyle(.bordered)
                     .modifier(ResetConfirmation(isPresented: $confirmingCardReset, reset: reset))
             }
         } else {
@@ -190,6 +196,13 @@ struct ProjectDetailView: View {
                     .disabled(runtime.isBusy || provisioner.isUsingVM(otherThan: project))
             }
         }
+    }
+
+    /// Retry after a failure (like the Start Failed card), otherwise start or continue the setup.
+    private func setupAction(for env: DevEnvironment, failed: Bool) -> (title: String, systemImage: String) {
+        if failed { return (String(localized: "Try Again"), "arrow.clockwise") }
+        if env.completedSteps.isEmpty { return (String(localized: "Start Setup"), "play.fill") }
+        return (String(localized: "Resume Setup"), "play.fill")
     }
 
     private func reset() {
@@ -217,17 +230,18 @@ struct ProjectDetailView: View {
         let image = Catalog.baseImage(id: env.baseImageId)
         let missing = Catalog.missingComponents(of: env)
         Section {
-            NavigationLink {
-                InstalledSoftwareView(project: project, environment: env)
+            // A sheet with Cancel and Apply, like Edit Project: going back must not drop the edits.
+            Button {
+                editingSoftware = true
             } label: {
                 LabeledContent("Installed Software") {
                     Text(env.software.summary)
                 }
             }
+            .foregroundStyle(.primary)
             environmentOptions(env, image: image)
             if !missing.isEmpty {
-                Label("No longer available in the catalog: \(missing.formatted(.list(type: .and)))", systemImage: "exclamationmark.triangle")
-                    .foregroundStyle(.orange)
+                StatusLabel("No longer available in the catalog: \(missing.formatted(.list(type: .and)))")
             }
         } header: {
             Text("Environment")
@@ -266,13 +280,11 @@ struct ProjectDetailView: View {
             // A failed start already offers resetting in the status card.
             if env.isFullyProvisioned, env.state != .failed {
                 Button("Reset Environment…", systemImage: "arrow.counterclockwise", role: .destructive) { confirmingReset = true }
-                    .foregroundStyle(.red)
                     .disabled(runtime.activeProjectID == project.id || provisioner.isRunning(project))
                     .modifier(ResetConfirmation(isPresented: $confirmingReset, reset: reset))
             } else if !provisioner.isRunning(project), !env.completedSteps.isEmpty, let requestRemoval {
                 // Same careful path as removing the project from the menu.
-                Button("Discard Setup", systemImage: "trash", role: .destructive, action: requestRemoval)
-                    .foregroundStyle(.red)
+                Button("Remove Project…", systemImage: "trash", role: .destructive, action: requestRemoval)
             }
         }
     }
@@ -301,34 +313,28 @@ struct ProjectDetailView: View {
             if binding.storageMode == .mountedFolder {
                 IconValueRow(title: "Access", value: String(localized: "Direct"), systemImage: "externaldrive.connected.to.line.below")
                 if binding.accessState == .unavailable {
-                    Label("The folder is not reachable. Choose the folder again.", systemImage: "exclamationmark.triangle")
-                        .foregroundStyle(.orange)
+                    StatusLabel("The folder is not reachable. Choose the folder again.")
                 }
-                Button("Reassign Folder…") { reassigningFolder = true }
-                if let folderError { Text(folderError).foregroundStyle(.red) }
+                Button("Reassign Folder…", systemImage: "folder.badge.gearshape") { reassigningFolder = true }
+                if let folderError { StatusLabel(folderError, tint: .red) }
             } else if binding.storageMode == .localFolder {
                 IconValueRow(title: "Access", value: String(localized: "Synced Copy"), systemImage: "arrow.triangle.2.circlepath")
                 if binding.accessState == .unavailable {
-                    Label("The folder is not reachable. Your local working copy is kept; choose the folder again.",
-                          systemImage: "exclamationmark.triangle")
-                        .foregroundStyle(.orange)
+                    StatusLabel("The folder is not reachable. Your local working copy is kept; choose the folder again.")
                 }
                 syncStatus(status)
-                HStack {
-                    Button("Sync Now", systemImage: "arrow.triangle.2.circlepath") {
-                        Task {
-                            try? await ContinuedWork.shared.run(title: String(localized: "Syncing “\(project.name)”"),
-                                                                subtitle: binding.displayLocation) { _ in
-                                await sync.sync(binding)
-                            }
+                // One action per row, the same as for a mounted folder.
+                Button("Sync Now", systemImage: "arrow.triangle.2.circlepath") {
+                    Task {
+                        try? await ContinuedWork.shared.run(title: String(localized: "Syncing “\(project.name)”"),
+                                                            subtitle: binding.displayLocation) { _ in
+                            await sync.sync(binding)
                         }
                     }
-                        .disabled(status.phase == .syncing)
-                    Spacer()
-                    Button("Reassign Folder…") { reassigningFolder = true }
                 }
-                .buttonStyle(.borderless)
-                if let folderError { Text(folderError).foregroundStyle(.red) }
+                .disabled(status.phase == .syncing)
+                Button("Reassign Folder…", systemImage: "folder.badge.gearshape") { reassigningFolder = true }
+                if let folderError { StatusLabel(folderError, tint: .red) }
                 if !status.unsupported.isEmpty {
                     DisclosureGroup("Not Synced (\(status.unsupported.count))") {
                         Text("Symbolic links, cloud files that aren't downloaded, and special files are not transferred.")
@@ -352,16 +358,15 @@ struct ProjectDetailView: View {
         case .syncing:
             Label("Syncing…", systemImage: "arrow.triangle.2.circlepath")
         case .unreachable(let message):
-            Label(message, systemImage: "externaldrive.badge.xmark").foregroundStyle(.orange)
+            StatusLabel(message, systemImage: "externaldrive.badge.xmark")
         case .failed(let message):
-            Label(message, systemImage: "exclamationmark.triangle").foregroundStyle(.red)
+            StatusLabel(message, tint: .red)
         case .idle:
             EmptyView()
         }
         Label("Saved Locally", systemImage: "internaldrive")
         if status.pendingLocalChanges > 0 {
-            Label("\(status.pendingLocalChanges) changes not yet in the folder", systemImage: "clock.arrow.circlepath")
-                .foregroundStyle(.orange)
+            StatusLabel("\(status.pendingLocalChanges) changes not yet in the folder", systemImage: "clock.arrow.circlepath")
         } else if let date = status.lastSyncedAt {
             Label("Synced \(date.formatted(.relative(presentation: .named)))", systemImage: "checkmark.icloud")
         }
@@ -370,8 +375,7 @@ struct ProjectDetailView: View {
                 .foregroundStyle(.secondary)
         }
         if status.wasInterrupted {
-            Label("A sync was interrupted and will continue with the next run.", systemImage: "arrow.uturn.forward")
-                .foregroundStyle(.orange)
+            StatusLabel("A sync was interrupted and will continue with the next run.", systemImage: "arrow.uturn.forward")
         }
     }
 
@@ -381,12 +385,11 @@ struct ProjectDetailView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text(conflict.path).font(.body.monospaced())
                     Text(conflict.summary).font(.caption).foregroundStyle(.secondary)
-                    HStack {
-                        Button("Runfern Version") { Task { await sync.resolve(conflict, with: .keepLocal, in: binding) } }
-                        Button("Files Version") { Task { await sync.resolve(conflict, with: .keepExternal, in: binding) } }
-                        if conflict.canKeepBoth {
-                            Button("Keep Both") { Task { await sync.resolve(conflict, with: .keepBoth, in: binding) } }
-                        }
+                    // Side by side when they fit, otherwise stacked. The buttons carry no state, shortcut,
+                    // or dialog, so laying them out twice is harmless.
+                    ViewThatFits(in: .horizontal) {
+                        HStack { resolutionButtons(conflict, in: binding) }
+                        VStack(alignment: .leading) { resolutionButtons(conflict, in: binding) }
                     }
                     .buttonStyle(.bordered)
                 }
@@ -395,6 +398,15 @@ struct ProjectDetailView: View {
             Label("Conflicts", systemImage: "exclamationmark.2")
         } footer: {
             Text("Both versions are kept until you decide. The Files version is also preserved inside Runfern.")
+        }
+    }
+
+    @ViewBuilder
+    private func resolutionButtons(_ conflict: SyncConflict, in binding: WorkspaceBinding) -> some View {
+        Button("Keep Runfern Version") { Task { await sync.resolve(conflict, with: .keepLocal, in: binding) } }
+        Button("Keep Files Version") { Task { await sync.resolve(conflict, with: .keepExternal, in: binding) } }
+        if conflict.canKeepBoth {
+            Button("Keep Both") { Task { await sync.resolve(conflict, with: .keepBoth, in: binding) } }
         }
     }
 

@@ -22,35 +22,47 @@ struct NewProjectView: View {
     private var preset: EnvironmentPreset? { store.presets.first { $0.id == presetID } }
     @State private var binding: WorkspaceBinding?
     @State private var pickingFolder = false
-    @State private var errorMessage: String?
+    /// Measured once, off the main thread: the capacity query is slow and `body` runs on every
+    /// keystroke in Name. `nil` while measuring.
+    @State private var availableCapacity: Int64?
+    /// A folder that couldn't be chosen, shown in the Project Folder footer.
+    @State private var folderError: String?
+    /// A failed “Create”, shown as an alert (A7).
+    @State private var createError: String?
 
     private var baseImage: BaseImage { Catalog.baseImage(id: baseImageId) ?? Catalog.baseImages[0] }
     private var toolchains: [ToolchainProfile] { software.toolchains }
-    private var imageDownload: Int64 { images.status(of: baseImage) == .available ? 0 : baseImage.downloadSizeBytes }
-    private var totalDownload: Int64 { imageDownload + toolchains.reduce(0) { $0 + $1.estimatedSizeBytes } }
     private var trimmedName: String { name.trimmingCharacters(in: .whitespaces) }
 
-    /// Missing or contradictory input, flagged before creation (NEW01). An empty name only disables
-    /// “Create”; the missing folder is pointed out in its own section.
-    private var canCreate: Bool {
-        problems.isEmpty && !trimmedName.isEmpty && !(storageMode == .localFolder && binding == nil)
+    /// Input the person would lose by dismissing the sheet (A2). A blank sheet closes without asking.
+    private var hasInput: Bool { !trimmedName.isEmpty || !details.isEmpty || binding != nil || presetID != nil }
+
+    private func totalDownload(_ status: ImageLibrary.Status) -> Int64 {
+        (status == .available ? 0 : baseImage.downloadSizeBytes) + toolchains.reduce(0) { $0 + $1.estimatedSizeBytes }
     }
 
-    private var problems: [String] {
-        var result: [String] = []
-        if images.status(of: baseImage) == .notPublished, !runtime.isSimulated {
-            result.append(String(localized: "\(baseImage.displayName) is not available for download yet."))
-        }
-        if DiskUsage.availableCapacity < totalDownload + DiskUsage.reserve { result.append(String(localized: "Not enough free storage.")) }
-        return result
+    private func isUnpublished(_ status: ImageLibrary.Status) -> Bool { status == .notPublished && !runtime.isSimulated }
+
+    /// Unknown capacity never blocks: Provisioner checks storage again before downloading.
+    private func lacksStorage(_ status: ImageLibrary.Status) -> Bool {
+        availableCapacity.map { $0 < totalDownload(status) + DiskUsage.reserve } ?? false
+    }
+
+    /// Missing or contradictory input disables “Create” (NEW01); each reason sits in the footer of
+    /// the section that causes it (A7). An empty name only disables “Create”.
+    private func canCreate(_ status: ImageLibrary.Status) -> Bool {
+        !isUnpublished(status) && !lacksStorage(status) && !trimmedName.isEmpty && !(storageMode == .localFolder && binding == nil)
     }
 
     var body: some View {
+        // Read once per pass: every lookup checks the file system.
+        let imageStatus = images.status(of: baseImage)
         NavigationStack {
             Form {
                 Section("Project") {
                     TextField("Name", text: $name)
                     TextField("Description (Optional)", text: $details, axis: .vertical)
+                        .lineLimit(3...6)
                 }
 
                 Section {
@@ -67,14 +79,17 @@ struct NewProjectView: View {
                 } header: {
                     Text("Project Folder")
                 } footer: {
-                    if storageMode == .localFolder, binding == nil {
+                    // The folder error only concerns the picker, which "Only in Runfern" hides.
+                    if storageMode == .localFolder, let folderError {
+                        Text(folderError)
+                    } else if storageMode == .localFolder, binding == nil {
                         Text("Choose a folder to create the project.")
                     } else if storageMode == .appInternal {
                         Text("Back up the files at any time with “Export”.")
                     }
                 }
 
-                Section("Environment") {
+                Section {
                     if !store.presets.isEmpty {
                         Picker("Preset", selection: $presetID) {
                             Text("None").tag(UUID?.none)
@@ -82,35 +97,51 @@ struct NewProjectView: View {
                         }
                     }
                     // A preset fixes the base and software; only a project without one chooses them.
+                    // The same rows as BaseImagePicker, so the layout stays put when a preset is chosen.
                     if preset != nil {
-                        LabeledContent("Distribution", value: baseImage.displayName)
+                        LabeledContent("Distribution", value: baseImage.distribution)
+                        LabeledContent("Version", value: baseImage.release)
                         LabeledContent("Software", value: software.summary)
                     } else {
                         BaseImagePicker(selection: $baseImageId)
                         SoftwareLink(base: baseImage, selection: $software)
                     }
-                    LabeledContent("Image", value: images.status(of: baseImage).title)
-                }
-
-                Section("Summary") {
-                    LabeledContent("Download", value: totalDownload.formattedBytes)
-                    LabeledContent("Available Storage", value: DiskUsage.availableCapacity.formattedBytes)
-                }
-
-                if !problems.isEmpty || errorMessage != nil {
-                    Section {
-                        ForEach(problems, id: \.self) { Label($0, systemImage: "exclamationmark.triangle.fill") }
-                        if let errorMessage { Label(errorMessage, systemImage: "xmark.octagon.fill") }
+                    LabeledContent("Linux Base", value: imageStatus.title)
+                } header: {
+                    Text("Environment")
+                } footer: {
+                    if isUnpublished(imageStatus) {
+                        StatusLabel("\(baseImage.displayName) is not available for download yet.")
                     }
-                    .foregroundStyle(.red)
+                }
+
+                Section {
+                    LabeledContent("Download", value: totalDownload(imageStatus).formattedBytes)
+                    LabeledContent("Available Storage") {
+                        if let availableCapacity {
+                            Text(availableCapacity.formattedBytes)
+                        } else {
+                            ProgressView().controlSize(.small)
+                        }
+                    }
+                } header: {
+                    Text("Summary")
+                } footer: {
+                    if lacksStorage(imageStatus), let availableCapacity {
+                        StatusLabel(DiskUsage.SpaceError.insufficient(needed: totalDownload(imageStatus) + DiskUsage.reserve,
+                                                                      available: availableCapacity).localizedDescription)
+                    }
                 }
             }
             .navigationTitle("New Project")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                ToolbarItem(placement: .cancellationAction) { CancelButton(hasChanges: hasInput) }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Create", action: create).disabled(!canCreate)
+                    // ⌘↩, not ↩: Description is a multi-line field.
+                    Button("Create", role: .confirm, action: create)
+                        .keyboardShortcut(.return, modifiers: .command)
+                        .disabled(!canCreate(imageStatus))
                 }
             }
             .fileImporter(isPresented: $pickingFolder, allowedContentTypes: [.folder]) { result in
@@ -119,12 +150,12 @@ struct NewProjectView: View {
                     do {
                         binding = try WorkspaceAccess.makeBinding(for: url)
                         if trimmedName.isEmpty { name = url.lastPathComponent }
-                        errorMessage = nil
+                        folderError = nil
                     } catch {
-                        errorMessage = error.localizedDescription
+                        folderError = error.localizedDescription
                     }
                 case .failure(let error):
-                    errorMessage = error.localizedDescription
+                    folderError = error.localizedDescription
                 }
             }
             .onChange(of: presetID) {
@@ -141,6 +172,11 @@ struct NewProjectView: View {
             .onChange(of: baseImageId) {
                 // Remove unsupported combinations before they can be created (IMG03).
                 software.toolchainIds.removeAll { !baseImage.supportedToolchains.contains($0) }
+            }
+            .interactiveDismissDisabled(hasInput)
+            .errorAlert("Couldn't Create Project", message: $createError)
+            .task {
+                availableCapacity = await Task.detached(priority: .userInitiated) { DiskUsage.availableCapacity }.value
             }
         }
     }
@@ -160,7 +196,7 @@ struct NewProjectView: View {
             onCreated(project)
             dismiss()
         } catch {
-            errorMessage = error.localizedDescription
+            createError = error.localizedDescription
         }
     }
 }

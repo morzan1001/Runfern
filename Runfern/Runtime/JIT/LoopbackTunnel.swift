@@ -20,9 +20,7 @@ enum LoopbackTunnel {
     /// The VPN extension is part of this installation.
     static var isInstalled: Bool { providerIdentifier != nil }
 
-    private static var providerIdentifier: String? {
-        Bundle.main.builtInPlugInsURL.flatMap { Bundle(url: $0.appending(path: "RunfernTunnel.appex"))?.bundleIdentifier }
-    }
+    private static var providerIdentifier: String? { JITInstallation.tunnelIdentifier }
 
     /// One use of the VPN. The VPN stays connected until the last use is released, so a check in
     /// Settings and a Linux start in another window don't cut each other off.

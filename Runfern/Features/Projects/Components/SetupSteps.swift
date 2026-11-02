@@ -10,6 +10,9 @@ struct SetupSteps: View {
     /// Why the last run stopped.
     var error: String? = nil
 
+    /// Grows with the step titles, so the icons and the spinner keep lining up with them.
+    @ScaledMetric(relativeTo: .subheadline) private var iconSize: CGFloat = 20
+
     private var steps: [ProvisioningStep] { ProvisioningStep.allCases }
     private var completedCount: Int { steps.filter(environment.hasCompleted).count }
 
@@ -32,23 +35,33 @@ struct SetupSteps: View {
                         // Centered, because the spinner has no text baseline to align with.
                         HStack(spacing: 10) {
                             icon(for: step)
-                                .frame(width: 20, height: 20)
+                                .frame(width: iconSize, height: iconSize)
+                                // The value below says the same, without the symbol names and the spinner's label.
+                                .accessibilityHidden(true)
                             Text(step.title)
                                 .font(.subheadline.weight(isHighlighted(step) ? .semibold : .regular))
                                 .foregroundStyle(environment.hasCompleted(step) || isHighlighted(step) ? .primary : .secondary)
                         }
                         if step == failedStep, let error {
+                            // Plain text: the step's icon already shows the failure.
                             Text(error)
                                 .font(.footnote)
-                                .foregroundStyle(.red)
-                                .padding(.leading, 30)
+                                .padding(.leading, iconSize + 10)
                         }
                     }
                     .accessibilityElement(children: .combine)
-                    .accessibilityValue(environment.hasCompleted(step) ? String(localized: "done") : String(localized: "pending"))
+                    .accessibilityValue(value(for: step))
                 }
             }
         }
+    }
+
+    /// What the icon shows, for VoiceOver.
+    private func value(for step: ProvisioningStep) -> String {
+        if environment.hasCompleted(step) { return String(localized: "done") }
+        if step == failedStep { return String(localized: "failed") }
+        if step == currentStep && isRunning { return String(localized: "in progress") }
+        return String(localized: "pending")
     }
 
     private func isHighlighted(_ step: ProvisioningStep) -> Bool {
