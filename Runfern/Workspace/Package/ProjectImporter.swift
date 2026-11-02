@@ -49,35 +49,27 @@ nonisolated enum ProjectImporter {
     }
 
     /// Registers the project and moves the verified files to where it keeps them: into the chosen
-    /// folder for a folder on the device or a drive, otherwise into its new working copy.
+    /// folder for a folder on the device or a drive, otherwise into its new working copy. The files
+    /// move off the main thread: into a folder on another volume, a move is a copy of every byte.
     @MainActor
-    static func commit(_ preview: Preview, store: ProjectStore, binding: WorkspaceBinding) throws -> Project {
+    static func commit(_ preview: Preview, store: ProjectStore, binding: WorkspaceBinding) async throws -> Project {
         guard let recipe = preview.recipe, let image = Catalog.baseImage(id: recipe.base.id) else {
             throw ImportError.missingRecipe
         }
-        // A folder on the device or a drive is used in place, so the files go there; it must be empty,
-        // so nothing is overwritten and no move fails halfway on a name that already exists.
         var target: WorkspaceFiles?
         if binding.storageMode == .mountedFolder {
-            let files = try WorkspaceFiles(binding)   // keeps the security scope while alive
-            guard try FileManager.default.contentsOfDirectory(at: files.url, includingPropertiesForKeys: nil).isEmpty else {
-                throw ImportError.folderNotEmpty
-            }
-            target = files
+            target = try await Task.detached(priority: .userInitiated) { try emptyFolder(of: binding) }.value
         }
         let toolchains = recipe.toolchains.compactMap { Catalog.toolchain(id: $0.id) }
         let project = try store.createProject(name: preview.projectName, details: "", source: .empty,
                                               baseImage: image, toolchains: toolchains, binding: binding)
+        let filesRoot = preview.filesRoot
+        let workingCopy = AppPaths.workingCopy(binding.id)
+        let folder = target
         do {
-            if let target {
-                for item in try FileManager.default.contentsOfDirectory(at: preview.filesRoot, includingPropertiesForKeys: nil) {
-                    try FileManager.default.moveItem(at: item, to: target.url.appending(path: item.lastPathComponent))
-                }
-            } else {
-                let workingCopy = AppPaths.workingCopy(binding.id)
-                try FileManager.default.createDirectory(at: workingCopy.deletingLastPathComponent(), withIntermediateDirectories: true)
-                try FileManager.default.moveItem(at: preview.filesRoot, to: workingCopy)
-            }
+            try await Task.detached(priority: .userInitiated) {
+                try moveFiles(from: filesRoot, into: folder, orTo: workingCopy)
+            }.value
         } catch {
             store.remove(project)
             throw error
@@ -93,6 +85,29 @@ nonisolated enum ProjectImporter {
     }
 
     // MARK: Private
+
+    /// A folder on the device or a drive is used in place, so the files go there. It must be empty,
+    /// so nothing is overwritten and no move fails halfway on a name that already exists. The
+    /// returned files keep the folder's security scope while alive.
+    private static func emptyFolder(of binding: WorkspaceBinding) throws -> WorkspaceFiles {
+        let files = try WorkspaceFiles(binding)
+        guard try FileManager.default.contentsOfDirectory(at: files.url, includingPropertiesForKeys: nil).isEmpty else {
+            throw ImportError.folderNotEmpty
+        }
+        return files
+    }
+
+    private static func moveFiles(from filesRoot: URL, into folder: WorkspaceFiles?, orTo workingCopy: URL) throws {
+        let fm = FileManager.default
+        if let folder {
+            for item in try fm.contentsOfDirectory(at: filesRoot, includingPropertiesForKeys: nil) {
+                try fm.moveItem(at: item, to: folder.url.appending(path: item.lastPathComponent))
+            }
+        } else {
+            try fm.createDirectory(at: workingCopy.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try fm.moveItem(at: filesRoot, to: workingCopy)
+        }
+    }
 
     private static func verify(staging: URL) throws -> Preview {
         let root = try packageRoot(in: staging)

@@ -78,7 +78,7 @@ struct DevServerPreviewView: View {
             if isLoading { ProgressView() }
         }
         .safeAreaInset(edge: .bottom) {
-            if let pageError { Banner(text: LocalizedStringKey(pageError), systemImage: "exclamationmark.triangle", tint: .orange) }
+            if let pageError { Banner(text: pageError, systemImage: "exclamationmark.triangle", tint: .orange) }
         }
         .navigationTitle("Port \(target.port.formatted(.number.grouping(.never)))")
         .toolbar {

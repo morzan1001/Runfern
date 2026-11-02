@@ -489,7 +489,7 @@
         }
       }
     },
-    "A debugger is attached that Runfern did not request. If it is Xcode's, Linux stops at QEMU's breakpoint. Start Runfern from the Home Screen, turn JIT off, or choose External Debugger and answer the breakpoint with Tools/QEMU/lldb_txm_jit.py." : {
+    "A debugger is attached that Runfern did not request. If it is Xcode’s, Linux stops at QEMU’s breakpoint. Start Runfern from the Home Screen, turn JIT off, or choose External Debugger and answer the breakpoint with Tools/QEMU/lldb_txm_jit.py." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -666,7 +666,7 @@
         }
       }
     },
-    "Allow Runfern's VPN" : {
+    "Allow Runfern’s VPN" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -676,7 +676,7 @@
         }
       }
     },
-    "Another debugger, such as Xcode's, is attached, so Linux runs interpreted. To use JIT with it, choose External Debugger and answer QEMU's breakpoint with Tools/QEMU/lldb_txm_jit.py." : {
+    "Another debugger, such as Xcode’s, is attached, so Linux runs interpreted. To use JIT with it, choose External Debugger and answer QEMU’s breakpoint with Tools/QEMU/lldb_txm_jit.py." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1216,7 +1216,7 @@
         }
       }
     },
-    "Couldn't Create File" : {
+    "Couldn’t Create File" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1226,7 +1226,7 @@
         }
       }
     },
-    "Couldn't Create Project" : {
+    "Couldn’t Create Project" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1236,7 +1236,7 @@
         }
       }
     },
-    "Couldn't Delete File" : {
+    "Couldn’t Delete File" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1246,7 +1246,7 @@
         }
       }
     },
-    "Couldn't Duplicate Project" : {
+    "Couldn’t Duplicate Project" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1256,7 +1256,7 @@
         }
       }
     },
-    "Couldn't Export Project" : {
+    "Couldn’t Export Project" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1266,7 +1266,7 @@
         }
       }
     },
-    "Couldn't Import Files" : {
+    "Couldn’t Import Files" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1276,7 +1276,7 @@
         }
       }
     },
-    "Couldn't Import Project" : {
+    "Couldn’t Import Project" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1286,7 +1286,7 @@
         }
       }
     },
-    "Couldn't Open Package" : {
+    "Couldn’t Open Package" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1296,7 +1296,7 @@
         }
       }
     },
-    "Couldn't Remove Credential" : {
+    "Couldn’t Remove Credential" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1306,7 +1306,7 @@
         }
       }
     },
-    "Couldn't Remove Project" : {
+    "Couldn’t Remove Project" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1316,7 +1316,7 @@
         }
       }
     },
-    "Couldn't Save Credential" : {
+    "Couldn’t Save Credential" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2483,7 +2483,7 @@
         }
       }
     },
-    "iPadOS did not allow Runfern's VPN. Try again and tap Allow." : {
+    "iPadOS did not allow Runfern’s VPN. Try again and tap Allow." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3241,7 +3241,7 @@
         }
       }
     },
-    "On a computer the iPad trusts, create it with Tools/JIT/create-pairing-file.sh from Runfern's source, idevice_pair, or iloader, and import it under Runfern Settings › Performance › Built-In JIT. Create a new pairing file after changing or removing the iPad's passcode." : {
+    "On a computer the iPad trusts, create it with Tools/JIT/create-pairing-file.sh from Runfern’s source, idevice_pair, or iloader, and import it under Runfern Settings › Performance › Built-In JIT. Create a new pairing file after changing or removing the iPad’s passcode." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3341,7 +3341,7 @@
         }
       }
     },
-    "Open Runfern's Settings" : {
+    "Open Runfern’s Settings" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -4161,7 +4161,7 @@
         }
       }
     },
-    "Runfern sets up JIT by itself. You only answer what iPadOS asks: allow Runfern's VPN, local network access, and notifications, and confirm the pairing with this iPad in Settings." : {
+    "Runfern sets up JIT by itself. You only answer what iPadOS asks: allow Runfern’s VPN, local network access, and notifications, and confirm the pairing with this iPad in Settings." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -4691,7 +4691,7 @@
         }
       }
     },
-    "Start this project's environment from the overview to keep working in the editor." : {
+    "Start this project’s environment from the overview to keep working in the editor." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -4927,7 +4927,7 @@
         }
       }
     },
-    "Symbolic links, cloud files that aren't downloaded, and special files are not transferred." : {
+    "Symbolic links, cloud files that aren’t downloaded, and special files are not transferred." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -5027,7 +5027,7 @@
         }
       }
     },
-    "Tap Set Up JIT. Runfern does the rest; you only answer iPadOS's questions and confirm the pairing in Settings." : {
+    "Tap Set Up JIT. Runfern does the rest; you only answer iPadOS’s questions and confirm the pairing in Settings." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -5338,7 +5338,7 @@
         }
       }
     },
-    "The iPad's developer services could not be reached through Runfern's VPN. Check that Developer Mode is on and Wi-Fi is connected, and that no other VPN took over." : {
+    "The iPad’s developer services could not be reached through Runfern’s VPN. Check that Developer Mode is on and Wi-Fi is connected, and that no other VPN took over." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -5565,7 +5565,7 @@
         }
       }
     },
-    "The pairing file connects Runfern with this iPad's developer services. Create a new one after changing or removing the iPad's passcode." : {
+    "The pairing file connects Runfern with this iPad’s developer services. Create a new one after changing or removing the iPad’s passcode." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -5685,7 +5685,7 @@
         }
       }
     },
-    "This can't be undone." : {
+    "This can’t be undone." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -5735,7 +5735,7 @@
         }
       }
     },
-    "This file can't be shown in the built-in editor." : {
+    "This file can’t be shown in the built-in editor." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -5755,7 +5755,7 @@
         }
       }
     },
-    "This installation may not use Runfern's VPN. Built-In needs signing with the Network Extension capability, for example from Xcode with a paid developer account; AltStore, SideStore, and iloader cannot add it. Use StikDebug instead." : {
+    "This installation may not use Runfern’s VPN. Built-In needs signing with the Network Extension capability, for example from Xcode with a paid developer account; AltStore, SideStore, and iloader cannot add it. Use StikDebug instead." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -6155,7 +6155,7 @@
         }
       }
     },
-    "With JIT, Linux runs several times faster. With the Built-In method, Runfern's VPN connects briefly before the first Linux start after opening Runfern, so a debugger can attach to Runfern; afterwards the VPN disconnects again. The first time, and after Reset Developer Disk Image, this downloads the Developer Disk Image from the internet." : {
+    "With JIT, Linux runs several times faster. With the Built-In method, Runfern’s VPN connects briefly before the first Linux start after opening Runfern, so a debugger can attach to Runfern; afterwards the VPN disconnects again. The first time, and after Reset Developer Disk Image, this downloads the Developer Disk Image from the internet." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {

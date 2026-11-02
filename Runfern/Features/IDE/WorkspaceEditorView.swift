@@ -117,9 +117,9 @@ struct WorkspaceEditorView: View {
             Button("Create", action: createFile)
             Button("Cancel", role: .cancel) { newFileName = "" }
         }
-        .errorAlert("Couldn't Create File", message: $createError)
-        .errorAlert("Couldn't Delete File", message: $deleteError)
-        .errorAlert("Couldn't Import Files", message: $importError)
+        .errorAlert("Couldn’t Create File", message: $createError)
+        .errorAlert("Couldn’t Delete File", message: $deleteError)
+        .errorAlert("Couldn’t Import Files", message: $importError)
         .alert("File Changed Elsewhere", isPresented: $changedOnDisk) {
             Button("Save My Version") { forceSave() }
             Button("Load Other Version", role: .destructive) { load(selection) }
@@ -143,7 +143,7 @@ struct WorkspaceEditorView: View {
                     .navigationSubtitle(folder)
             } else if isBinary {
                 ContentUnavailableView("Not a Text File", systemImage: "doc.questionmark",
-                                       description: Text("This file can't be shown in the built-in editor."))
+                                       description: Text("This file can’t be shown in the built-in editor."))
             } else {
                 ContentUnavailableView("No File Open", systemImage: "doc.text",
                                        description: Text("Select a file in the sidebar."))

@@ -67,7 +67,7 @@ struct OnboardingView: View {
             .frame(maxWidth: 560)
             .padding()
         }
-        .errorAlert("Couldn't Create Project", message: $errorMessage)
+        .errorAlert("Couldn’t Create Project", message: $errorMessage)
     }
 
     private func point(_ systemImage: String, _ title: LocalizedStringKey, _ text: LocalizedStringKey,

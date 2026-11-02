@@ -91,7 +91,7 @@ final class JITSetup {
         if vpnStep != .done {
             vpnStep = .running
             guard await LoopbackTunnel.requestPermission() else {
-                vpnStep = .failed(String(localized: "iPadOS did not allow Runfern's VPN. Try again and tap Allow."))
+                vpnStep = .failed(String(localized: "iPadOS did not allow Runfern’s VPN. Try again and tap Allow."))
                 return
             }
             vpnStep = .done

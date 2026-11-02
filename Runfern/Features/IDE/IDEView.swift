@@ -21,7 +21,7 @@ struct IDEView: View {
                 placeholder {
                     Label("Environment Not Active", systemImage: "pause.circle")
                 } description: {
-                    Text("Start this project's environment from the overview to keep working in the editor.")
+                    Text("Start this project’s environment from the overview to keep working in the editor.")
                 } actions: {
                     Button("Back to Overview", action: close)
                         .buttonStyle(.borderedProminent)
