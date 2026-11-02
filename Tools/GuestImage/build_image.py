@@ -1,28 +1,48 @@
 #!/usr/bin/env python3
-"""Builds a Runfern Linux base image bundle (see ImageBundle.swift) on a Mac.
+"""Builds a Runfern Linux base image bundle (see ImageBundle.swift) on a Mac or on Linux.
 
-The official cloud image of the distribution is customized once in a hardware-accelerated
-VM (Homebrew QEMU with HVF) via cloud-init: GuestAgent, openvscode-server, the Runfern extension,
-a kernel with 9p support, the libraries the catalog's toolchains need, and the /workspace mount.
-Distributions differ only in their package manager (FLAVORS). The VM writes kernel, initrd,
-and kernel command line to an extra raw disk as a tar stream, then powers off.
+The official cloud image of the distribution is customized once in a QEMU VM via cloud-init:
+GuestAgent, openvscode-server, the Runfern extension, a kernel with 9p support, the libraries
+the catalog's toolchains need, and the /workspace mount. Distributions differ only in their
+package manager (FLAVORS). The VM writes kernel, initrd, and kernel command line to an extra raw
+disk as a tar stream, then powers off.
+
+The VM runs hardware-accelerated where the host can run the arm64 guest natively (HVF on Apple
+silicon, KVM on arm64 Linux with access to /dev/kvm), and emulated with TCG everywhere else, for
+example on GitHub's runners without /dev/kvm. The image is the same; TCG just takes hours instead
+of minutes.
 
 Usage: build_image.py <id>        ids: see BASES (debian-12-arm64, fedora-44-arm64, ...)
+
+Requirements:
+    macOS           brew install qemu
+    Debian/Ubuntu   apt-get install qemu-system-arm qemu-efi-aarch64 qemu-utils xorriso zstd
+
+Optional environment:
+    RUNFERN_ACCEL                       hvf, kvm, or tcg instead of the automatic choice
+    RUNFERN_BUILD_TIMEOUT               seconds the VM may take (default 3600; 19800 with tcg)
+    RUNFERN_EFI_CODE, RUNFERN_EFI_VARS  UEFI firmware and variable store template for the VM
+    GITHUB_TOKEN or GH_TOKEN            for GitHub's API, whose anonymous limit CI runners share
 
 Output in Tools/GuestImage/build/<id>/:
     <id>.runfernimage   ustar bundle to publish
     <id>.sha256         checksum for the catalog's ImageSource
+    <id>.json           id, size, and checksum (also printed), for CI
 """
 import base64
 import gzip
+import hashlib
 import io
 import json
+import os
 import pathlib
+import platform
 import re
 import shutil
 import struct
 import subprocess
 import sys
+import time
 import urllib.request
 import uuid
 import zipfile
@@ -81,15 +101,198 @@ DISK_SIZE = "16G"
 BOOT_MODULES = ["virtio_pci", "virtio_blk", "virtio_net", "virtio_console", "9p", "9pnet_virtio"]
 AGENT_PROTOCOL_VERSION = 1
 
+# The customization VM. Emulated (tcg) it needs hours, so it gets most of a 6 hour CI job.
+ACCELERATORS = ("hvf", "kvm", "tcg")
+KVM_DEVICE = "/dev/kvm"
+ACCELERATED_TIMEOUT = 3600
+EMULATED_TIMEOUT = 19800
+MAX_VCPUS = 4
+# UEFI firmware and variable store template from distribution packages, after Homebrew's.
+SYSTEM_FIRMWARE = [("/usr/share/qemu/edk2-aarch64-code.fd", "/usr/share/qemu/edk2-arm-vars.fd"),
+                   ("/usr/share/AAVMF/AAVMF_CODE.fd", "/usr/share/AAVMF/AAVMF_VARS.fd")]  # qemu-efi-aarch64
+# Programs that write the cloud-init seed ISO on Linux, preferred first.
+ISO_TOOLS = ("xorriso", "genisoimage", "mkisofs", "cloud-localds")
+# The bundle's files in archive order (see ImageBundle.swift).
+BUNDLE_FILES = ["image.json", "disk.qcow2", "vmlinuz", "initrd.img"]
+# GitHub refuses release assets of 2 GiB or more.
+RELEASE_ASSET_LIMIT = 2 << 30
+
 
 def run(*command, **options):
     print("+", " ".join(map(str, command)), flush=True)
     return subprocess.run(list(map(str, command)), check=True, **options)
 
 
+def is_macos():
+    return platform.system() == "Darwin"
+
+
+def sysctl(name):
+    """A macOS kernel setting, or "" if the host doesn't have it."""
+    try:
+        result = subprocess.run(["/usr/sbin/sysctl", "-n", name], capture_output=True, text=True)
+    except OSError:
+        return ""
+    return result.stdout.strip() if result.returncode == 0 else ""
+
+
+def accelerator():
+    """hvf or kvm where the host runs the arm64 guest natively, tcg (emulation) otherwise."""
+    override = os.environ.get("RUNFERN_ACCEL", "").strip()
+    if override:
+        if override not in ACCELERATORS:
+            sys.exit(f"RUNFERN_ACCEL must be one of {', '.join(ACCELERATORS)}, not {override!r}")
+        return override
+    if is_macos():
+        # Intel Macs support Hypervisor.framework too, but only for guests of their own architecture.
+        return "hvf" if sysctl("kern.hv_support") == "1" and sysctl("hw.optional.arm64") == "1" else "tcg"
+    if platform.system() == "Linux" and platform.machine() in ("aarch64", "arm64"):
+        if os.access(KVM_DEVICE, os.R_OK | os.W_OK):
+            return "kvm"
+        if os.path.exists(KVM_DEVICE):
+            print(f"{KVM_DEVICE} exists but this user can't read and write it, so the VM is emulated")
+    return "tcg"
+
+
+def host_cpus():
+    try:
+        return len(os.sched_getaffinity(0))  # what a container or CI runner actually grants
+    except AttributeError:  # macOS
+        return os.cpu_count() or 1
+
+
+def vm_cpu_arguments(accel):
+    """QEMU's -accel, -cpu, and -smp. Emulated, every vCPU gets its own host thread, and the
+    implementation-defined pointer authentication is much cheaper to emulate than QARMA."""
+    cpus = min(host_cpus(), MAX_VCPUS)
+    if accel == "tcg":
+        return ["-accel", "tcg,thread=multi", "-cpu", "max,pauth-impdef=on", "-smp", cpus]
+    return ["-accel", accel, "-cpu", "host", "-smp", cpus]
+
+
+def build_timeout(accel):
+    """Seconds the customization VM may run before the build fails."""
+    value = os.environ.get("RUNFERN_BUILD_TIMEOUT", "").strip()
+    if value:
+        if not value.isdigit() or int(value) == 0:
+            sys.exit(f"RUNFERN_BUILD_TIMEOUT must be a positive number of seconds, not {value!r}")
+        return int(value)
+    return EMULATED_TIMEOUT if accel == "tcg" else ACCELERATED_TIMEOUT
+
+
+def efi_firmware():
+    """UEFI firmware and variable store template for the VM's two flash devices:
+    RUNFERN_EFI_CODE and RUNFERN_EFI_VARS if set, else Homebrew's QEMU, else SYSTEM_FIRMWARE."""
+    code, variables = os.environ.get("RUNFERN_EFI_CODE"), os.environ.get("RUNFERN_EFI_VARS")
+    if code or variables:
+        if not (code and variables):
+            sys.exit("Set both RUNFERN_EFI_CODE and RUNFERN_EFI_VARS, or neither")
+        candidates = [(code, variables)]
+    else:
+        candidates = []
+        if shutil.which("brew"):
+            prefix = subprocess.run(["brew", "--prefix", "qemu"], capture_output=True, text=True).stdout.strip()
+            if prefix:
+                share = pathlib.Path(prefix) / "share/qemu"
+                candidates.append((share / "edk2-aarch64-code.fd", share / "edk2-arm-vars.fd"))
+        candidates += SYSTEM_FIRMWARE
+    for code, variables in candidates:
+        code, variables = pathlib.Path(code), pathlib.Path(variables)
+        if code.is_file() and variables.is_file():
+            # The virt machine's two flash devices are equally large; QEMU rejects images that don't fit.
+            if code.stat().st_size == variables.stat().st_size:
+                return code, variables
+            print(f"Skipping {code} and {variables}: they differ in size")
+    sys.exit("No UEFI firmware for the VM found. Looked for:\n"
+             + "".join(f"    {code} and {variables}\n" for code, variables in candidates)
+             + "Install it (macOS: brew install qemu; Debian/Ubuntu: apt-get install qemu-efi-aarch64) "
+               "or set RUNFERN_EFI_CODE and RUNFERN_EFI_VARS.")
+
+
+def seed_iso_tool():
+    """The program that writes the cloud-init seed ISO."""
+    if is_macos():
+        return "hdiutil"
+    for tool in ISO_TOOLS:
+        if shutil.which(tool):
+            return tool
+    sys.exit(f"None of {', '.join(ISO_TOOLS)} is installed to create the cloud-init seed ISO. "
+             "Install xorriso (apt-get install xorriso, dnf install xorriso), genisoimage, or cloud-image-utils.")
+
+
+def seed_iso_command(tool, seed, iso):
+    """Writes user-data and meta-data from `seed` to an ISO labelled cidata, where cloud-init's
+    NoCloud source looks for them. Joliet and Rock Ridge keep the file names intact."""
+    files = [seed / "user-data", seed / "meta-data"]
+    if tool == "hdiutil":
+        return ["hdiutil", "makehybrid", "-quiet", "-iso", "-joliet", "-default-volume-name", "cidata",
+                "-o", iso, seed]
+    if tool == "cloud-localds":
+        return ["cloud-localds", iso, *files]
+    mkisofs = ["xorriso", "-as", "mkisofs"] if tool == "xorriso" else [tool]
+    return mkisofs + ["-quiet", "-output", iso, "-volid", "cidata", "-joliet", "-rock", *files]
+
+
+def require_programs():
+    """Fails before the long VM run rather than after it."""
+    needed = ["qemu-img", "qemu-system-aarch64", "zstd"] + ([] if is_macos() else ["tar"])
+    missing = [name for name in needed if not shutil.which(name)]
+    if missing:
+        sys.exit(f"Missing {', '.join(missing)}. Install: brew install qemu (macOS), or apt-get install "
+                 "qemu-system-arm qemu-efi-aarch64 qemu-utils xorriso zstd (Debian/Ubuntu)")
+    if not is_macos():
+        version = subprocess.run(["tar", "--version"], capture_output=True, text=True).stdout
+        if "GNU tar" not in version:
+            sys.exit("On Linux the bundle is written with GNU tar, but `tar` is another implementation")
+
+
+def archive_command(archive, bundle, mtime):
+    """The tar invocation and environment for the bundle: plain ustar (all TarExtractor.swift reads),
+    files in BUNDLE_FILES order. On macOS the system's bsdtar rather than a GNU tar from Homebrew,
+    without AppleDouble files. Elsewhere GNU tar with fixed owner, mode, and time, so the archive's
+    metadata doesn't depend on the build machine."""
+    if is_macos():
+        return (["tar", "--format", "ustar", "-cf", archive, "-C", bundle, *BUNDLE_FILES],
+                {"COPYFILE_DISABLE": "1", "PATH": "/usr/bin:/bin"})
+    return (["tar", "--format=ustar", "--owner=0", "--group=0", "--numeric-owner", "--mode=0644",
+             f"--mtime=@{mtime}", "-cf", archive, "-C", bundle, *BUNDLE_FILES], None)
+
+
+def release_size(archive):
+    """The archive's size if GitHub accepts it as a release asset. A larger archive is removed, so
+    publish-image.sh can't create a release whose upload then fails; bundle/ keeps its parts."""
+    size = archive.stat().st_size
+    if size >= RELEASE_ASSET_LIMIT:
+        archive.unlink()
+        sys.exit(f"{archive} would have {size} bytes, but GitHub release assets must be smaller than 2 GiB "
+                 f"({RELEASE_ASSET_LIMIT} bytes). Make the image smaller.")
+    return size
+
+
+def sha256(path):
+    digest = hashlib.sha256()
+    with open(path, "rb") as handle:
+        for chunk in iter(lambda: handle.read(4 << 20), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def console_tail(log, lines=60):
+    """The end of the VM's serial console, for build logs where console.log itself isn't at hand."""
+    try:
+        return "\n".join(log.read_text(errors="replace").splitlines()[-lines:])
+    except OSError:
+        return "(no console output)"
+
+
 def latest_openvscode_server():
+    headers = {"Accept": "application/vnd.github+json"}
+    # CI runners share the anonymous rate limit of their address; a token has its own.
+    token = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
     request = urllib.request.Request("https://api.github.com/repos/gitpod-io/openvscode-server/releases/latest",
-                                     headers={"Accept": "application/vnd.github+json"})
+                                     headers=headers)
     release = json.load(urllib.request.urlopen(request))
     for asset in release["assets"]:
         if asset["name"].endswith("linux-arm64.tar.gz"):
@@ -267,10 +470,22 @@ def main():
         sys.exit("Usage: build_image.py " + "|".join(BASES))
     image_id = sys.argv[1]
     base = BASES[image_id]
+    started = int(time.time())
+    require_programs()
+    accel = accelerator()
+    timeout = build_timeout(accel)
+    firmware, firmware_variables = efi_firmware()
+    iso_tool = seed_iso_tool()
+    print(f"Accelerator: {accel}" + (" (emulated, this takes hours)" if accel == "tcg" else ""), flush=True)
+
     build = HERE / "build" / image_id
     work = build / "work"
     shutil.rmtree(work, ignore_errors=True)
     work.mkdir(parents=True)
+    archive = build / f"{image_id}.runfernimage"
+    # Results of an earlier build must not survive a failed one and get published instead.
+    for stale in (archive, build / f"{image_id}.sha256", build / f"{image_id}.json"):
+        stale.unlink(missing_ok=True)
 
     url = cloud_image_url(base)
     cloud_image = HERE / "build" / pathlib.Path(url).name
@@ -288,28 +503,35 @@ def main():
     seed.mkdir()
     (seed / "meta-data").write_text(f"instance-id: runfern-{image_id}\nlocal-hostname: runfern\n")
     (seed / "user-data").write_text(user_data(base, ide_url))
-    run("hdiutil", "makehybrid", "-quiet", "-iso", "-joliet", "-default-volume-name", "cidata",
-        "-o", work / "seed.iso", seed)
+    run(*seed_iso_command(iso_tool, seed, work / "seed.iso"))
     out = work / "out.raw"
     run("qemu-img", "create", "-f", "raw", out, "512M")
 
-    share = pathlib.Path(subprocess.check_output(["brew", "--prefix", "qemu"], text=True).strip()) / "share/qemu"
+    console = work / "console.log"
     variables = work / "efi-vars.fd"
-    shutil.copy(share / "edk2-arm-vars.fd", variables)
-    run("qemu-system-aarch64", "-machine", "virt", "-accel", "hvf", "-cpu", "host", "-smp", "4", "-m", "4096",
-        "-nographic", "-serial", f"file:{work / 'console.log'}", "-monitor", "none",
-        "-drive", f"if=pflash,format=raw,readonly=on,file={share / 'edk2-aarch64-code.fd'}",
-        "-drive", f"if=pflash,format=raw,file={variables}",
-        "-drive", f"if=virtio,format=qcow2,file={disk}",
-        "-drive", f"if=virtio,format=raw,readonly=on,file={work / 'seed.iso'}",
-        "-drive", f"if=virtio,format=raw,file={out}",
-        "-netdev", "user,id=net0", "-device", "virtio-net-pci,netdev=net0", timeout=3600)
+    # copyfile, not copy: the template may be read-only, but the VM writes to its copy.
+    shutil.copyfile(firmware_variables, variables)
+    try:
+        # romfile= leaves out the NIC's iPXE boot ROM: the VM boots from disk, the firmware has its
+        # own virtio-net driver, and Debian/Ubuntu only recommend the package with the ROM (ipxe-qemu).
+        run("qemu-system-aarch64", "-machine", "virt", *vm_cpu_arguments(accel), "-m", "4096",
+            "-nographic", "-serial", f"file:{console}", "-monitor", "none",
+            "-drive", f"if=pflash,format=raw,readonly=on,file={firmware}",
+            "-drive", f"if=pflash,format=raw,file={variables}",
+            "-drive", f"if=virtio,format=qcow2,file={disk}",
+            "-drive", f"if=virtio,format=raw,readonly=on,file={work / 'seed.iso'}",
+            "-drive", f"if=virtio,format=raw,file={out}",
+            "-netdev", "user,id=net0", "-device", "virtio-net-pci,netdev=net0,romfile=", timeout=timeout)
+    except subprocess.TimeoutExpired:
+        print(console_tail(console), file=sys.stderr)
+        sys.exit(f"The customization VM didn't finish within {timeout} s (RUNFERN_BUILD_TIMEOUT); see {console}")
 
     extracted = work / "boot"
     extracted.mkdir()
     run("tar", "-xf", out, "-C", extracted)
     if not (extracted / "vmlinuz").exists():
-        sys.exit(f"Customization failed; see {work / 'console.log'}")
+        print(console_tail(console), file=sys.stderr)
+        sys.exit(f"Customization failed; see {console}")
 
     bundle = build / "bundle"
     shutil.rmtree(bundle, ignore_errors=True)
@@ -325,12 +547,14 @@ def main():
                 "ideVersion": ide_version}
     (bundle / "image.json").write_text(json.dumps(manifest, indent=2) + "\n")
 
-    archive = build / f"{image_id}.runfernimage"
-    run("tar", "--format", "ustar", "-cf", archive, "-C", bundle, "image.json", "disk.qcow2", "vmlinuz", "initrd.img",
-        env={"COPYFILE_DISABLE": "1", "PATH": "/usr/bin:/bin"})
-    digest = subprocess.check_output(["shasum", "-a", "256", archive], text=True).split()[0]
+    command, environment = archive_command(archive, bundle, started)
+    run(*command, env=environment)
+    size = release_size(archive)
+    digest = sha256(archive)
     (build / f"{image_id}.sha256").write_text(digest + "\n")
-    print(json.dumps({"id": image_id, "sizeBytes": archive.stat().st_size, "sha256": digest}, indent=2))
+    summary = json.dumps({"id": image_id, "sizeBytes": size, "sha256": digest}, indent=2)
+    (build / f"{image_id}.json").write_text(summary + "\n")
+    print(summary)
 
 
 if __name__ == "__main__":
