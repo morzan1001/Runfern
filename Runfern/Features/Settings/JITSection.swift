@@ -1,9 +1,10 @@
 #if RUNFERN_JIT
 import SwiftUI
-import UniformTypeIdentifiers
 
 /// JIT compilation in builds for sideloading: the setting, how the debugger is obtained, and what
-/// this app session uses.
+/// this app session uses. The built-in method's details and actions live on their own page
+/// (`BuiltInJITView`), like a Wi-Fi network's in Settings; this section only offers the setup
+/// while JIT is not set up yet.
 struct JITSection: View {
     @AppStorage(JITSupport.enabledKey) private var isEnabled = true
     @AppStorage(JITAcquisition.methodKey) private var storedMethod: JITMethod?
@@ -11,25 +12,19 @@ struct JITSection: View {
     var builtInUnavailableReason = BuiltInJIT.unavailableReason
     var canCreatePairingFile = OnDevicePairing.isSupported
 
-    @State private var isImporting = false
-    @State private var setup: SetupRequest?
+    @State private var isSettingUp = false
     @State private var pairingState = PairingFile.state
-    @State private var message: String?
 
     private var isBuiltInAvailable: Bool { builtInUnavailableReason == nil }
-
-    /// An open `JITSetupView`.
-    private struct SetupRequest: Identifiable {
-        let id = UUID()
-        /// Runs at once, to check a pairing file that is already there.
-        var startsAutomatically = false
-        /// Creates a new pairing file although one is stored.
-        var forcesPairing = false
-    }
 
     private var method: Binding<JITMethod> {
         Binding(get: { storedMethod ?? (isBuiltInAvailable ? .builtIn : .stikDebug) },
                 set: { storedMethod = $0 })
+    }
+
+    /// A debugger such as Xcode's is attached that the chosen method does not use for JIT.
+    private var hasOtherDebugger: Bool {
+        JITSupport.isDebuggerAttached && !JITAcquisition.acceptsAttachedDebugger
     }
 
     var body: some View {
@@ -40,26 +35,10 @@ struct JITSection: View {
                 }
                 // Presentations hang on this one row, which is always there: on the Section, a
                 // List would attach them to every row, which then all try to present at once.
-                .fileImporter(isPresented: $isImporting, allowedContentTypes: [.propertyList, .data]) { result in
-                    do {
-                        try PairingFile.importFile(at: result.get())
-                        message = nil
-                        pairingFileChanged()
-                        // Finish the setup with the imported file and check it right away, once
-                        // the file picker has gone.
-                        Task {
-                            try? await Task.sleep(for: .milliseconds(600))
-                            setup = SetupRequest(startsAutomatically: true)
-                        }
-                    } catch {
-                        message = error.localizedDescription
-                        pairingState = PairingFile.state
-                    }
+                .sheet(isPresented: $isSettingUp, onDismiss: refresh) {
+                    JITSetupView()
                 }
-                // The setup keeps its own result in `BuiltInJIT.lastError`, so closing it only refreshes.
-                .sheet(item: $setup, onDismiss: { pairingState = PairingFile.state }) { request in
-                    JITSetupView(startsAutomatically: request.startsAutomatically, forcesPairing: request.forcesPairing)
-                }
+                .onAppear(perform: refresh)
                 if isEnabled {
                     Picker(selection: method) {
                         // A choice that is no longer available stays visible, so it is never
@@ -75,7 +54,19 @@ struct JITSection: View {
                         Label("Method", systemImage: "ladybug")
                     }
                     if method.wrappedValue == .builtIn, isBuiltInAvailable {
-                        builtInRows
+                        if pairingState != .ready, canCreatePairingFile {
+                            Button("Set Up JIT…", systemImage: "wand.and.stars") { isSettingUp = true }
+                                .bold()
+                        }
+                        NavigationLink {
+                            BuiltInJITView(canCreatePairingFile: canCreatePairingFile)
+                        } label: {
+                            LabeledContent {
+                                Text(builtInState)
+                            } label: {
+                                Label("Built-In JIT", systemImage: "cpu")
+                            }
+                        }
                     }
                 }
                 LabeledContent {
@@ -91,14 +82,16 @@ struct JITSection: View {
         }
     }
 
+    private func refresh() {
+        pairingState = PairingFile.state
+    }
+
     @ViewBuilder
     private var footer: some View {
-        if let message {
-            Text(message)
+        if isEnabled, hasOtherDebugger {
+            Text("Another debugger, such as Xcode's, is attached, so Linux runs interpreted. To use JIT with it, choose External Debugger and answer QEMU's breakpoint with Tools/QEMU/lldb_txm_jit.py.")
         } else if isEnabled, method.wrappedValue == .builtIn, let builtInUnavailableReason {
             Text(builtInUnavailableReason)
-        } else if isEnabled, method.wrappedValue == .builtIn, let lastError = BuiltInJIT.lastError {
-            Text(lastError)
         } else if isEnabled, method.wrappedValue == .builtIn, pairingState != .ready {
             if canCreatePairingFile {
                 Text("Tap Set Up JIT. Runfern does the rest; you only allow its VPN and confirm the pairing in Settings.")
@@ -110,53 +103,11 @@ struct JITSection: View {
         }
     }
 
-    @ViewBuilder
-    private var builtInRows: some View {
-        LabeledContent {
-            switch pairingState {
-            case .ready: Text("Ready")
-            case .missing: Text("Missing")
-            case .unusable: Text("Wrong Format")
-            }
-        } label: {
-            Label("Pairing File", systemImage: "key")
-        }
-        if pairingState == .ready {
-            Button("Check JIT", systemImage: "checkmark.shield") {
-                message = nil
-                setup = SetupRequest(startsAutomatically: true)
-            }
-            if canCreatePairingFile {
-                Button("Pair Again…", systemImage: "arrow.triangle.2.circlepath") {
-                    message = nil
-                    setup = SetupRequest(forcesPairing: true)
-                }
-            }
-        } else if canCreatePairingFile {
-            Button("Set Up JIT…", systemImage: "wand.and.stars") {
-                message = nil
-                setup = SetupRequest(startsAutomatically: false)
-            }
-            .bold()
-        }
-        Button("Import Pairing File…", systemImage: "square.and.arrow.down") { isImporting = true }
-        if pairingState != .missing {
-            Button("Remove Pairing File", systemImage: "trash", role: .destructive) {
-                PairingFile.remove()
-                pairingFileChanged()
-            }
-        }
-        Button("Reset Developer Disk Image", systemImage: "arrow.counterclockwise") {
-            Task { message = await BuiltInJIT.resetDiskImage() }
-        }
-    }
-
-    /// A new or removed pairing file makes the last failure meaningless.
-    private func pairingFileChanged() {
-        let previous = pairingState
-        pairingState = PairingFile.state
-        if pairingState != previous || pairingState == .ready {
-            BuiltInJIT.clearLastError()
+    private var builtInState: LocalizedStringKey {
+        switch pairingState {
+        case .ready: BuiltInJIT.lastError == nil ? "Ready" : "Needs Attention"
+        case .missing: "Not Set Up"
+        case .unusable: "Needs Attention"
         }
     }
 
@@ -167,6 +118,8 @@ struct JITSection: View {
         case nil:
             if !isEnabled {
                 "Off"
+            } else if hasOtherDebugger {
+                "Other Debugger Attached"
             } else if JITSupport.isDebuggerAttached {
                 "Ready"
             } else {
@@ -175,11 +128,7 @@ struct JITSection: View {
                     if !isBuiltInAvailable {
                         "Unavailable"
                     } else {
-                        switch pairingState {
-                        case .ready: "On Next Linux Start"
-                        case .missing: "Not Set Up"
-                        case .unusable: "Pairing File Unusable"
-                        }
+                        pairingState == .ready ? "On Next Linux Start" : "Not Set Up"
                     }
                 case .stikDebug: "On Next Linux Start"
                 case .externalDebugger: "No Debugger Attached"
@@ -190,6 +139,8 @@ struct JITSection: View {
 }
 
 #Preview {
-    Form { JITSection(isIncluded: true, builtInUnavailableReason: nil, canCreatePairingFile: true) }
+    NavigationStack {
+        Form { JITSection(isIncluded: true, builtInUnavailableReason: nil, canCreatePairingFile: true) }
+    }
 }
 #endif

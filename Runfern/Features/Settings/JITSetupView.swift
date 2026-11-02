@@ -125,10 +125,12 @@ struct JITSetupView: View {
         }
     }
 
-    /// Opens Settings as close to Developer Mode as iPadOS allows: these addresses are not public,
-    /// so each one that fails falls back to the next, ending with Runfern's own page in Settings.
+    /// Opens Settings as close to Developer Mode as iPadOS allows. These addresses are not public:
+    /// iPadOS opens Settings for any of them and shows the deepest page it recognizes, so only the
+    /// `root=` form is used, which names a page rather than an app (a bare `App-prefs:Privacy…`
+    /// opens Settings › Apps). Runfern's own page in Settings is the last resort.
     private func openSettings() {
-        openFirst("App-prefs:Privacy&path=DEVELOPER_MODE", "App-prefs:Privacy", "App-prefs:", UIApplication.openSettingsURLString)
+        openFirst("App-prefs:root=Privacy&path=DEVELOPER_MODE", UIApplication.openSettingsURLString)
     }
 
     /// Opens the first of `candidates` that iPadOS accepts.
