@@ -97,7 +97,7 @@ struct JITSetupView: View {
         switch setup.pairing.phase {
         case .advertising(let name):
             VStack(alignment: .leading, spacing: 12) {
-                Text("In Settings, open Privacy & Security › Developer Mode and tap “Pair with \(name)”. Then enter the code Runfern shows here and in a notification.")
+                Text("In Settings, open Privacy & Security › Developer Mode, at the very bottom, or search Settings for “Developer Mode”. Tap “Pair with \(name)”, then enter the code Runfern shows here and in a notification.")
                 Button("Open Settings", systemImage: "gear") { openSettings() }
                     .buttonStyle(.borderedProminent)
                 Text("Tip: Keep Settings and Runfern side by side, as windows or in Stage Manager, to see the code while you type it. Stay on Wi-Fi; no internet connection is needed.")
@@ -125,12 +125,12 @@ struct JITSetupView: View {
         }
     }
 
-    /// Opens Settings as close to Developer Mode as iPadOS allows. These addresses are not public:
-    /// iPadOS opens Settings for any of them and shows the deepest page it recognizes, so only the
-    /// `root=` form is used, which names a page rather than an app (a bare `App-prefs:Privacy…`
-    /// opens Settings › Apps). Runfern's own page in Settings is the last resort.
+    /// Opens Settings › Privacy & Security, where Developer Mode is the last entry. There is no
+    /// documented address for Developer Mode itself, and an unknown path made iPadOS open
+    /// Settings › Apps instead, so this asks for the Privacy & Security page only. These addresses
+    /// are not public either; Runfern's own page in Settings is the last resort.
     private func openSettings() {
-        openFirst("App-prefs:root=Privacy&path=DEVELOPER_MODE", UIApplication.openSettingsURLString)
+        openFirst("App-prefs:root=Privacy", UIApplication.openSettingsURLString)
     }
 
     /// Opens the first of `candidates` that iPadOS accepts.

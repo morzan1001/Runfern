@@ -2082,12 +2082,12 @@
         }
       }
     },
-    "In Settings, open Privacy & Security › Developer Mode and tap “Pair with %@”. Then enter the code Runfern shows here and in a notification." : {
+    "In Settings, open Privacy & Security › Developer Mode, at the very bottom, or search Settings for “Developer Mode”. Tap “Pair with %@”, then enter the code Runfern shows here and in a notification." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Öffne in den Einstellungen Datenschutz & Sicherheit › Entwicklermodus und tippe auf „Mit %@ koppeln“. Gib dann den Code ein, den Runfern hier und in einer Mitteilung anzeigt."
+            "value" : "Öffne in den Einstellungen Datenschutz & Sicherheit › Entwicklermodus, ganz unten, oder suche in den Einstellungen nach „Entwicklermodus“. Tippe auf „Mit %@ koppeln“ und gib dann den Code ein, den Runfern hier und in einer Mitteilung anzeigt."
           }
         }
       }
