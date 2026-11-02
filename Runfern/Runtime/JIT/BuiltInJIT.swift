@@ -20,7 +20,13 @@ enum BuiltInJIT {
     static func attachDebugger() async -> Bool {
         lastError = nil
         guard isAvailable else { return fail(String(localized: "The JIT helper is missing from this installation.")) }
-        guard let pairing = PairingFile.load() else { return fail(String(localized: "Import a pairing file to use JIT.")) }
+        let pairing: Data
+        do {
+            guard let loaded = try PairingFile.load() else { return fail(String(localized: "Import a pairing file to use JIT.")) }
+            pairing = loaded
+        } catch {
+            return fail(error.localizedDescription)
+        }
         do {
             try await LoopbackTunnel.connect()
         } catch {

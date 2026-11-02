@@ -11,7 +11,7 @@ struct JITSection: View {
     var isBuiltInAvailable = BuiltInJIT.isAvailable
 
     @State private var isImporting = false
-    @State private var hasPairingFile = PairingFile.isImported
+    @State private var pairingState = PairingFile.state
     @State private var message: String?
 
     private var method: Binding<JITMethod> {
@@ -60,7 +60,7 @@ struct JITSection: View {
                 } catch {
                     message = error.localizedDescription
                 }
-                hasPairingFile = PairingFile.isImported
+                pairingState = PairingFile.state
             }
         }
     }
@@ -68,15 +68,19 @@ struct JITSection: View {
     @ViewBuilder
     private var builtInRows: some View {
         LabeledContent {
-            Text(hasPairingFile ? "Imported" : "Missing")
+            switch pairingState {
+            case .ready: Text("Imported")
+            case .missing: Text("Missing")
+            case .unusable: Text("Wrong Format")
+            }
         } label: {
             Label("Pairing File", systemImage: "key")
         }
         Button("Import Pairing File…", systemImage: "square.and.arrow.down") { isImporting = true }
-        if hasPairingFile {
+        if pairingState != .missing {
             Button("Remove Pairing File", systemImage: "trash", role: .destructive) {
                 PairingFile.remove()
-                hasPairingFile = PairingFile.isImported
+                pairingState = PairingFile.state
             }
         }
         Button("Reset Developer Disk Image", systemImage: "arrow.counterclockwise") {
@@ -95,7 +99,12 @@ struct JITSection: View {
                 "Ready"
             } else {
                 switch method.wrappedValue {
-                case .builtIn: hasPairingFile ? "On Next Linux Start" : "Pairing File Missing"
+                case .builtIn:
+                    switch pairingState {
+                    case .ready: "On Next Linux Start"
+                    case .missing: "Pairing File Missing"
+                    case .unusable: "Pairing File Unusable"
+                    }
                 case .stikDebug: "On Next Linux Start"
                 case .externalDebugger: "No Debugger Attached"
                 }
