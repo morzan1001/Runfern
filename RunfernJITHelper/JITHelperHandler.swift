@@ -74,8 +74,9 @@ final class JITHelperHandler: NSObject, NSExtensionRequestHandling {
                     Self.log.error("Unreachable: \(reason, privacy: .public)")
                     return Answer(success: false, message: reason, stage: JITProtocol.Stage.reachability)
                 case .preparationFailed(let reason):
-                    Self.log.error("Failed at stage \(stage.current, privacy: .public): \(reason, privacy: .public)")
-                    return Answer(success: false, message: reason, stage: stage.current)
+                    let failedStage = refined(stage.current, pairingFile: pairingFile, configuration: configuration)
+                    Self.log.error("Failed at stage \(failedStage, privacy: .public): \(reason, privacy: .public)")
+                    return Answer(success: false, message: reason, stage: failedStage)
                 @unknown default:
                     return Answer(success: false, message: "StikJIT reported an unknown state.", stage: stage.current)
                 }
@@ -87,12 +88,18 @@ final class JITHelperHandler: NSObject, NSExtensionRequestHandling {
                 let pairingFile = try writePairingFile(pairing)
                 defer { try? fileManager.removeItem(at: pairingFile) }
                 Self.log.info("Enabling JIT for process \(pid, privacy: .public)")
-                // QEMU stops at its breakpoint whenever a debugger is attached, so the script always
-                // runs, also where StikJIT detects no Trusted Execution Monitor.
-                try StikJIT.enableJIT(targetPID: pid, pairingFile: pairingFile, ddiPaths: paths,
-                                      configuration: configuration, script: .legacy, forceScript: true,
-                                      preparationProgress: { stage.record($0) },
-                                      progress: { line in Self.log.info("\(line, privacy: .public)") })
+                do {
+                    // QEMU stops at its breakpoint whenever a debugger is attached, so the script
+                    // always runs, also where StikJIT detects no Trusted Execution Monitor.
+                    try StikJIT.enableJIT(targetPID: pid, pairingFile: pairingFile, ddiPaths: paths,
+                                          configuration: configuration, script: .legacy, forceScript: true,
+                                          preparationProgress: { stage.record($0) },
+                                          progress: { line in Self.log.info("\(line, privacy: .public)") })
+                } catch {
+                    let failedStage = refined(stage.current, pairingFile: pairingFile, configuration: configuration)
+                    Self.log.error("Failed at stage \(failedStage, privacy: .public): \(error.localizedDescription, privacy: .public)")
+                    return Answer(success: false, message: error.localizedDescription, stage: failedStage)
+                }
                 Self.log.info("Detached")
                 return Answer(success: true, message: "Detached.")
             default:
@@ -106,6 +113,17 @@ final class JITHelperHandler: NSObject, NSExtensionRequestHandling {
         return Answer(success: false, message: "StikJIT is not part of this build.")
         #endif
     }
+
+    #if canImport(StikJIT)
+    /// A failure StikJIT reports while checking the Developer Disk Image may come from the pairing
+    /// or from the disk image itself. Asking whether the image is mounted needs only the pairing, so
+    /// if that works, the pairing was not the problem.
+    private static func refined(_ stage: String, pairingFile: URL, configuration: StikJIT.Configuration) -> String {
+        guard stage == JITProtocol.Stage.pairing,
+              (try? StikJIT.isDDIMounted(pairingFile: pairingFile, configuration: configuration)) != nil else { return stage }
+        return JITProtocol.Stage.diskImageMount
+    }
+    #endif
 
     /// Writes the pairing file for StikJIT, which takes a path. The file exists only for the duration
     /// of the request and is never logged. It lives in the helper's temporary folder, which is never

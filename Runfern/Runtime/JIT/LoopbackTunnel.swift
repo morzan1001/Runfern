@@ -24,9 +24,38 @@ enum LoopbackTunnel {
         Bundle.main.builtInPlugInsURL.flatMap { Bundle(url: $0.appending(path: "RunfernTunnel.appex"))?.bundleIdentifier }
     }
 
+    /// One use of the VPN. The VPN stays connected until the last use is released, so a check in
+    /// Settings and a Linux start in another window don't cut each other off.
+    final class Lease {
+        private var isHeld = true
+
+        fileprivate init() {}
+
+        func release() async {
+            guard isHeld else { return }
+            isHeld = false
+            await LoopbackTunnel.endUse()
+        }
+    }
+
+    /// Uses that have not been released.
+    private static var users = 0
+
     /// Connects the tunnel, adding its configuration first if needed; adding it is what asks the
-    /// person for permission once.
-    static func connect() async throws {
+    /// person for permission once. Also when this fails or is cancelled, the VPN is left as the
+    /// other uses need it.
+    static func connect() async throws -> Lease {
+        users += 1
+        do {
+            try await start()
+        } catch {
+            await endUse()
+            throw error
+        }
+        return Lease()
+    }
+
+    private static func start() async throws {
         guard let manager = await manager() else { throw TunnelError.notConnected }
         if manager.connection.status != .connected {
             try manager.connection.startVPNTunnel()
@@ -35,18 +64,20 @@ enum LoopbackTunnel {
             if manager.connection.status == .connected { return }
             try await Task.sleep(for: .milliseconds(200))
         }
-        manager.connection.stopVPNTunnel()
         throw TunnelError.notConnected
+    }
+
+    fileprivate static func endUse() async {
+        users -= 1
+        if users == 0 {
+            await existingManager()?.connection.stopVPNTunnel()
+        }
     }
 
     /// Adds Runfern's VPN configuration without connecting it, so iPadOS asks for permission during
     /// setup rather than at the first Linux start. Returns whether the configuration is in place.
     static func requestPermission() async -> Bool {
         await manager() != nil
-    }
-
-    static func disconnect() async {
-        await existingManager()?.connection.stopVPNTunnel()
     }
 
     private static func existingManager() async -> NETunnelProviderManager? {
