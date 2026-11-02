@@ -16,6 +16,7 @@ set -euo pipefail
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
 TARGET="$REPO/Vendor/JIT"
 STIKJIT_VERSION="2.0.1"
+STIKJIT_COMMIT="b3e01a30ded4cd0b27cf1b6bd42f123bbdf49c3a"
 STIKJIT_SHA256="c376687326a785f5ed1da8caca08adc709b56919019dd751bca059b92b175d95"
 IDEVICE_VERSION="v0.1.68"
 IDEVICE_COMMIT="d32c8189c51c2789496b0768039419c3705498c3"
@@ -25,7 +26,9 @@ IDEVICE_LICENSE_SHA256="131488ce7e302b9f62e3236793e57c86a208d3dfaf03e6d7d03ddc0f
 fail () { echo "error: $1" >&2; exit 1; }
 
 mkdir -p "$TARGET"
-work="$(mktemp -d)"
+work="$REPO/build/licenses/jit-vendor-work"
+mkdir -p "$(dirname "$work")"
+mkdir "$work" || fail "License staging directory already exists: $work"
 trap 'rm -rf "$work"' EXIT
 
 echo "=== Fetching StikJIT $STIKJIT_VERSION ==="
@@ -43,6 +46,9 @@ version="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$fram
 [ "$version" = "$STIKJIT_VERSION" ] || fail "StikJIT reports version $version instead of $STIKJIT_VERSION."
 rm -rf "$TARGET/StikJIT.xcframework"
 mv "$work/stikjit/StikJIT.xcframework" "$TARGET/"
+curl -sSfL -o "$TARGET/StikJIT.xcframework/LICENSE.txt" \
+    "https://raw.githubusercontent.com/StikDebug/StikJIT/$STIKJIT_COMMIT/LICENSE"
+[ -s "$TARGET/StikJIT.xcframework/LICENSE.txt" ] || fail "Missing pinned StikJIT MPL text."
 
 echo "=== Fetching idevice $IDEVICE_VERSION (about 210 MB) ==="
 curl -sSfL -o "$work/idevice.zip" \
@@ -71,5 +77,23 @@ echo "$IDEVICE_LICENSE_SHA256  $work/idevice/swift/IDevice.xcframework/LICENSE.t
 rm -rf "$TARGET/IDevice.xcframework"
 mv "$work/idevice/swift/IDevice.xcframework" "$TARGET/"
 
+cat > "$TARGET/source-provenance.json" <<EOF
+{
+  "StikJIT": {
+    "version": "$STIKJIT_VERSION",
+    "commit": "$STIKJIT_COMMIT",
+    "releaseSHA256": "$STIKJIT_SHA256",
+    "source": "https://github.com/StikDebug/StikJIT/tree/$STIKJIT_COMMIT",
+    "embeddedIDeviceSourceStatus": "UNRESOLVED: upstream prebuilt archives lack source/features pin"
+  },
+  "IDevice": {
+    "version": "$IDEVICE_VERSION",
+    "commit": "$IDEVICE_COMMIT",
+    "releaseSHA256": "$IDEVICE_SHA256",
+    "source": "https://github.com/jkcoxson/idevice/tree/$IDEVICE_COMMIT"
+  }
+}
+EOF
+echo "Release licensing remains blocked until Tools/Licenses/verify.py --release --app PATH succeeds."
 echo "Installed into $TARGET:"
 du -sh "$TARGET"/*.xcframework

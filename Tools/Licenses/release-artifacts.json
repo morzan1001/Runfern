@@ -1,0 +1,12 @@
+{
+  "format": 1,
+  "release": "0.0.1",
+  "status": "BLOCKED",
+  "sha256": {
+    "Runfern-0.0.1-source-inputs.tar.gz": "be15529b9281ece825f44c0edbdad771c36b13256f705a516a5b19cda1167cb3",
+    "blockers.json": "f2f55d18e2ed72e8d1fbdff0cae1dec7e952d3501be887ab21940802db432f2e",
+    "provenance.json": "435444e149f2cb68d1a99cf1625d4dbded111dbca44571bbe057463d1e328975",
+    "source-inputs.json": "5ce20df4365fcfceba2110a4cec499763bdca87764d531572cb965bf5fbd98dd",
+    "SHA256SUMS": "381979d56ba6ed901fca66bfc86d3017468cabcc8e9e1fd570f5b40d31031140"
+  }
+}

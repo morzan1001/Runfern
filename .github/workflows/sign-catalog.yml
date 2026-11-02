@@ -1,0 +1,38 @@
+name: Sign Catalog
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sign-catalog
+  cancel-in-progress: false
+
+jobs:
+  sign:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: catalog
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Raise the catalog version and sign
+        env:
+          CATALOG_SIGNING_KEY: ${{ secrets.CATALOG_SIGNING_KEY }}
+        run: |
+          Tools/Catalog/sign-catalog.sh --check-key
+          python3 Tools/Catalog/catalog_release.py finish
+          Tools/Catalog/sign-catalog.sh
+          Tools/Catalog/verify-catalog.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: signed-catalog
+          path: |
+            Catalog/catalog.json
+            Catalog/catalog.json.sig
+          if-no-files-found: error
+          retention-days: 30

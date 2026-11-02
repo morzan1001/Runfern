@@ -1,0 +1,174 @@
+Rust crate: winreg — 0.55.0
+Source: https://static.crates.io/crates/winreg/winreg-0.55.0.crate
+
+===== LICENSE =====
+Copyright (c) 2015 Igor Shaula
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+
+===== examples/basic_usage.rs, examples/enum.rs, examples/installed_apps.rs, examples/load_app_key.rs, examples/map_key_serialization.rs, examples/reg2json.rs, examples/serialization.rs, examples/transacted_serialization.rs, examples/transactions.rs, src/common.rs, src/decoder/mod.rs, src/decoder/serialization_serde.rs, src/encoder/mod.rs, src/reg_key.rs, src/reg_key_metadata.rs, src/reg_value.rs, src/transaction.rs, tests/common/mod.rs, tests/reg_key.rs, tests/serialization.rs =====
+// Copyright 2023, Igor Shaula
+// Licensed under the MIT License <LICENSE or
+// http://opensource.org/licenses/MIT>. This file
+// may not be copied, modified, or distributed
+// except according to those terms.
+
+
+===== src/encoder/serialization_serde.rs =====
+// Copyright 2017, Igor Shaula
+// Licensed under the MIT License <LICENSE or
+// http://opensource.org/licenses/MIT>. This file
+// may not be copied, modified, or distributed
+// except according to those terms.
+
+
+===== src/enums.rs =====
+// Copyright 2023, Igor Shaula
+// Licensed under the MIT License <LICENSE or
+// http://opensource.org/licenses/MIT>. This file
+// may not be copied, modified, or distributed
+// except according to those terms.
+
+//! `use winreg::enums::*;` to import all needed enumerations and constants
+
+
+===== src/lib.rs =====
+// Copyright 2023, Igor Shaula
+// Licensed under the MIT License <LICENSE or
+// http://opensource.org/licenses/MIT>. This file
+// may not be copied, modified, or distributed
+// except according to those terms.
+
+//! Crate for accessing MS Windows registry
+//!
+//!## Usage
+//!
+//!### Basic usage
+//!
+//!```toml,ignore
+//!# Cargo.toml
+//![dependencies]
+//!winreg = "0.55"
+//!```
+//!
+//!```no_run
+//!use std::io;
+//!use std::path::Path;
+//!use winreg::enums::*;
+//!use winreg::RegKey;
+//!
+//!fn main() -> io::Result<()> {
+//!    println!("Reading some system info...");
+//!    let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
+//!    let cur_ver = hklm.open_subkey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion")?;
+//!    let pf: String = cur_ver.get_value("ProgramFilesDir")?;
+//!    let dp: String = cur_ver.get_value("DevicePath")?;
+//!    println!("ProgramFiles = {}\nDevicePath = {}", pf, dp);
+//!    let info = cur_ver.query_info()?;
+//!    println!("info = {:?}", info);
+//!    let mt = info.get_last_write_time_system();
+//!    println!(
+//!        "last_write_time as windows_sys::Win32::Foundation::SYSTEMTIME = {}-{:02}-{:02} {:02}:{:02}:{:02}",
+//!        mt.wYear, mt.wMonth, mt.wDay, mt.wHour, mt.wMinute, mt.wSecond
+//!    );
+//!
+//!    // enable `chrono` feature on `winreg` to make this work
+//!    // println!(
+//!    //     "last_write_time as chrono::NaiveDateTime = {}",
+//!    //     info.get_last_write_time_chrono()
+//!    // );
+//!
+//!    println!("And now lets write something...");
+//!    let hkcu = RegKey::predef(HKEY_CURRENT_USER);
+//!    let path = Path::new("Software").join("WinregRsExample1");
+//!    let (key, disp) = hkcu.create_subkey(&path)?;
+//!
+//!    match disp {
+//!        REG_CREATED_NEW_KEY => println!("A new key has been created"),
+//!        REG_OPENED_EXISTING_KEY => println!("An existing key has been opened"),
+//!    }
+//!
+//!    key.set_value("TestSZ", &"written by Rust")?;
+//!    let sz_val: String = key.get_value("TestSZ")?;
+//!    key.delete_value("TestSZ")?;
+//!    println!("TestSZ = {}", sz_val);
+//!
+//!    key.set_value("TestMultiSZ", &vec!["written", "by", "Rust"])?;
+//!    let multi_sz_val: Vec<String> = key.get_value("TestMultiSZ")?;
+//!    key.delete_value("TestMultiSZ")?;
+//!    println!("TestMultiSZ = {:?}", multi_sz_val);
+//!
+//!    key.set_value("TestDWORD", &1234567890u32)?;
+//!    let dword_val: u32 = key.get_value("TestDWORD")?;
+//!    println!("TestDWORD = {}", dword_val);
+//!
+//!    key.set_value("TestQWORD", &1234567891011121314u64)?;
+//!    let qword_val: u64 = key.get_value("TestQWORD")?;
+//!    println!("TestQWORD = {}", qword_val);
+//!
+//!    key.create_subkey("sub\\key")?;
+//!    hkcu.delete_subkey_all(&path)?;
+//!
+//!    println!("Trying to open nonexistent key...");
+//!    hkcu.open_subkey(&path).unwrap_or_else(|e| match e.kind() {
+//!        io::ErrorKind::NotFound => panic!("Key doesn't exist"),
+//!        io::ErrorKind::PermissionDenied => panic!("Access denied"),
+//!        _ => panic!("{:?}", e),
+//!    });
+//!    Ok(())
+//!}
+//!```
+//!
+//!### Iterators
+//!
+//!```no_run
+//!use std::io;
+//!use winreg::RegKey;
+//!use winreg::enums::*;
+//!
+//!fn main() -> io::Result<()> {
+//!    println!("File extensions, registered in system:");
+//!    for i in RegKey::predef(HKEY_CLASSES_ROOT)
+//!        .enum_keys().map(|x| x.unwrap())
+//!        .filter(|x| x.starts_with("."))
+//!    {
+//!        println!("{}", i);
+//!    }
+//!
+//!    let system = RegKey::predef(HKEY_LOCAL_MACHINE)
+//!        .open_subkey("HARDWARE\\DESCRIPTION\\System")?;
+//!    for (name, value) in system.enum_values().map(|x| x.unwrap()) {
+//!        println!("{} = {:?}", name, value);
+//!    }
+//!
+//!    Ok(())
+//!}
+//!```
+//!
+
+
+===== src/types.rs =====
+// Copyright 2023, Igor Shaula
+// Licensed under the MIT License <LICENSE or
+// http://opensource.org/licenses/MIT>. This file
+// may not be copied, modified, or distributed
+// except according to those terms.
+
+//! Traits for loading/saving Registry values

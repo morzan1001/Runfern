@@ -1,6 +1,6 @@
 # Builds Linux bases and publishes them, so apps can download a base the first time a project needs
 # it: each build becomes a release asset (<id>-v<image version>), the catalog lists it, and the
-# signed catalog is pushed to the branch the workflow runs on (main, where apps look for it).
+# signed catalog is saved as an artifact for a reviewed pull request to main.
 #
 # Run it from Actions > "Publish Linux Base" > Run workflow on main, with base ids from
 # Catalog/catalog.json. Needs the secret CATALOG_SIGNING_KEY of the environment "catalog", which
@@ -40,9 +40,18 @@ jobs:
       ids: ${{ steps.ids.outputs.ids }}
       list: ${{ steps.ids.outputs.list }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
+      - name: Require complete image redistribution evidence
+        env:
+          LICENSE_CLEARED: ${{ vars.LINUX_IMAGE_LICENSE_CLEARED }}
+        run: |
+          if [ "$LICENSE_CLEARED" != true ]; then
+            echo "::error::Linux image publication is blocked until guest package, license and source inventories are verified."
+            exit 1
+          fi
+          python3 Tools/Licenses/verify.py --notices-only --require-clearance
       - name: Check the requested bases
         id: ids
         env:
@@ -110,7 +119,7 @@ jobs:
     env:
       IMAGE: ${{ matrix.id }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
       - name: Check hardware acceleration
@@ -133,7 +142,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python3 Tools/GuestImage/build_image.py "$IMAGE"
       - name: Keep the image for publishing
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: image-${{ matrix.id }}
           path: |
@@ -147,7 +156,7 @@ jobs:
           overwrite: true
       - name: Keep the console log
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: console-${{ matrix.id }}
           path: Tools/GuestImage/build/${{ matrix.id }}/work/console.log
@@ -171,18 +180,18 @@ jobs:
     concurrency:
       group: publish-linux-base
       cancel-in-progress: false
-      queue: max
     env:
       IDS: ${{ needs.plan.outputs.list }}
       REBUILD: ${{ inputs.rebuild }}
       BRANCH: ${{ github.ref_name }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           # The branch as it is now, not the commit the run started on: image versions continue
           # from the newest catalog.
           ref: ${{ github.ref }}
           fetch-depth: 0
+          persist-credentials: false
       - name: Check the signing key
         env:
           CATALOG_SIGNING_KEY: ${{ secrets.CATALOG_SIGNING_KEY }}
@@ -192,7 +201,7 @@ jobs:
             exit 1
           fi
           Tools/Catalog/sign-catalog.sh --check-key
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           pattern: image-*
           merge-multiple: true
@@ -222,28 +231,23 @@ jobs:
           fi
           python3 Tools/Catalog/catalog_release.py finish
           Tools/Catalog/sign-catalog.sh
-      - name: Commit and push the catalog
-        run: |
-          if git diff --quiet -- Catalog/catalog.json Catalog/catalog.json.sig; then
-            echo "Nothing to push."
-            exit 0
-          fi
-          version="$(jq .catalogVersion Catalog/catalog.json)"
-          tags=""
-          for id in $IDS; do
-            tags="$tags $id-v$(jq --arg id "$id" '.baseImages[] | select(.id == $id) | .catalogVersion' Catalog/catalog.json)"
-          done
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "Catalog v$version: publish$tags" -- Catalog/catalog.json Catalog/catalog.json.sig
-          git pull --rebase origin "$BRANCH"
-          # Whatever landed meanwhile, only a catalog that verifies is pushed.
-          Tools/Catalog/verify-catalog.sh
-          git push origin "HEAD:$BRANCH"
+      - name: Verify the signed catalog
+        run: Tools/Catalog/verify-catalog.sh
+      - name: Save the catalog for review
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: signed-catalog
+          path: |
+            Catalog/catalog.json
+            Catalog/catalog.json.sig
+          if-no-files-found: error
+          retention-days: 30
       - name: Summary
         run: |
           {
             echo "### Catalog version $(jq .catalogVersion Catalog/catalog.json) on $BRANCH"
+            echo
+            echo "Download signed-catalog and submit both files in a pull request to main. Main is never bypassed."
             echo
             echo "| Base | Image version | Size | Download |"
             echo "| --- | --- | --- | --- |"
