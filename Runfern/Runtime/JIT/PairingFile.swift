@@ -1,6 +1,7 @@
 #if RUNFERN_JIT
 import CryptoKit
 import Foundation
+import Synchronization
 
 /// The iPad's Remote Pairing record for its developer services, which the built-in JIT needs.
 ///
@@ -47,7 +48,20 @@ nonisolated enum PairingFile {
 
     static var url: URL { AppPaths.pairingFile }
 
+    /// Read from the file once and kept until Runfern stores or removes the file, so views can ask
+    /// for it as often as they draw.
     static var state: State {
+        knownState.withLock { known in
+            if let known { return known }
+            let state = readState()
+            known = state
+            return state
+        }
+    }
+
+    private static let knownState = Mutex<State?>(nil)
+
+    private static func readState() -> State {
         guard let data = try? Data(contentsOf: url) else { return .missing }
         do {
             try validate(data)
@@ -75,6 +89,7 @@ nonisolated enum PairingFile {
         let reduced = try normalized(data)
         var destination = url
         try FileManager.default.createDirectory(at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
+        defer { knownState.withLock { $0 = nil } }
         try reduced.write(to: destination, options: [.atomic, .completeFileProtection])
         var values = URLResourceValues()
         values.isExcludedFromBackup = true
@@ -155,6 +170,7 @@ nonisolated enum PairingFile {
 
     static func remove() {
         try? FileManager.default.removeItem(at: url)
+        knownState.withLock { $0 = nil }
     }
 }
 #endif

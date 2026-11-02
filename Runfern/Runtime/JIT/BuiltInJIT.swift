@@ -14,8 +14,12 @@ enum BuiltInJIT {
     /// The VPN, the helper, and the debugger-friendly signing are part of this installation.
     static var isAvailable: Bool { unavailableReason == nil }
 
-    /// Why this installation cannot use the built-in method, or nil if it can.
-    static var unavailableReason: String? {
+    /// Why this installation cannot use the built-in method, or nil if it can. Nothing it depends
+    /// on changes while Runfern runs, and finding it out takes file and container lookups, so it is
+    /// worked out once, not every time Settings draws itself.
+    static let unavailableReason: String? = findUnavailableReason()
+
+    private static func findUnavailableReason() -> String? {
         if !JITSupport.allowsTunnel {
             return String(localized: "This installation may not use Runfern's VPN. Built-In needs signing with the Network Extension capability, for example from Xcode with a paid developer account; AltStore, SideStore, and iloader cannot add it. Use StikDebug instead.")
         }
