@@ -14,8 +14,10 @@ if [ "${1:-}" = "detach" ]; then DETACH="detach"; shift; fi
 [ "${1:-}" = "--" ] && shift
 SCRIPT="$(cd "$(dirname "$0")" && pwd)/lldb_txm_jit.py"
 
+# The Built-In method uses JIT only with the debugger its own helper attached; this script's LLDB
+# answers QEMU's breakpoint itself, so Runfern runs with the External Debugger method.
 nohup xcrun devicectl device process launch --device "$DEVICE" --terminate-existing --start-stopped \
-    --console nrw.cyber.runfern -- "$@" > "$PREFIX-app.log" 2>&1 &
+    --console nrw.cyber.runfern -- -jitMethod externalDebugger "$@" > "$PREFIX-app.log" 2>&1 &
 
 PID=""
 for _ in $(seq 1 30); do

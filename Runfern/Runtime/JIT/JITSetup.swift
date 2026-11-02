@@ -28,9 +28,9 @@ final class JITSetup {
         case failed(String)
     }
 
-    private(set) var vpn: StepState = .pending
+    private(set) var vpnStep: StepState = .pending
     private(set) var pairingStep: StepState = .pending
-    private(set) var check: StepState = .pending
+    private(set) var checkStep: StepState = .pending
     /// The iPad did not accept the stored pairing file; pairing again creates a new one.
     private(set) var canPairAgain = false
     let pairing = OnDevicePairing()
@@ -50,10 +50,10 @@ final class JITSetup {
 
     var isRunning: Bool { task != nil }
 
-    var isDone: Bool { check == .done }
+    var isDone: Bool { checkStep == .done }
 
     /// Units of background progress for the check, which shows no progress of its own.
-    private static let checkUnits = 100
+    private static let unitsPerStage = 100
 
     /// Runs the steps that are not done yet; `forcingPairing` creates a new pairing file even if
     /// one is stored. Must be called as a direct result of a person's action, because the steps
@@ -62,9 +62,9 @@ final class JITSetup {
         guard task == nil else { return }
         let forcing = forcingPairing || (pairingIsForced && pairingStep != .done)
         pairingIsForced = forcing
-        if vpn != .done { vpn = .pending }
+        if vpnStep != .done { vpnStep = .pending }
         if pairingStep != .done || forcing { pairingStep = .pending }
-        check = .pending
+        checkStep = .pending
         canPairAgain = false
         task = Task {
             await run(forcingPairing: forcing)
@@ -79,7 +79,7 @@ final class JITSetup {
     private func run(forcingPairing: Bool) async {
         let needsPairing = forcingPairing || PairingFile.state != .ready
         if needsPairing && !OnDevicePairing.isSupported {
-            pairingStep = .failed(String(localized: "This build cannot create the pairing file on the iPad. Create it on a computer and import it, as described in How Runfern Works."))
+            pairingStep = .failed(OnDevicePairing.unsupportedMessage)
             return
         }
         // The pairing sends its code as a notification; asking now keeps all of iPadOS's questions
@@ -88,13 +88,13 @@ final class JITSetup {
             _ = try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound])
         }
 
-        if vpn != .done {
-            vpn = .running
+        if vpnStep != .done {
+            vpnStep = .running
             guard await LoopbackTunnel.requestPermission() else {
-                vpn = .failed(String(localized: "iPadOS did not allow Runfern's VPN. Try again and tap Allow."))
+                vpnStep = .failed(String(localized: "iPadOS did not allow Runfern's VPN. Try again and tap Allow."))
                 return
             }
-            vpn = .done
+            vpnStep = .done
         }
         guard !Task.isCancelled else { return }
 
@@ -110,7 +110,7 @@ final class JITSetup {
             let message = String(localized: "iPadOS stopped the setup while Runfern was in the background. Keep Runfern next to Settings, as a window or in Stage Manager, and try again.")
             switch interruptedStep {
             case .pairing: pairingStep = .failed(message)
-            case .check: check = .failed(message)
+            case .check: checkStep = .failed(message)
             }
         }
     }
@@ -119,14 +119,12 @@ final class JITSetup {
     private func pairAndCheck(needsPairing: Bool, progress: ContinuedWork.Handle) async -> Bool {
         if needsPairing {
             pairingStep = .running
-            guard await pairing.pairToEnd(progress: progress) else {
+            if let failure = await pairing.pairToEnd(progress: progress) {
                 if Task.isCancelled {
                     pairingStep = .pending
                     interruptedStep = .pairing
-                } else if case .failed(let message) = pairing.phase {
-                    pairingStep = .failed(message)
                 } else {
-                    pairingStep = .failed(String(localized: "The pairing was cancelled."))
+                    pairingStep = .failed(failure)
                 }
                 return false
             }
@@ -139,30 +137,21 @@ final class JITSetup {
             return false
         }
 
-        check = .running
-        progress.report(completed: 0, of: Self.checkUnits, subtitle: String(localized: "Checking the connection"))
-        let heartbeat = Task {
-            while !Task.isCancelled {
-                do {
-                    try await Task.sleep(for: .seconds(5))
-                } catch {
-                    break
-                }
-                progress.advance(withinStagesOf: Self.checkUnits)
-            }
-        }
+        checkStep = .running
+        progress.report(completed: 0, of: Self.unitsPerStage, subtitle: String(localized: "Checking the connection"))
+        let heartbeat = progress.heartbeat(withinStagesOf: Self.unitsPerStage)
         defer { heartbeat.cancel() }
         switch await BuiltInJIT.check() {
         case .ready:
-            check = .done
-            progress.report(completed: Self.checkUnits, of: Self.checkUnits, subtitle: String(localized: "JIT is ready"))
+            checkStep = .done
+            progress.report(completed: Self.unitsPerStage, of: Self.unitsPerStage, subtitle: String(localized: "JIT is ready"))
             return true
         case .failed(let message, let needsNewPairing):
-            check = .failed(message)
+            checkStep = .failed(message)
             canPairAgain = needsNewPairing && OnDevicePairing.isSupported
             return false
         case .cancelled:
-            check = .pending
+            checkStep = .pending
             interruptedStep = .check
             return false
         }

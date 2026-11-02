@@ -3,7 +3,8 @@ import SwiftUI
 import UIKit
 
 /// Sets up the built-in JIT step by step (`JITSetup`). Runfern does everything it can by itself;
-/// the person only allows the VPN and confirms the pairing in Settings with the code shown here.
+/// the person only answers iPadOS's prompts (VPN, Local Network, notifications) and confirms the
+/// pairing in Settings with the code shown here.
 struct JITSetupView: View {
     /// Starts right away, for example to check a pairing file that was just imported.
     var startsAutomatically = false
@@ -21,7 +22,7 @@ struct JITSetupView: View {
                     Text("Runfern sets up JIT by itself. You only answer what iPadOS asks: allow Runfern's VPN, local network access, and notifications, and confirm the pairing with this iPad in Settings.")
                 }
                 Section {
-                    StepRow(title: "Allow Runfern's VPN", detail: "iPadOS asks once.", state: setup.vpn)
+                    StepRow(title: "Allow Runfern's VPN", detail: "iPadOS asks once.", state: setup.vpnStep)
                     StepRow(title: "Pair This iPad", detail: "Once; again only after the passcode changes.", state: setup.pairingStep)
                     if setup.pairingStep == .running {
                         pairingDetails
@@ -33,7 +34,7 @@ struct JITSetupView: View {
                     }
                     StepRow(title: "Check the Connection",
                             detail: "The first time, this downloads the Developer Disk Image, which needs the internet and can take a few minutes.",
-                            state: setup.check)
+                            state: setup.checkStep)
                 }
                 Section {
                     if setup.isDone {
@@ -60,17 +61,16 @@ struct JITSetupView: View {
             .navigationTitle("Set Up JIT")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    if !setup.isDone {
+                if setup.isDone {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Done", role: .confirm) { dismiss() }
+                    }
+                } else {
+                    ToolbarItem(placement: .cancellationAction) {
                         Button("Cancel", role: .cancel) {
                             setup.cancel()
                             dismiss()
                         }
-                    }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    if setup.isDone {
-                        Button("Done") { dismiss() }
                     }
                 }
             }
@@ -85,7 +85,7 @@ struct JITSetupView: View {
     }
 
     private var hasFailed: Bool {
-        [setup.vpn, setup.pairingStep, setup.check].contains { state in
+        [setup.vpnStep, setup.pairingStep, setup.checkStep].contains { state in
             if case .failed = state { return true }
             return false
         }
@@ -105,7 +105,7 @@ struct JITSetupView: View {
                     .foregroundStyle(.secondary)
             }
             .padding(.vertical, 4)
-        case .pairing(_, let code):
+        case .pairing(let code):
             if let code {
                 VStack(spacing: 8) {
                     Text("Enter this code on the iPad")
@@ -134,30 +134,45 @@ struct JITSetupView: View {
     }
 }
 
-/// One step of the setup with its state.
+/// One step of the setup with its state: the icon or spinner beside the title, the explanation or
+/// the failure below it, aligned with the title.
 private struct StepRow: View {
     let title: LocalizedStringKey
     let detail: LocalizedStringKey
     let state: JITSetup.StepState
 
+    @ScaledMetric private var iconWidth: CGFloat = 24
+
     var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 12) {
-            icon
-                .frame(width: 24)
-            VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack(spacing: 12) {
+                icon
+                    .frame(width: iconWidth)
                 Text(title)
+            }
+            Group {
                 if case .failed(let message) = state {
                     Text(message)
-                        .font(.footnote)
                         .foregroundStyle(.red)
                 } else {
                     Text(detail)
-                        .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
             }
+            .font(.footnote)
+            .padding(.leading, iconWidth + 12)
         }
         .accessibilityElement(children: .combine)
+        .accessibilityValue(accessibilityState)
+    }
+
+    /// What the icon alone shows; the spinner and the failure text speak for themselves.
+    private var accessibilityState: String {
+        switch state {
+        case .pending: String(localized: "pending")
+        case .done: String(localized: "done")
+        case .running, .failed: ""
+        }
     }
 
     @ViewBuilder
@@ -166,14 +181,17 @@ private struct StepRow: View {
         case .pending:
             Image(systemName: "circle")
                 .foregroundStyle(.secondary)
+                .accessibilityHidden(true)
         case .running:
             ProgressView()
         case .done:
             Image(systemName: "checkmark.circle.fill")
                 .foregroundStyle(.green)
+                .accessibilityHidden(true)
         case .failed:
             Image(systemName: "exclamationmark.triangle.fill")
                 .foregroundStyle(.orange)
+                .accessibilityHidden(true)
         }
     }
 }

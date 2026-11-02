@@ -43,14 +43,6 @@ nonisolated final class PairingHost: @unchecked Sendable {
         case code(String)
     }
 
-    /// A finished pairing.
-    struct Pairing: Sendable {
-        /// The RPPairing file (XML property list).
-        var file: Data
-        /// The iPad's name, as it introduced itself.
-        var deviceName: String?
-    }
-
     /// The Bonjour instance name, which is also the pairing file's identifier.
     let serviceName: String
     /// The TXT record to publish with the service.
@@ -116,14 +108,14 @@ nonisolated final class PairingHost: @unchecked Sendable {
         pairable_host_free(handle)
     }
 
-    /// Waits for this iPad to connect and runs the pairing. Gives up after `timeout`, or when the
-    /// calling task is cancelled.
-    func pair(timeout: Duration, onEvent: @escaping @Sendable (Event) -> Void) async throws -> Pairing {
+    /// Waits for this iPad to connect and runs the pairing. Returns the RPPairing file (an XML
+    /// property list). Gives up after `timeout`, or when the calling task is cancelled.
+    func pair(timeout: Duration, onEvent: @escaping @Sendable (Event) -> Void) async throws -> Data {
         setEventHandler(onEvent)
         let seconds = Double(timeout.components.seconds)
         DispatchQueue.global().asyncAfter(deadline: .now() + seconds) { [weak self] in self?.stop(.timedOut) }
         return try await withTaskCancellationHandler {
-            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Pairing, Error>) in
+            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Data, Error>) in
                 let thread = Thread { [self] in
                     continuation.resume(with: Result { try self.acceptAndPair() })
                 }
@@ -136,7 +128,7 @@ nonisolated final class PairingHost: @unchecked Sendable {
     }
 
     /// Ends a running `pair`: wakes the wait for a connection and closes a connection in progress.
-    func stop(_ reason: HostError = .cancelled) {
+    private func stop(_ reason: HostError) {
         lock.lock()
         defer { lock.unlock() }
         guard stopReason == nil, !isClosed else { return }
@@ -162,20 +154,18 @@ nonisolated final class PairingHost: @unchecked Sendable {
 
     // MARK: - Pairing thread
 
-    private func acceptAndPair() throws -> Pairing {
+    private func acceptAndPair() throws -> Data {
         defer { closeAll() }
         let connection = try acceptLocalConnection()
         report(.connected)
-        var peer: UnsafeMutablePointer<RpPairingPeerDeviceC>?
         var file: OpaquePointer?
         let context = Unmanaged.passUnretained(self).toOpaque()
         let error = pairable_host_accept_fd(handle, connection, { code, context in
             guard let code, let context else { return }
             // `code` is valid only during this call.
             Unmanaged<PairingHost>.fromOpaque(context).takeUnretainedValue().report(.code(String(cString: code)))
-        }, context, &peer, &file)
+        }, context, nil, &file)
         defer {
-            if let peer { rppairing_peer_device_free(peer) }
             if let file { rp_pairing_file_free(file) }
         }
         if let error {
@@ -191,11 +181,7 @@ nonisolated final class PairingHost: @unchecked Sendable {
         guard let bytes else { throw HostError.pairing("empty pairing file") }
         let data = Data(bytes: bytes, count: Int(count))
         idevice_data_free(bytes, count)
-        var deviceName: String?
-        if let peer, let name = peer.pointee.name {
-            deviceName = String(cString: name)
-        }
-        return Pairing(file: data, deviceName: deviceName)
+        return data
     }
 
     /// The first connection that comes from this iPad itself. Connections from other devices on
@@ -287,14 +273,14 @@ nonisolated final class PairingHost: @unchecked Sendable {
 
     /// Whether the connection `fd` comes from this iPad: its peer has the address it was made to,
     /// or a loopback address.
-    static func isFromThisDevice(_ fd: Int32) -> Bool {
+    private static func isFromThisDevice(_ fd: Int32) -> Bool {
         guard let peer = address(of: fd, peer: true), let local = address(of: fd, peer: false) else { return false }
         return isLocal(peer: peer, local: local)
     }
 
     /// Whether a connection from `peer` to `local` (IPv4 addresses in host byte order) stays on
     /// this device.
-    static func isLocal(peer: UInt32, local: UInt32) -> Bool {
+    private static func isLocal(peer: UInt32, local: UInt32) -> Bool {
         peer == local || peer >> 24 == 127
     }
 

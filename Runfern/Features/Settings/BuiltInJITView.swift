@@ -8,6 +8,9 @@ struct BuiltInJITView: View {
     var canCreatePairingFile = OnDevicePairing.isSupported
 
     @State private var pairingState = PairingFile.state
+    /// `BuiltInJIT.lastError`, which SwiftUI does not observe, as of the last refresh.
+    @State private var lastError = BuiltInJIT.lastError
+    @State private var diskImageMessage: String?
     @State private var setup: SetupRequest?
     @State private var isImporting = false
     @State private var isConfirmingRemoval = false
@@ -26,6 +29,9 @@ struct BuiltInJITView: View {
     var body: some View {
         Form {
             Section {
+                LabeledContent("Status") {
+                    Text(pairingState.builtInTitle(lastError: lastError))
+                }
                 LabeledContent("Pairing File") {
                     switch pairingState {
                     case .ready: Text("Ready")
@@ -34,7 +40,7 @@ struct BuiltInJITView: View {
                     }
                 }
             } footer: {
-                if let problem = message ?? BuiltInJIT.lastError {
+                if let problem = message ?? lastError {
                     Text(problem)
                 } else {
                     Text("The pairing file connects Runfern with this iPad's developer services. Create a new one after changing or removing the iPad's passcode.")
@@ -70,13 +76,27 @@ struct BuiltInJITView: View {
                 }
                 .disabled(isResettingDiskImage)
             } footer: {
-                Text("Runfern downloads it again at the next check or Linux start.")
+                if let diskImageMessage {
+                    Text(diskImageMessage)
+                } else {
+                    Text("Runfern downloads it again at the next check or Linux start.")
+                }
             }
 
             if pairingState != .missing {
                 Section {
                     Button("Remove Pairing File", systemImage: "trash", role: .destructive) {
                         isConfirmingRemoval = true
+                    }
+                    // On the button, so that on iPad the dialog points at it.
+                    .confirmationDialog("Remove Pairing File?", isPresented: $isConfirmingRemoval, titleVisibility: .visible) {
+                        Button("Remove Pairing File", role: .destructive) {
+                            PairingFile.remove()
+                            BuiltInJIT.clearLastError()
+                            refresh()
+                        }
+                    } message: {
+                        Text("Built-In JIT stops working until you set it up again.")
                     }
                 }
             }
@@ -102,15 +122,6 @@ struct BuiltInJITView: View {
         .sheet(item: $setup, onDismiss: refresh) { request in
             JITSetupView(startsAutomatically: request.startsAutomatically, forcesPairing: request.forcesPairing)
         }
-        .confirmationDialog("Remove the pairing file?", isPresented: $isConfirmingRemoval, titleVisibility: .visible) {
-            Button("Remove Pairing File", role: .destructive) {
-                PairingFile.remove()
-                BuiltInJIT.clearLastError()
-                refresh()
-            }
-        } message: {
-            Text("Built-In JIT stops working until you set it up again.")
-        }
     }
 
     private func present(_ request: SetupRequest) {
@@ -120,14 +131,14 @@ struct BuiltInJITView: View {
 
     private func refresh() {
         pairingState = PairingFile.state
+        lastError = BuiltInJIT.lastError
     }
 
     private func resetDiskImage() {
         isResettingDiskImage = true
-        message = nil
+        diskImageMessage = nil
         Task {
-            message = await BuiltInJIT.resetDiskImage()
-                ?? String(localized: "The Developer Disk Image was removed. Runfern downloads it again at the next check or Linux start.")
+            diskImageMessage = await BuiltInJIT.resetDiskImage() ?? String(localized: "Developer Disk Image removed.")
             isResettingDiskImage = false
         }
     }

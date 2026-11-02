@@ -3,10 +3,12 @@ import Foundation
 
 /// How QEMU runs guest code: interpreted (every build) or translated just in time (sideload builds).
 ///
-/// iPadOS lets an app execute generated code only while a debugger is attached; on devices with
-/// the Trusted Execution Monitor the debugger must also prepare the code region. QEMU asks for
-/// that with `brk #0x69` when it allocates the region (UTM's protocol, which StikDebug implements).
-/// Without a debugger, generated code would crash the app, so the interpreter is used instead.
+/// iPadOS lets an app execute generated code only while a debugger is attached, and the debugger
+/// must prepare the code region: whenever a debugger is attached, QEMU's JIT build stops at
+/// `brk #0x69` when it allocates the region (UTM's protocol, which StikDebug's and StikJIT's
+/// `legacy.js` implement). Without a debugger generated code would crash the app, and with one
+/// that does not answer the breakpoint (Xcode's) Linux would stop there, so the interpreter is
+/// used instead (`JITSupport.backendForLaunch`).
 nonisolated enum QEMUBackend: String, Sendable {
     case interpreter
     case jit

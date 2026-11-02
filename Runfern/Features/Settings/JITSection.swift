@@ -14,6 +14,8 @@ struct JITSection: View {
 
     @State private var isSettingUp = false
     @State private var pairingState = PairingFile.state
+    /// `BuiltInJIT.lastError`, which SwiftUI does not observe, as of the last refresh.
+    @State private var lastError = BuiltInJIT.lastError
 
     private var isBuiltInAvailable: Bool { builtInUnavailableReason == nil }
 
@@ -25,6 +27,14 @@ struct JITSection: View {
     /// A debugger such as Xcode's is attached that the chosen method does not use for JIT.
     private var hasOtherDebugger: Bool {
         JITSupport.isDebuggerAttached && !JITAcquisition.acceptsAttachedDebugger
+    }
+
+    /// With StikDebug, a debugger Runfern did not ask for is taken to be StikDebug's, which
+    /// StikDebug may attach before Runfern starts. If it is Xcode's, Linux would stop at QEMU's
+    /// breakpoint, so Settings says so.
+    private var hasUnrequestedDebugger: Bool {
+        method.wrappedValue == .stikDebug && JITSupport.isDebuggerAttached && !JITAcquisition.attachedByRunfern
+            && QEMULauncher.launchedBackend == nil
     }
 
     var body: some View {
@@ -60,6 +70,7 @@ struct JITSection: View {
                         }
                         NavigationLink {
                             BuiltInJITView(canCreatePairingFile: canCreatePairingFile)
+                                .onDisappear(perform: refresh)
                         } label: {
                             LabeledContent {
                                 Text(builtInState)
@@ -84,17 +95,20 @@ struct JITSection: View {
 
     private func refresh() {
         pairingState = PairingFile.state
+        lastError = BuiltInJIT.lastError
     }
 
     @ViewBuilder
     private var footer: some View {
         if isEnabled, hasOtherDebugger {
             Text("Another debugger, such as Xcode's, is attached, so Linux runs interpreted. To use JIT with it, choose External Debugger and answer QEMU's breakpoint with Tools/QEMU/lldb_txm_jit.py.")
+        } else if isEnabled, hasUnrequestedDebugger {
+            Text("A debugger is attached that Runfern did not request. If it is Xcode's, Linux stops at QEMU's breakpoint. Start Runfern from the Home Screen, turn JIT off, or choose External Debugger and answer the breakpoint with Tools/QEMU/lldb_txm_jit.py.")
         } else if isEnabled, method.wrappedValue == .builtIn, let builtInUnavailableReason {
             Text(builtInUnavailableReason)
         } else if isEnabled, method.wrappedValue == .builtIn, pairingState != .ready {
             if canCreatePairingFile {
-                Text("Tap Set Up JIT. Runfern does the rest; you only allow its VPN and confirm the pairing in Settings.")
+                Text("Tap Set Up JIT. Runfern does the rest; you only answer iPadOS's questions and confirm the pairing in Settings.")
             } else {
                 Text("Built-In needs a pairing file of this iPad. Create it on a computer, as described in How Runfern Works.")
             }
@@ -104,11 +118,7 @@ struct JITSection: View {
     }
 
     private var builtInState: LocalizedStringKey {
-        switch pairingState {
-        case .ready: BuiltInJIT.lastError == nil ? "Ready" : "Needs Attention"
-        case .missing: "Not Set Up"
-        case .unusable: "Needs Attention"
-        }
+        pairingState.builtInTitle(lastError: lastError)
     }
 
     private var status: LocalizedStringKey {
@@ -120,6 +130,8 @@ struct JITSection: View {
                 "Off"
             } else if hasOtherDebugger {
                 "Other Debugger Attached"
+            } else if hasUnrequestedDebugger {
+                "Debugger Attached"
             } else if JITSupport.isDebuggerAttached {
                 "Ready"
             } else {
@@ -134,6 +146,17 @@ struct JITSection: View {
                 case .externalDebugger: "No Debugger Attached"
                 }
             }
+        }
+    }
+}
+
+extension PairingFile.State {
+    /// The built-in method's state as Settings shows it, in the row and on its page.
+    func builtInTitle(lastError: String?) -> LocalizedStringKey {
+        switch self {
+        case .ready: lastError == nil ? "Ready" : "Needs Attention"
+        case .missing: "Not Set Up"
+        case .unusable: "Needs Attention"
         }
     }
 }

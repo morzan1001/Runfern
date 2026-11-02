@@ -489,6 +489,16 @@
         }
       }
     },
+    "A debugger is attached that Runfern did not request. If it is Xcode's, Linux stops at QEMU's breakpoint. Start Runfern from the Home Screen, turn JIT off, or choose External Debugger and answer the breakpoint with Tools/QEMU/lldb_txm_jit.py." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Debugger ist angehängt, den Runfern nicht angefordert hat. Ist es der von Xcode, hält Linux an QEMUs Breakpoint an. Starte Runfern vom Home-Bildschirm, schalte JIT aus oder wähle „Externer Debugger“ und beantworte den Breakpoint mit Tools/QEMU/lldb_txm_jit.py."
+          }
+        }
+      }
+    },
     "A Linux base needs about %@ once, plus the tools of each project." : {
       "localizations" : {
         "de" : {
@@ -1266,6 +1276,16 @@
         }
       }
     },
+    "Debugger Attached" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Debugger angehängt"
+          }
+        }
+      }
+    },
     "Debugger for JIT" : {
       "localizations" : {
         "de" : {
@@ -1352,6 +1372,16 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Beschreibung (optional)"
+          }
+        }
+      }
+    },
+    "Developer Disk Image removed." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Developer Disk Image entfernt."
           }
         }
       }
@@ -2560,7 +2590,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Prüfen nötig"
+            "value" : "Aktion erforderlich"
           }
         }
       }
@@ -2891,12 +2921,12 @@
         }
       }
     },
-    "On a computer the iPad trusts, create it with Tools/JIT/create-pairing-file.sh from Runfern's source, idevice_pair, or iloader, and import it under Settings › Performance. Create a new pairing file after changing or removing the iPad's passcode." : {
+    "On a computer the iPad trusts, create it with Tools/JIT/create-pairing-file.sh from Runfern's source, idevice_pair, or iloader, and import it under Settings › Performance › Built-In JIT. Create a new pairing file after changing or removing the iPad's passcode." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Auf einem Computer, dem das iPad vertraut, erstellst du sie mit Tools/JIT/create-pairing-file.sh aus dem Quellcode von Runfern, idevice_pair oder iloader und importierst sie unter Einstellungen › Leistung. Erstelle nach dem Ändern oder Entfernen des iPad-Codes eine neue Pairing-Datei."
+            "value" : "Auf einem Computer, dem das iPad vertraut, erstellst du sie mit Tools/JIT/create-pairing-file.sh aus dem Quellcode von Runfern, idevice_pair oder iloader und importierst sie unter Einstellungen › Leistung › Eingebauter JIT. Erstelle nach dem Ändern oder Entfernen des iPad-Codes eine neue Pairing-Datei."
           }
         }
       }
@@ -3087,16 +3117,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pairing-Datei"
-          }
-        }
-      }
-    },
-    "Pairing File Unusable" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pairing-Datei unbrauchbar"
           }
         }
       }
@@ -3451,7 +3471,7 @@
         }
       }
     },
-    "Remove the pairing file?" : {
+    "Remove Pairing File?" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3971,12 +3991,12 @@
         }
       }
     },
-    "Set up JIT under Settings › Performance to use it." : {
+    "Set up JIT, or import a pairing file, under Settings › Performance › Built-In JIT." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Richte JIT unter Einstellungen › Leistung ein, um es zu nutzen."
+            "value" : "Richte JIT ein oder importiere eine Pairing-Datei unter Einstellungen › Leistung › Eingebauter JIT."
           }
         }
       }
@@ -4567,12 +4587,12 @@
         }
       }
     },
-    "Tap Set Up JIT. Runfern does the rest; you only allow its VPN and confirm the pairing in Settings." : {
+    "Tap Set Up JIT. Runfern does the rest; you only answer iPadOS's questions and confirm the pairing in Settings." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tippe auf „JIT einrichten“. Runfern erledigt den Rest; du erlaubst nur sein VPN und bestätigst das Koppeln in den Einstellungen."
+            "value" : "Tippe auf „JIT einrichten“. Runfern erledigt den Rest; du beantwortest nur die Fragen von iPadOS und bestätigst das Koppeln in den Einstellungen."
           }
         }
       }
@@ -4757,32 +4777,22 @@
         }
       }
     },
-    "The Developer Disk Image could not be downloaded. The first JIT start after restarting the iPad needs the internet." : {
+    "The Developer Disk Image could not be downloaded. Runfern downloads it once, and again after a reset, which needs the internet." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Das Developer Disk Image konnte nicht geladen werden. Der erste JIT-Start nach einem Neustart des iPads braucht das Internet."
+            "value" : "Das Developer Disk Image konnte nicht geladen werden. Runfern lädt es einmal und nach einem Zurücksetzen erneut; dafür braucht es Internet."
           }
         }
       }
     },
-    "The Developer Disk Image could not be mounted. Reset it in Settings › Performance and try again." : {
+    "The Developer Disk Image could not be mounted. Reset it under Settings › Performance › Built-In JIT and try again." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Das Developer Disk Image konnte nicht eingebunden werden. Setze es unter Einstellungen › Leistung zurück und versuche es erneut."
-          }
-        }
-      }
-    },
-    "The Developer Disk Image was removed. Runfern downloads it again at the next check or Linux start." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Das Developer Disk Image wurde entfernt. Runfern lädt es bei der nächsten Prüfung oder beim nächsten Linux-Start erneut."
+            "value" : "Das Developer Disk Image konnte nicht eingebunden werden. Setze es unter Einstellungen › Leistung › Eingebauter JIT zurück und versuche es erneut."
           }
         }
       }
@@ -5231,16 +5241,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dieser Build kann die Pairing-Datei nicht auf dem iPad erstellen. Erstelle sie auf einem Computer und importiere sie, wie unter „So funktioniert Runfern“ beschrieben."
-          }
-        }
-      }
-    },
-    "This build of Runfern cannot create pairing files." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dieser Build von Runfern kann keine Pairing-Dateien erstellen."
           }
         }
       }
@@ -5695,12 +5695,12 @@
         }
       }
     },
-    "With JIT, Linux runs several times faster. Before the first Linux start after opening Runfern, its VPN connects briefly so a debugger can attach to Runfern; afterwards the VPN disconnects again. The first time after the iPad restarts, this also downloads the Developer Disk Image from the internet." : {
+    "With JIT, Linux runs several times faster. With the Built-In method, Runfern's VPN connects briefly before the first Linux start after opening Runfern, so a debugger can attach to Runfern; afterwards the VPN disconnects again. The first time, and after Reset Developer Disk Image, this downloads the Developer Disk Image from the internet." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mit JIT läuft Linux um ein Vielfaches schneller. Vor dem ersten Linux-Start nach dem Öffnen verbindet sich das VPN von Runfern kurz, damit sich ein Debugger an Runfern anhängen kann; danach trennt sich das VPN wieder. Beim ersten Mal nach einem Neustart des iPads wird dabei auch das Developer Disk Image aus dem Internet geladen."
+            "value" : "Mit JIT läuft Linux um ein Vielfaches schneller. Mit der Methode „Eingebaut“ verbindet sich das VPN von Runfern vor dem ersten Linux-Start nach dem Öffnen kurz, damit sich ein Debugger an Runfern anhängen kann; danach trennt es sich wieder. Beim ersten Mal und nach „Developer Disk Image zurücksetzen“ wird dabei das Developer Disk Image aus dem Internet geladen."
           }
         }
       }

@@ -4,11 +4,12 @@ import UIKit
 
 /// Runfern's own way to JIT: its loopback VPN reaches the iPad's developer services, and its helper
 /// extension attaches StikJIT as the debugger (StikJIT INTEGRATION.md, “Built-in StikJIT”). Only
-/// the pairing file comes from outside, once.
+/// the pairing file has to be created, once: on this iPad (`OnDevicePairing`, Settings ›
+/// Performance › Set Up JIT…) or on a computer and imported.
 ///
-/// The VPN is connected only for this: from the request until the helper has detached, or until
-/// the attempt failed or timed out. Meanwhile the iPad does not lock by itself, because a lock
-/// would cut the debugger's connection while QEMU waits at its breakpoint.
+/// The VPN is connected only for this: during a check (`check()`), or from the request until the
+/// helper has detached, or until the attempt failed or timed out. Meanwhile the iPad does not lock
+/// by itself, because a lock would cut the debugger's connection while QEMU waits at its breakpoint.
 @MainActor
 enum BuiltInJIT {
     /// The VPN, the helper, and the debugger-friendly signing are part of this installation.
@@ -24,7 +25,7 @@ enum BuiltInJIT {
             return String(localized: "This installation may not use Runfern's VPN. Built-In needs signing with the Network Extension capability, for example from Xcode with a paid developer account; AltStore, SideStore, and iloader cannot add it. Use StikDebug instead.")
         }
         if !LoopbackTunnel.isInstalled || !JITHelperClient.isInstalled {
-            return String(localized: "The JIT helper is missing from this installation.")
+            return JITHelperClient.ClientError.missingHelper.errorDescription
         }
         if !hasStikJIT {
             return String(localized: "StikJIT is missing from this installation. Build Runfern again after running Tools/JIT/build-jit-vendor.sh.")
@@ -33,7 +34,7 @@ enum BuiltInJIT {
             return String(localized: "Built-In does not work inside LiveContainer. Use StikDebug instead.")
         }
         if FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: JITProtocol.appGroup) == nil {
-            return String(localized: "Runfern and its JIT helper share no app group in this installation.")
+            return JITHelperClient.ClientError.missingAppGroup.errorDescription
         }
         return nil
     }
@@ -53,7 +54,7 @@ enum BuiltInJIT {
         if let unavailableReason { return fail(unavailableReason) }
         let pairing: Data
         do {
-            guard let loaded = try PairingFile.load() else { return fail(String(localized: "Set up JIT under Settings › Performance to use it.")) }
+            guard let loaded = try PairingFile.load() else { return fail(notSetUpMessage) }
             pairing = loaded
         } catch {
             return fail(error.localizedDescription)
@@ -95,8 +96,8 @@ enum BuiltInJIT {
             await vpn.release()
             wakeLock.release()
         }
-        // The first attempt after a reboot also downloads and mounts the Developer Disk Image,
-        // which can take a few minutes.
+        // The first attempt after a restart mounts the Developer Disk Image again, and the first
+        // ever, or the first after a reset, also downloads it; that can take a few minutes.
         let attached = await JITAcquisition.waitForDebugger(checks: 1200) {
             outcome.response.map { !$0.success } ?? false
         }
@@ -112,7 +113,7 @@ enum BuiltInJIT {
     }
 
     /// The result of `check()`.
-    enum CheckResult: Equatable {
+    enum CheckResult {
         case ready
         /// `needsNewPairing`: the iPad did not accept the pairing file.
         case failed(String, needsNewPairing: Bool)
@@ -128,7 +129,7 @@ enum BuiltInJIT {
         let pairing: Data
         do {
             guard let loaded = try PairingFile.load() else {
-                return checked(.failed(String(localized: "Set up JIT under Settings › Performance to use it."), needsNewPairing: false))
+                return checked(.failed(notSetUpMessage, needsNewPairing: false))
             }
             pairing = loaded
         } catch {
@@ -163,7 +164,7 @@ enum BuiltInJIT {
             result = .failed(error.localizedDescription, needsNewPairing: false)
         }
         await vpn.release()
-        return result == .cancelled ? result : checked(result)
+        return checked(result)
     }
 
     /// Records the result of a check that ran to its end, for Settings and the diagnostics.
@@ -201,9 +202,9 @@ enum BuiltInJIT {
         case JITProtocol.Stage.pairing:
             String(localized: "This iPad did not accept the pairing file. Create a new one; this is needed after the passcode was changed or removed, or if the file comes from another iPad.")
         case JITProtocol.Stage.diskImageDownload:
-            String(localized: "The Developer Disk Image could not be downloaded. The first JIT start after restarting the iPad needs the internet.")
+            String(localized: "The Developer Disk Image could not be downloaded. Runfern downloads it once, and again after a reset, which needs the internet.")
         case JITProtocol.Stage.diskImageMount:
-            String(localized: "The Developer Disk Image could not be mounted. Reset it in Settings › Performance and try again.")
+            String(localized: "The Developer Disk Image could not be mounted. Reset it under Settings › Performance › Built-In JIT and try again.")
         case JITProtocol.Stage.debugger:
             String(localized: "The debugger could not prepare Linux for JIT.")
         default:
@@ -211,6 +212,10 @@ enum BuiltInJIT {
         }
         guard let meaning else { return response.message }
         return response.message.isEmpty ? meaning : "\(meaning) (\(response.message))"
+    }
+
+    private static var notSetUpMessage: String {
+        String(localized: "Set up JIT, or import a pairing file, under Settings › Performance › Built-In JIT.")
     }
 
     /// StikJIT is embedded where the helper loads it from.

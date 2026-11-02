@@ -56,12 +56,7 @@ enum JITHelperClient {
     }
 
     /// The helper's answer to a request.
-    struct Response: Sendable {
-        var success: Bool
-        var message: String
-        /// For a failed `JITProtocol.Operation.enable`: how far the helper got (`JITProtocol.Stage`).
-        var stage: String?
-    }
+    typealias Response = JITProtocol.Answer
 
     static var isInstalled: Bool { helperIdentifier != nil }
 
@@ -127,11 +122,7 @@ enum JITHelperClient {
         func begin(userInfo: [String: Any], continuation: CheckedContinuation<Response, Error>) {
             self.continuation = continuation
             requesting.setRequestCompletionBlock({ [weak self] identifier, items in
-                let answer = (items?.first as? NSExtensionItem)?.userInfo
-                let response = (answer?[JITProtocol.Key.success] as? Bool).map {
-                    Response(success: $0, message: answer?[JITProtocol.Key.message] as? String ?? "",
-                             stage: answer?[JITProtocol.Key.stage] as? String)
-                }
+                let response = Response(userInfo: (items?.first as? NSExtensionItem)?.userInfo)
                 DispatchQueue.main.async {
                     MainActor.assumeIsolated {
                         guard let self, self.isMine(identifier) else { return }

@@ -143,6 +143,9 @@ actor QEMUMachines {
     /// Starts QEMU with the environment's disk; it then serves every later environment of the session.
     private func launch(_ configuration: MachineConfiguration, bundle: ImageBundle, manifest: ImageBundle.Manifest,
                         console: URL) async throws -> Instance {
+        // QEMU runs once per process. Refused here, before a debugger is attached for a QEMU that
+        // would never reach its breakpoint and the VPN and the wake lock would stay taken.
+        if QEMULauncher.launchedBackend != nil { throw QEMULauncher.LaunchError.restartRequired }
         let sockets = try QEMUSockets.make()
         let hostIDEPort = try LoopbackPort.free()
         let backend = await JITSupport.backendForLaunch()

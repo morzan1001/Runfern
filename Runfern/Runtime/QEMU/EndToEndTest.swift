@@ -41,7 +41,7 @@ enum EndToEndTest {
         let runtime = RuntimeCoordinator(store: store, sync: sync, adapter: adapter)
         provisioner.releaseVM = { await runtime.release(for: $0) }
         images.allowsExpensiveNetwork = true
-        step("backend: \(QEMUBackend.preferred.rawValue), debugger attached: \(JITSupport.isDebuggerAttached)")
+        step("debugger attached: \(JITSupport.isDebuggerAttached); the backend is logged when QEMU starts")
 
         do {
             // 1. A folder on the iPad, mounted directly.

@@ -3,8 +3,8 @@ import Foundation
 import NetworkExtension
 
 /// Runfern's own loopback VPN (PlugIns/RunfernTunnel.appex), through which the JIT helper reaches
-/// this iPad's developer services. It is connected only while JIT is being enabled, never on
-/// demand. It stays connected while the iPad sleeps, because a sleeping iPad would otherwise cut
+/// this iPad's developer services. It is connected only while JIT is being checked or enabled,
+/// never on demand. It stays connected while the iPad sleeps, because a sleeping iPad would otherwise cut
 /// the debugger's connection while QEMU waits at its breakpoint; the VPN stops itself after a
 /// while (`PacketTunnelProvider`). Connecting it deselects any other VPN, as iPadOS allows only one.
 @MainActor

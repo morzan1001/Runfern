@@ -1,8 +1,8 @@
 #!/bin/bash
 #
 # Creates the Remote Pairing file (RPPairing) that Runfern's built-in JIT needs, on a computer.
-# Runfern on iPadOS 27 can also create it by itself (Settings > Performance > Create on This
-# iPad...); this script is the way for a computer the iPad already trusts.
+# Runfern on iPadOS 27 can also create it by itself (Settings > Performance > Set Up JIT...);
+# this script is the way for a computer the iPad already trusts.
 #
 #   Tools/JIT/create-pairing-file.sh [--udid <UDID>] [--output <file>]
 #   Tools/JIT/create-pairing-file.sh --wifi [--output <file>]
@@ -17,8 +17,8 @@
 #
 # The file holds public_key, private_key, identifier, and alt_irk: exactly what StikJIT reads
 # (idevice's RpPairingFile). It is a secret: whoever has it can use the iPad's developer services.
-# Send it to the iPad (AirDrop, or iCloud Drive), import it in Runfern (Settings >
-# Performance > Import Pairing File...), then delete every copy. It stops working when the iPad's
+# Send it to the iPad (AirDrop, or iCloud Drive), import it in Runfern (Settings > Performance >
+# Built-In JIT > Import Pairing File...), then delete every copy. It stops working when the iPad's
 # passcode is changed or removed; run this script again then. Every run adds another trusted host
 # on the iPad, which you can remove under Settings > Privacy & Security > Developer Mode.
 #
@@ -94,8 +94,9 @@ finish () {
     echo "Pairing file: $OUTPUT"
     cat <<EOF
 Next: send it to the iPad (AirDrop, or iCloud Drive), open Runfern > Settings > Performance >
-Import Pairing File..., pick it, then delete every copy of it. It stops working when the iPad's
-passcode is changed or removed; create a new one then.
+Built-In JIT > Import Pairing File..., pick it, then delete every copy of it. Runfern checks it
+right after the import. It stops working when the iPad's passcode is changed or removed; create a
+new one then.
 EOF
 }
 

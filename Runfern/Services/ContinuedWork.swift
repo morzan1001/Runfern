@@ -36,6 +36,22 @@ final class ContinuedWork {
             apply()
         }
 
+        /// Moves the progress on every few seconds within the current stage of `stage` units, until
+        /// the returned task is cancelled: iPadOS may end background work that shows no progress,
+        /// for example while it waits for the person.
+        func heartbeat(withinStagesOf stage: Int) -> Task<Void, Never> {
+            Task {
+                while !Task.isCancelled {
+                    do {
+                        try await Task.sleep(for: .seconds(5))
+                    } catch {
+                        break
+                    }
+                    self.advance(withinStagesOf: stage)
+                }
+            }
+        }
+
         fileprivate func attach(_ task: BGContinuedProcessingTask) {
             if let outcome {
                 task.setTaskCompleted(success: outcome)
