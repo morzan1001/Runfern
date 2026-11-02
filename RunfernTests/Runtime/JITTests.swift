@@ -99,6 +99,18 @@ import Testing
         #expect(throws: PairingFile.ImportError.lockdownRecord) { try PairingFile.validate(plist(lockdown)) }
     }
 
+    /// pymobiledevice3 keeps the identifier of pairings the iPad started as `host_identifier`.
+    @Test func pymobiledevice3DeviceInitiatedRecordsAreAccepted() throws {
+        let record: [String: Any] = ["public_key": signingKey.publicKey.rawRepresentation,
+                                     "private_key": signingKey.rawRepresentation,
+                                     "host_identifier": "0F4B6D2E-9C3A-4E1B-8D7F-112233445566",
+                                     "remote_unlock_host_key": "ABCD", "peer_alt_irk": Data(repeating: 5, count: 16)]
+        let reduced = try dictionary(PairingFile.normalized(plist(record)))
+        #expect(Set(reduced.keys) == ["public_key", "private_key", "identifier", "alt_irk"])
+        #expect(reduced["identifier"] as? String == "0F4B6D2E-9C3A-4E1B-8D7F-112233445566")
+        #expect(reduced["alt_irk"] as? Data == Data(repeating: 5, count: 16))
+    }
+
     @Test func pymobiledevice3RecordsAreRecognizedAndRejected() throws {
         let record: [String: Any] = ["public_key": signingKey.publicKey.rawRepresentation,
                                      "private_key": signingKey.rawRepresentation,

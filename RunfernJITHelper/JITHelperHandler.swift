@@ -59,9 +59,11 @@ final class JITHelperHandler: NSObject, NSExtensionRequestHandling {
                     return Answer(success: false, message: "The request is incomplete.")
                 }
                 // The pairing file exists only for the duration of the request and is never logged.
-                // StikJIT reads it again for every connection, so it must stay readable while the
-                // iPad is locked.
-                let pairingFile = root.appending(path: "pairing-\(UUID().uuidString).plist")
+                // It lives in the helper's temporary folder, which is never backed up, under one
+                // name, so a request that was killed leaves nothing behind for long: the next one
+                // overwrites it (requests run one at a time). StikJIT reads it again for every
+                // connection, so it must stay readable while the iPad is locked.
+                let pairingFile = fileManager.temporaryDirectory.appending(path: "pairingFile.plist")
                 try pairing.write(to: pairingFile, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
                 defer { try? fileManager.removeItem(at: pairingFile) }
                 // The port is fixed: StikJIT's Bonjour lookup could pick another device's service.

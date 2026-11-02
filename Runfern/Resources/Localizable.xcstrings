@@ -826,6 +826,16 @@
         }
       }
     },
+    "Built-In needs a pairing file of this iPad. Create it on a computer, as described in How Runfern Works." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„Eingebaut“ braucht eine Pairing-Datei dieses iPads. Erstelle sie auf einem Computer, wie unter „So funktioniert Runfern“ beschrieben."
+          }
+        }
+      }
+    },
     "Cancel" : {
       "localizations" : {
         "de" : {
@@ -1132,6 +1142,16 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Archiv erstellen"
+          }
+        }
+      }
+    },
+    "Create it under Settings › Performance › Create on This iPad: Runfern then appears under Settings › Privacy & Security › Developer Mode, and you confirm it there with the code Runfern shows." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erstelle sie unter Einstellungen › Leistung › Auf diesem iPad erstellen: Runfern erscheint dann unter Einstellungen › Datenschutz & Sicherheit › Entwicklermodus, und du bestätigst dort mit dem Code, den Runfern anzeigt."
           }
         }
       }
@@ -2163,12 +2183,12 @@
         }
       }
     },
-    "It needs Developer Mode, Wi-Fi, and a pairing file of this iPad (a Remote Pairing file, not a lockdown record). On iPadOS 27, create it under Settings › Performance › Create on This iPad: Runfern then appears under Settings › Privacy & Security › Developer Mode, and you confirm it there with the code Runfern shows." : {
+    "It needs Developer Mode, Wi-Fi, and a pairing file of this iPad (a Remote Pairing file, not a lockdown record)." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dafür braucht es den Entwicklermodus, WLAN und eine Pairing-Datei dieses iPads (eine Remote-Pairing-Datei, keinen Lockdown-Record). Unter iPadOS 27 erstellst du sie unter Einstellungen › Leistung › Auf diesem iPad erstellen: Runfern erscheint dann unter Einstellungen › Datenschutz & Sicherheit › Entwicklermodus, und du bestätigst dort mit dem Code, den Runfern anzeigt."
+            "value" : "Dafür braucht es den Entwicklermodus, WLAN und eine Pairing-Datei dieses iPads (eine Remote-Pairing-Datei, keinen Lockdown-Record)."
           }
         }
       }
@@ -2777,6 +2797,16 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Offline einrichtbar mit: %@"
+          }
+        }
+      }
+    },
+    "On a computer the iPad trusts, create it with Tools/JIT/create-pairing-file.sh from Runfern's source, idevice_pair, or iloader, and import it under Settings › Performance. Create a new pairing file after changing or removing the iPad's passcode." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auf einem Computer, dem das iPad vertraut, erstellst du sie mit Tools/JIT/create-pairing-file.sh aus dem Quellcode von Runfern, idevice_pair oder iloader und importierst sie unter Einstellungen › Leistung. Erstelle nach dem Ändern oder Entfernen des iPad-Codes eine neue Pairing-Datei."
           }
         }
       }
@@ -5462,16 +5492,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ja"
-          }
-        }
-      }
-    },
-    "You can also create it on a computer the iPad trusts, with Tools/JIT/create-pairing-file.sh from Runfern's source, idevice_pair, or iloader, and import it under Settings › Performance. Create a new pairing file after changing or removing the iPad's passcode." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Du kannst sie auch auf einem Computer erstellen, dem das iPad vertraut, mit Tools/JIT/create-pairing-file.sh aus dem Quellcode von Runfern, idevice_pair oder iloader, und sie unter Einstellungen › Leistung importieren. Erstelle nach dem Ändern oder Entfernen des iPad-Codes eine neue Pairing-Datei."
           }
         }
       }

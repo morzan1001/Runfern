@@ -51,6 +51,8 @@ final class OnDevicePairing {
     }
 
     private static let notificationID = "nrw.cyber.runfern.pairing-code"
+    /// Progress units per step of the pairing (advertising, connected, code shown, saved).
+    private static let stage = 100
 
     private func run() async {
         #if canImport(IDevice)
@@ -87,12 +89,21 @@ final class OnDevicePairing {
         try await advertiser.publish()
         try Task.checkCancellation()
         phase = .advertising(name: name)
-        progress.report(completed: 1, of: 4, subtitle: String(localized: "Open Settings › Privacy & Security › Developer Mode"))
+        progress.report(completed: 1 * Self.stage, of: 4 * Self.stage,
+                        subtitle: String(localized: "Open Settings › Privacy & Security › Developer Mode"))
 
+        // iPadOS may end background work that shows no progress, and most of the time is spent
+        // waiting for the person; the progress moves a little every few seconds meanwhile.
+        let heartbeat = Task { @MainActor in
+            while (try? await Task.sleep(for: .seconds(5))) != nil {
+                progress.advance(withinStagesOf: Self.stage)
+            }
+        }
+        defer { heartbeat.cancel() }
         let pairing = try await host.pair(timeout: .seconds(5 * 60)) { event in
             Task { @MainActor [weak self] in self?.handle(event, name: name, progress: progress) }
         }
-        progress.report(completed: 4, of: 4, subtitle: String(localized: "Saving"))
+        progress.report(completed: 4 * Self.stage, of: 4 * Self.stage, subtitle: String(localized: "Saving"))
         try PairingFile.store(pairing.file)
         phase = .done(deviceName: pairing.deviceName)
     }
@@ -102,7 +113,7 @@ final class OnDevicePairing {
         switch (event, phase) {
         case (.connected, .advertising):
             phase = .pairing(name: name, code: nil)
-            progress.report(completed: 2, of: 4, subtitle: String(localized: "Connected"))
+            progress.report(completed: 2 * Self.stage, of: 4 * Self.stage, subtitle: String(localized: "Connected"))
         case (.code(let code), .advertising), (.code(let code), .pairing):
             show(code, name: name, progress: progress)
         default:
@@ -112,7 +123,7 @@ final class OnDevicePairing {
 
     private func show(_ code: String, name: String, progress: ContinuedWork.Handle) {
         phase = .pairing(name: name, code: code)
-        progress.report(completed: 3, of: 4, subtitle: String(localized: "Enter \(code) on this iPad"))
+        progress.report(completed: 3 * Self.stage, of: 4 * Self.stage, subtitle: String(localized: "Enter \(code) on this iPad"))
         let content = UNMutableNotificationContent()
         content.title = String(localized: "Pairing Code")
         content.body = String(localized: "Enter \(code) in Settings › Privacy & Security › Developer Mode.")

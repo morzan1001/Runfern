@@ -61,12 +61,13 @@ struct JITSection: View {
                 do {
                     try PairingFile.importFile(at: result.get())
                     message = nil
+                    pairingFileChanged()
                 } catch {
                     message = error.localizedDescription
+                    pairingState = PairingFile.state
                 }
-                pairingState = PairingFile.state
             }
-            .sheet(isPresented: $isCreatingPairingFile, onDismiss: { pairingState = PairingFile.state }) {
+            .sheet(isPresented: $isCreatingPairingFile, onDismiss: pairingFileChanged) {
                 PairingCreationView()
             }
         }
@@ -81,7 +82,11 @@ struct JITSection: View {
         } else if isEnabled, method.wrappedValue == .builtIn, let lastError = BuiltInJIT.lastError {
             Text(lastError)
         } else if isEnabled, method.wrappedValue == .builtIn, pairingState != .ready {
-            Text("Built-In needs a pairing file of this iPad. Create it here (iPadOS 27) or on a computer, as described in How Runfern Works.")
+            if canCreatePairingFile {
+                Text("Built-In needs a pairing file of this iPad. Create it here (iPadOS 27) or on a computer, as described in How Runfern Works.")
+            } else {
+                Text("Built-In needs a pairing file of this iPad. Create it on a computer, as described in How Runfern Works.")
+            }
         } else if QEMULauncher.launchedBackend != nil {
             Text("Takes effect after Runfern restarts.")
         }
@@ -108,11 +113,20 @@ struct JITSection: View {
         if pairingState != .missing {
             Button("Remove Pairing File", systemImage: "trash", role: .destructive) {
                 PairingFile.remove()
-                pairingState = PairingFile.state
+                pairingFileChanged()
             }
         }
         Button("Reset Developer Disk Image", systemImage: "arrow.counterclockwise") {
             Task { message = await BuiltInJIT.resetDiskImage() }
+        }
+    }
+
+    /// A new or removed pairing file makes the last failure meaningless.
+    private func pairingFileChanged() {
+        let previous = pairingState
+        pairingState = PairingFile.state
+        if pairingState != previous || pairingState == .ready {
+            BuiltInJIT.clearLastError()
         }
     }
 

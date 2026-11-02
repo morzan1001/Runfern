@@ -83,7 +83,7 @@ nonisolated enum PairingFile {
 
     /// Checks `data` the way StikJIT's reader (idevice `RpPairingFile::from_bytes`) does: an XML or
     /// binary property list with a 32-byte `public_key`, a 32-byte `private_key`, and an
-    /// `identifier` string. `alt_irk` is optional. Also checks that the public key belongs to the
+    /// `identifier` string (`host_identifier` in pymobiledevice3's records). `alt_irk` is optional. Also checks that the public key belongs to the
     /// private key (both are Ed25519 in their 32-byte RFC 8032 form), because the iPad would
     /// otherwise reject the file only when JIT is first needed.
     static func validate(_ data: Data) throws(ImportError) {
@@ -102,8 +102,11 @@ nonisolated enum PairingFile {
             let isLockdownRecord = lockdownKeys.contains { record[$0] != nil }
             throw isLockdownRecord ? ImportError.lockdownRecord : ImportError.invalid
         }
-        guard let identifier = record["identifier"] as? String, !identifier.isEmpty else {
-            // pymobiledevice3 keeps the key pair without the identifier it paired with.
+        // pymobiledevice3 names the identifier `host_identifier` in records of pairings the iPad
+        // started, and keeps none for pairings it started itself.
+        let identifier = [record["identifier"], record["host_identifier"]].lazy
+            .compactMap { $0 as? String }.first { !$0.isEmpty }
+        guard let identifier else {
             let isPymobiledevice3Record = record["remote_unlock_host_key"] != nil || record["peer_alt_irk"] != nil
             throw isPymobiledevice3Record ? ImportError.pymobiledevice3Record : ImportError.invalid
         }
@@ -112,7 +115,8 @@ nonisolated enum PairingFile {
             throw .mismatchedKeys
         }
         var kept: [String: Any] = ["public_key": publicKey, "private_key": privateKey, "identifier": identifier]
-        if let altIRK = record["alt_irk"] as? Data, altIRK.count == 16 {
+        // The iPad's IRK, which idevice and pymobiledevice3 name differently.
+        if let altIRK = [record["alt_irk"], record["peer_alt_irk"]].lazy.compactMap({ $0 as? Data }).first(where: { $0.count == 16 }) {
             kept["alt_irk"] = altIRK
         }
         guard let reduced = try? PropertyListSerialization.data(fromPropertyList: kept, format: .xml, options: 0) else {

@@ -17,7 +17,7 @@
 #
 # The file holds public_key, private_key, identifier, and alt_irk: exactly what StikJIT reads
 # (idevice's RpPairingFile). It is a secret: whoever has it can use the iPad's developer services.
-# Send it to the iPad (AirDrop, or Finder's Files tab), import it in Runfern (Settings >
+# Send it to the iPad (AirDrop, or iCloud Drive), import it in Runfern (Settings >
 # Performance > Import Pairing File...), then delete every copy. It stops working when the iPad's
 # passcode is changed or removed; run this script again then. Every run adds another trusted host
 # on the iPad, which you can remove under Settings > Privacy & Security > Developer Mode.
@@ -93,7 +93,7 @@ finish () {
     chmod 600 "$OUTPUT"
     echo "Pairing file: $OUTPUT"
     cat <<EOF
-Next: send it to the iPad (AirDrop, or Finder's Files tab), open Runfern > Settings > Performance >
+Next: send it to the iPad (AirDrop, or iCloud Drive), open Runfern > Settings > Performance >
 Import Pairing File..., pick it, then delete every copy of it. It stops working when the iPad's
 passcode is changed or removed; create a new one then.
 EOF
@@ -106,11 +106,15 @@ if [ "$WIFI" = 1 ]; then
     echo "then type the code shown below. Keep both on the same Wi-Fi network."
     "$PAIR_HOST" --name "$label" --out "$work/pairingFile.plist" &
     pair_pid=$!
-    ( sleep 300; kill "$pair_pid" 2>/dev/null ) &
+    ( sleep 300; kill "$pair_pid" 2>/dev/null ) >/dev/null 2>&1 &
     watchdog=$!
+    # Ctrl-C must also stop the host, or it would keep advertising and write into a deleted folder.
+    trap 'kill "$pair_pid" "$watchdog" 2>/dev/null || true; rm -rf "$work"' EXIT
     status=0
     wait "$pair_pid" || status=$?
+    pkill -P "$watchdog" 2>/dev/null || true
     kill "$watchdog" 2>/dev/null || true
+    trap 'rm -rf "$work"' EXIT
     [ "$status" = 0 ] && [ -s "$work/pairingFile.plist" ] || fail "pairing did not complete (see above)."
     finish
     exit 0
