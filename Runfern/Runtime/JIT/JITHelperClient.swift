@@ -3,25 +3,30 @@ import Darwin
 import Foundation
 
 /// The private NSExtension calls that start one of the app's own extensions (the same ones Husk and
-/// LiveContainer use). Compiled only into builds for sideloading. Every call is optional, so a
-/// missing one ends the attempt with an error instead of an unrecognized selector.
+/// LiveContainer use). Compiled only into builds for sideloading. `send` checks that every one
+/// exists before using any, so a missing one ends the attempt with an error instead of an
+/// unrecognized selector.
 @objc private protocol NSExtensionFactory {
     @objc(extensionWithIdentifier:error:)
-    optional func `extension`(withIdentifier identifier: String) throws -> AnyObject
+    func `extension`(withIdentifier identifier: String) throws -> AnyObject
 }
 
 @objc private protocol NSExtensionRequesting {
     @objc(beginExtensionRequestWithInputItems:completion:)
-    optional func beginExtensionRequest(withInputItems items: [Any], completion: @escaping (NSUUID?) -> Void)
+    func beginExtensionRequest(withInputItems items: [Any], completion: @escaping (NSUUID?) -> Void)
     @objc(cancelExtensionRequestWithIdentifier:)
-    optional func cancelExtensionRequest(withIdentifier identifier: NSUUID)
+    func cancelExtensionRequest(withIdentifier identifier: NSUUID)
     @objc(setRequestCompletionBlock:)
-    optional func setRequestCompletionBlock(_ block: @escaping (NSUUID?, [Any]?) -> Void)
+    func setRequestCompletionBlock(_ block: @escaping (NSUUID?, [Any]?) -> Void)
     @objc(setRequestCancellationBlock:)
-    optional func setRequestCancellationBlock(_ block: @escaping (NSUUID?, NSError?) -> Void)
+    func setRequestCancellationBlock(_ block: @escaping (NSUUID?, NSError?) -> Void)
     @objc(setRequestInterruptionBlock:)
-    optional func setRequestInterruptionBlock(_ block: @escaping (NSUUID?) -> Void)
+    func setRequestInterruptionBlock(_ block: @escaping (NSUUID?) -> Void)
 }
+
+/// The instance methods of `NSExtensionRequesting`, by selector.
+private let requestingSelectors = ["beginExtensionRequestWithInputItems:completion:", "cancelExtensionRequestWithIdentifier:",
+                                   "setRequestCompletionBlock:", "setRequestCancellationBlock:", "setRequestInterruptionBlock:"]
 
 /// Starts the JIT helper extension (PlugIns/RunfernJITHelper.appex) with one request and returns
 /// its answer. Cancelling the calling task ends the helper's request.
@@ -73,13 +78,17 @@ enum JITHelperClient {
         if NSClassFromString("NSExtension") == nil {
             dlopen("/System/Library/Frameworks/ExtensionFoundation.framework/ExtensionFoundation", RTLD_NOW)
         }
-        guard let extensionClass = NSClassFromString("NSExtension") else { throw ClientError.unavailable }
+        guard let extensionClass = NSClassFromString("NSExtension"),
+              class_getClassMethod(extensionClass, NSSelectorFromString("extensionWithIdentifier:error:")) != nil else {
+            throw ClientError.unavailable
+        }
         let factory = unsafeBitCast(extensionClass as AnyObject, to: NSExtensionFactory.self)
-        guard let found = try factory.extension?(withIdentifier: identifier) else { throw ClientError.unavailable }
+        let found = try factory.extension(withIdentifier: identifier)
+        let foundClass: AnyClass? = object_getClass(found)
+        for name in requestingSelectors where class_getInstanceMethod(foundClass, NSSelectorFromString(name)) == nil {
+            throw ClientError.unavailable
+        }
         let requesting = unsafeBitCast(found, to: NSExtensionRequesting.self)
-        let selectors = ["beginExtensionRequestWithInputItems:completion:", "cancelExtensionRequestWithIdentifier:",
-                         "setRequestCompletionBlock:", "setRequestCancellationBlock:", "setRequestInterruptionBlock:"]
-        guard selectors.allSatisfy({ found.responds(to: NSSelectorFromString($0)) }) else { throw ClientError.unavailable }
         let pending = Request(extension: found, requesting: requesting)
         running.append(pending)
         return try await withTaskCancellationHandler {
@@ -117,7 +126,7 @@ enum JITHelperClient {
 
         func begin(userInfo: [String: Any], continuation: CheckedContinuation<Response, Error>) {
             self.continuation = continuation
-            requesting.setRequestCompletionBlock?({ [weak self] identifier, items in
+            requesting.setRequestCompletionBlock({ [weak self] identifier, items in
                 let answer = (items?.first as? NSExtensionItem)?.userInfo
                 let response = (answer?[JITProtocol.Key.success] as? Bool).map {
                     Response(success: $0, message: answer?[JITProtocol.Key.message] as? String ?? "",
@@ -130,7 +139,7 @@ enum JITHelperClient {
                     }
                 }
             })
-            requesting.setRequestCancellationBlock?({ [weak self] identifier, error in
+            requesting.setRequestCancellationBlock({ [weak self] identifier, error in
                 let reason = error?.localizedDescription ?? "canceled"
                 DispatchQueue.main.async {
                     MainActor.assumeIsolated {
@@ -139,7 +148,7 @@ enum JITHelperClient {
                     }
                 }
             })
-            requesting.setRequestInterruptionBlock?({ [weak self] identifier in
+            requesting.setRequestInterruptionBlock({ [weak self] identifier in
                 DispatchQueue.main.async {
                     MainActor.assumeIsolated {
                         guard let self, self.isMine(identifier) else { return }
@@ -149,7 +158,7 @@ enum JITHelperClient {
             })
             let item = NSExtensionItem()
             item.userInfo = userInfo
-            requesting.beginExtensionRequest?(withInputItems: [item], completion: { [weak self] identifier in
+            requesting.beginExtensionRequest(withInputItems: [item], completion: { [weak self] identifier in
                 DispatchQueue.main.async {
                     MainActor.assumeIsolated {
                         guard let self else { return }
@@ -167,7 +176,7 @@ enum JITHelperClient {
             isCancelled = true
             resume(.failure(CancellationError()))
             guard let identifier else { return }
-            requesting.cancelExtensionRequest?(withIdentifier: identifier)
+            requesting.cancelExtensionRequest(withIdentifier: identifier)
             JITHelperClient.finished(self)
         }
 

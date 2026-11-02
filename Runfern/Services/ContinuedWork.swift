@@ -29,7 +29,8 @@ final class ContinuedWork {
         /// sees the work going on while it waits for something, such as the person.
         func advance(withinStagesOf stage: Int) {
             let unit = Int64(max(stage, 1))
-            completed = min(completed + 1, (completed / unit + 1) * unit - 1, total)
+            let stageEnd = (completed / unit + 1) * unit - 1
+            completed = min(min(completed + 1, stageEnd), total)
             apply()
         }
 

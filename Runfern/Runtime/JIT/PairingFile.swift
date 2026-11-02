@@ -58,7 +58,7 @@ nonisolated enum PairingFile {
     }
 
     /// The pairing record, if a usable one was imported, reduced to the keys StikJIT reads.
-    static func load() throws(ImportError) -> Data? {
+    static func load() throws -> Data? {
         guard let data = try? Data(contentsOf: url) else { return nil }
         return try normalized(data)
     }
@@ -86,15 +86,15 @@ nonisolated enum PairingFile {
     /// `identifier` string (`host_identifier` in pymobiledevice3's records). `alt_irk` is optional. Also checks that the public key belongs to the
     /// private key (both are Ed25519 in their 32-byte RFC 8032 form), because the iPad would
     /// otherwise reject the file only when JIT is first needed.
-    static func validate(_ data: Data) throws(ImportError) {
+    static func validate(_ data: Data) throws {
         _ = try normalized(data)
     }
 
     /// `data` as an XML property list with only the keys StikJIT reads. Some tools, iloader among
     /// them, add lockdown secrets to the same file; those never reach the helper.
-    static func normalized(_ data: Data) throws(ImportError) -> Data {
+    static func normalized(_ data: Data) throws -> Data {
         guard let record = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any] else {
-            throw .invalid
+            throw ImportError.invalid
         }
         guard let publicKey = record["public_key"] as? Data, publicKey.count == 32,
               let privateKey = record["private_key"] as? Data, privateKey.count == 32 else {
@@ -104,23 +104,31 @@ nonisolated enum PairingFile {
         }
         // pymobiledevice3 names the identifier `host_identifier` in records of pairings the iPad
         // started, and keeps none for pairings it started itself.
-        let identifier = [record["identifier"], record["host_identifier"]].lazy
-            .compactMap { $0 as? String }.first { !$0.isEmpty }
-        guard let identifier else {
+        var foundIdentifier: String?
+        for key in ["identifier", "host_identifier"] {
+            if let value = record[key] as? String, !value.isEmpty {
+                foundIdentifier = value
+                break
+            }
+        }
+        guard let identifier = foundIdentifier else {
             let isPymobiledevice3Record = record["remote_unlock_host_key"] != nil || record["peer_alt_irk"] != nil
             throw isPymobiledevice3Record ? ImportError.pymobiledevice3Record : ImportError.invalid
         }
         guard let signingKey = try? Curve25519.Signing.PrivateKey(rawRepresentation: privateKey),
               signingKey.publicKey.rawRepresentation == publicKey else {
-            throw .mismatchedKeys
+            throw ImportError.mismatchedKeys
         }
         var kept: [String: Any] = ["public_key": publicKey, "private_key": privateKey, "identifier": identifier]
         // The iPad's IRK, which idevice and pymobiledevice3 name differently.
-        if let altIRK = [record["alt_irk"], record["peer_alt_irk"]].lazy.compactMap({ $0 as? Data }).first(where: { $0.count == 16 }) {
-            kept["alt_irk"] = altIRK
+        for key in ["alt_irk", "peer_alt_irk"] {
+            if let altIRK = record[key] as? Data, altIRK.count == 16 {
+                kept["alt_irk"] = altIRK
+                break
+            }
         }
         guard let reduced = try? PropertyListSerialization.data(fromPropertyList: kept, format: .xml, options: 0) else {
-            throw .invalid
+            throw ImportError.invalid
         }
         return reduced
     }
