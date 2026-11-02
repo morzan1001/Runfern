@@ -3,9 +3,13 @@
 # signed catalog is pushed to the branch the workflow runs on (main, where apps look for it).
 #
 # Run it from Actions > "Publish Linux Base" > Run workflow on main, with base ids from
-# Catalog/catalog.json. Needs the repository secret CATALOG_SIGNING_KEY (README.md, "Catalog").
+# Catalog/catalog.json. Needs the secret CATALOG_SIGNING_KEY of the environment "catalog", which
+# only main may use (README.md, "Catalog"). Bases the catalog lists already are built again only
+# with "rebuild": the catalog keeps one build per base, so environments created on the earlier
+# build can't download it anymore.
 # If a run fails after its builds, "Re-run failed jobs" publishes the same builds: a release that
-# already holds a build is used again, never replaced.
+# already holds a build is used again, never replaced, and builds the catalog lists already are
+# left as they are.
 
 name: Publish Linux Base
 
@@ -16,6 +20,11 @@ on:
         description: Base ids from Catalog/catalog.json, separated by spaces or commas (for example debian-12-arm64)
         required: true
         type: string
+      rebuild:
+        description: Build bases again that are published already (environments created on the published build can't download it anymore)
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -25,6 +34,8 @@ jobs:
     name: Plan
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # Holds CATALOG_SIGNING_KEY; its deployment branch rule admits main only.
+    environment: catalog
     outputs:
       ids: ${{ steps.ids.outputs.ids }}
       list: ${{ steps.ids.outputs.list }}
@@ -36,14 +47,21 @@ jobs:
         id: ids
         env:
           IMAGES: ${{ inputs.images }}
+          REBUILD: ${{ inputs.rebuild }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         run: |
-          if [ "$GITHUB_REF_TYPE" != branch ]; then
-            echo "::error::Run the workflow on a branch (main): it pushes the signed catalog there."
+          # Apps load the catalog from main, and releases belong to the whole repository: a run on
+          # another branch would publish builds that main's catalog never lists.
+          if [ "$GITHUB_REF" != "refs/heads/$DEFAULT_BRANCH" ]; then
+            echo "::error::Run the workflow on $DEFAULT_BRANCH, not $GITHUB_REF: apps load the catalog from there."
             exit 1
           fi
           python3 - <<'PYTHON'
           import json, os, re, sys
-          known = [image["id"] for image in json.load(open("Catalog/catalog.json"))["baseImages"]]
+          sys.path.insert(0, "Tools/Catalog")
+          import catalog_release
+          catalog = catalog_release.load("Catalog/catalog.json")
+          known = [image["id"] for image in catalog["baseImages"]]
           ids = []
           for image_id in re.split(r"[\s,]+", os.environ["IMAGES"].strip()):
               if image_id and image_id not in ids:
@@ -52,6 +70,17 @@ jobs:
           if not ids or unknown:
               problem = f"Unknown bases: {', '.join(unknown)}." if unknown else "No base given."
               print(f"::error::{problem} The catalog lists {', '.join(known)}.")
+              sys.exit(1)
+          # Published bases only with rebuild, before hours of building.
+          problems = []
+          for image_id in ids:
+              try:
+                  catalog_release.next_version(catalog, image_id, os.environ["REBUILD"] == "true")
+              except catalog_release.CatalogError as error:
+                  problems.append(str(error))
+          for problem in problems:
+              print(f"::error::{problem}")
+          if problems:
               sys.exit(1)
           with open(os.environ["GITHUB_OUTPUT"], "a") as output:
               output.write(f"ids={json.dumps(ids)}\nlist={' '.join(ids)}\n")
@@ -63,7 +92,7 @@ jobs:
           CATALOG_SIGNING_KEY: ${{ secrets.CATALOG_SIGNING_KEY }}
         run: |
           if [ -z "$CATALOG_SIGNING_KEY" ]; then
-            echo "::error::The repository secret CATALOG_SIGNING_KEY is missing (Settings > Secrets and variables > Actions; README.md, Catalog)."
+            echo "::error::The secret CATALOG_SIGNING_KEY of the environment catalog is missing (Settings > Environments > catalog; README.md, Catalog)."
             exit 1
           fi
           Tools/Catalog/sign-catalog.sh --check-key
@@ -132,15 +161,20 @@ jobs:
     needs: [plan, build]
     runs-on: ubuntu-latest
     timeout-minutes: 120
+    environment: catalog
     permissions:
       contents: write
     # One publish at a time in the whole repository: release tags and the catalog are shared, and
-    # each publish continues from the catalog the previous one pushed.
+    # each publish continues from the catalog the previous one pushed. queue: max lets every
+    # waiting publish wait; by default GitHub cancels all but the newest, and their builds would
+    # go unpublished. (actionlint 1.7.12 doesn't know the key yet; GitHub does.)
     concurrency:
       group: publish-linux-base
       cancel-in-progress: false
+      queue: max
     env:
       IDS: ${{ needs.plan.outputs.list }}
+      REBUILD: ${{ inputs.rebuild }}
       BRANCH: ${{ github.ref_name }}
     steps:
       - uses: actions/checkout@v4
@@ -154,7 +188,7 @@ jobs:
           CATALOG_SIGNING_KEY: ${{ secrets.CATALOG_SIGNING_KEY }}
         run: |
           if [ -z "$CATALOG_SIGNING_KEY" ]; then
-            echo "::error::The repository secret CATALOG_SIGNING_KEY is missing (Settings > Secrets and variables > Actions; README.md, Catalog)."
+            echo "::error::The secret CATALOG_SIGNING_KEY of the environment catalog is missing (Settings > Environments > catalog; README.md, Catalog)."
             exit 1
           fi
           Tools/Catalog/sign-catalog.sh --check-key
@@ -167,19 +201,33 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          rebuild=()
+          if [ "$REBUILD" = true ]; then
+            rebuild=(--rebuild)
+          fi
           for id in $IDS; do
             mkdir -p "Tools/GuestImage/build/$id"
             mv "$RUNNER_TEMP/images/$id".* "Tools/GuestImage/build/$id/"
-            Tools/Catalog/publish-image.sh "$id"
+            Tools/Catalog/publish-image.sh "${rebuild[@]}" "$id"
           done
       - name: Sign the catalog
         env:
           CATALOG_SIGNING_KEY: ${{ secrets.CATALOG_SIGNING_KEY }}
         run: |
+          # Unchanged when the catalog lists every build already, as after a re-run of this job
+          # whose first attempt pushed: then there's nothing to sign or push.
+          if git diff --quiet -- Catalog/catalog.json; then
+            echo "The catalog lists these builds already."
+            exit 0
+          fi
           python3 Tools/Catalog/catalog_release.py finish
           Tools/Catalog/sign-catalog.sh
       - name: Commit and push the catalog
         run: |
+          if git diff --quiet -- Catalog/catalog.json Catalog/catalog.json.sig; then
+            echo "Nothing to push."
+            exit 0
+          fi
           version="$(jq .catalogVersion Catalog/catalog.json)"
           tags=""
           for id in $IDS; do

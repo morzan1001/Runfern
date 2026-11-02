@@ -75,6 +75,7 @@ FLAVORS = {
         "packages": COMMON_TOOLS + ["build-essential", "openssh-client", "xz-utils", "procps", "pkg-config", "tzdata",
                                     "libicu-dev", "libcurl4-openssl-dev", "libxml2-dev", "libncurses-dev",
                                     "libsqlite3-dev", "zlib1g-dev", "libpython3-dev", "libedit2"],
+        "install_packages": "DEBIAN_FRONTEND=noninteractive apt-get install -y {packages}",
         "install_kernel": "DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends {kernel}",
         "quiet": "systemctl disable --now unattended-upgrades.service apt-daily.timer apt-daily-upgrade.timer || true",
         "clean": "apt-get clean; rm -rf /var/lib/apt/lists/*",
@@ -83,6 +84,7 @@ FLAVORS = {
         "packages": COMMON_TOOLS + ["gcc", "gcc-c++", "make", "openssh-clients", "xz", "procps-ng", "pkgconf", "tzdata",
                                     "libicu", "libcurl-devel", "libxml2-devel", "ncurses-devel", "sqlite-devel",
                                     "zlib-devel", "python3-devel", "libedit", "dracut"],
+        "install_packages": "dnf -y install {packages}",
         "install_kernel": "dnf -y install {kernel}",
         "quiet": "systemctl disable --now dnf-makecache.timer || true",
         "clean": "dnf clean all",
@@ -91,6 +93,7 @@ FLAVORS = {
         "packages": COMMON_TOOLS + ["gcc", "gcc-c++", "make", "openssh-clients", "xz", "procps", "pkg-config", "timezone",
                                     "libicu-devel", "libcurl-devel", "libxml2-devel", "ncurses-devel", "sqlite3-devel",
                                     "zlib-devel", "python3-devel", "libedit0", "dracut"],
+        "install_packages": "zypper --non-interactive install {packages}",
         "install_kernel": "zypper --non-interactive install --no-recommends {kernel}",
         "quiet": "systemctl disable --now transactional-update.timer || true",
         "clean": "zypper clean --all",
@@ -107,6 +110,8 @@ KVM_DEVICE = "/dev/kvm"
 ACCELERATED_TIMEOUT = 3600
 EMULATED_TIMEOUT = 19800
 MAX_VCPUS = 4
+# QEMU's virt machine has two 64 MiB flash devices and accepts only images of exactly that size.
+VIRT_FLASH_SIZE = 64 << 20
 # UEFI firmware and variable store template from distribution packages, after Homebrew's.
 SYSTEM_FIRMWARE = [("/usr/share/qemu/edk2-aarch64-code.fd", "/usr/share/qemu/edk2-arm-vars.fd"),
                    ("/usr/share/AAVMF/AAVMF_CODE.fd", "/usr/share/AAVMF/AAVMF_VARS.fd")]  # qemu-efi-aarch64
@@ -199,10 +204,11 @@ def efi_firmware():
     for code, variables in candidates:
         code, variables = pathlib.Path(code), pathlib.Path(variables)
         if code.is_file() and variables.is_file():
-            # The virt machine's two flash devices are equally large; QEMU rejects images that don't fit.
-            if code.stat().st_size == variables.stat().st_size:
+            # Images for -bios (QEMU_EFI.fd, 2 MiB) don't fit the flash devices.
+            if code.stat().st_size == variables.stat().st_size == VIRT_FLASH_SIZE:
                 return code, variables
-            print(f"Skipping {code} and {variables}: they differ in size")
+            print(f"Skipping {code} and {variables}: the VM's flash devices need images of exactly "
+                  f"{VIRT_FLASH_SIZE} bytes (64 MiB), these have {code.stat().st_size} and {variables.stat().st_size}")
     sys.exit("No UEFI firmware for the VM found. Looked for:\n"
              + "".join(f"    {code} and {variables}\n" for code, variables in candidates)
              + "Install it (macOS: brew install qemu; Debian/Ubuntu: apt-get install qemu-efi-aarch64) "
@@ -369,6 +375,9 @@ cp "/boot/initrd.img-$VERSION" /tmp/out/initrd.img"""
 
     script = f"""
 set -eux
+# cloud-init carries on when installing the packages fails; installing them again here stops the
+# build instead (and has nothing to do once they are installed).
+{flavor['install_packages'].format(packages=' '.join(flavor['packages']))}
 {flavor['install_kernel'].format(kernel=base['kernel'])}
 # Editor
 mkdir -p /opt/openvscode-server
@@ -400,11 +409,14 @@ SUBVOLUME=$(findmnt -no FSROOT / | sed 's|^/||')
 [ -n "$SUBVOLUME" ] && [ "$(findmnt -no FSTYPE /)" = btrfs ] && ROOTFLAGS="rootflags=subvol=$SUBVOLUME"
 echo "root=UUID=$(findmnt -no UUID /) $ROOTFLAGS ro console=ttyAMA0 quiet loglevel=3 selinux=0" > /tmp/out/cmdline.txt
 echo "$VERSION" > /tmp/out/kernel-version.txt
+{flavor['clean']}
+rm -rf /var/log/*.log
+cloud-init clean --logs || true
+# The boot files last: the host takes them as the sign that every step succeeded.
 tar -cf /dev/vdc -C /tmp/out .
 sync
-{flavor['clean']}
-rm -rf /var/log/*.log /tmp/out
-cloud-init clean --logs || true
+rm -rf /tmp/out
+# Frees the deleted files' blocks in disk.qcow2 too (discard=unmap), so they stay out of the bundle.
 fstrim -av || true
 poweroff
 """
@@ -416,7 +428,9 @@ poweroff
         "package_update": True,
         "packages": flavor["packages"],
         "write_files": files,
-        "runcmd": [["/bin/bash", "/usr/lib/runfern/customize.sh"]],
+        # The host waits for the VM to stop, so a failed customization powers off right away
+        # instead of after the timeout (hours with tcg); the missing boot files report it.
+        "runcmd": [["/bin/bash", "-c", "/bin/bash /usr/lib/runfern/customize.sh || poweroff"]],
     }
     # JSON is valid YAML, which keeps this script free of extra dependencies.
     return "#cloud-config\n" + json.dumps(config, indent=1)
@@ -518,13 +532,18 @@ def main():
             "-nographic", "-serial", f"file:{console}", "-monitor", "none",
             "-drive", f"if=pflash,format=raw,readonly=on,file={firmware}",
             "-drive", f"if=pflash,format=raw,file={variables}",
-            "-drive", f"if=virtio,format=qcow2,file={disk}",
+            # discard=unmap: blocks the guest trims (fstrim) leave disk.qcow2 instead of keeping
+            # deleted files' data, which qemu-img convert would copy into the bundle.
+            "-drive", f"if=virtio,format=qcow2,discard=unmap,file={disk}",
             "-drive", f"if=virtio,format=raw,readonly=on,file={work / 'seed.iso'}",
             "-drive", f"if=virtio,format=raw,file={out}",
             "-netdev", "user,id=net0", "-device", "virtio-net-pci,netdev=net0,romfile=", timeout=timeout)
     except subprocess.TimeoutExpired:
         print(console_tail(console), file=sys.stderr)
         sys.exit(f"The customization VM didn't finish within {timeout} s (RUNFERN_BUILD_TIMEOUT); see {console}")
+    except subprocess.CalledProcessError as error:
+        print(console_tail(console), file=sys.stderr)
+        sys.exit(f"QEMU failed with exit status {error.returncode}; see its error message and {console}")
 
     extracted = work / "boot"
     extracted.mkdir()
