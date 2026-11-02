@@ -1,0 +1,206 @@
+# Builds Linux bases and publishes them, so apps can download a base the first time a project needs
+# it: each build becomes a release asset (<id>-v<image version>), the catalog lists it, and the
+# signed catalog is pushed to the branch the workflow runs on (main, where apps look for it).
+#
+# Run it from Actions > "Publish Linux Base" > Run workflow on main, with base ids from
+# Catalog/catalog.json. Needs the repository secret CATALOG_SIGNING_KEY (README.md, "Catalog").
+# If a run fails after its builds, "Re-run failed jobs" publishes the same builds: a release that
+# already holds a build is used again, never replaced.
+
+name: Publish Linux Base
+
+on:
+  workflow_dispatch:
+    inputs:
+      images:
+        description: Base ids from Catalog/catalog.json, separated by spaces or commas (for example debian-12-arm64)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    name: Plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      ids: ${{ steps.ids.outputs.ids }}
+      list: ${{ steps.ids.outputs.list }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Check the requested bases
+        id: ids
+        env:
+          IMAGES: ${{ inputs.images }}
+        run: |
+          if [ "$GITHUB_REF_TYPE" != branch ]; then
+            echo "::error::Run the workflow on a branch (main): it pushes the signed catalog there."
+            exit 1
+          fi
+          python3 - <<'PYTHON'
+          import json, os, re, sys
+          known = [image["id"] for image in json.load(open("Catalog/catalog.json"))["baseImages"]]
+          ids = []
+          for image_id in re.split(r"[\s,]+", os.environ["IMAGES"].strip()):
+              if image_id and image_id not in ids:
+                  ids.append(image_id)
+          unknown = [image_id for image_id in ids if image_id not in known]
+          if not ids or unknown:
+              problem = f"Unknown bases: {', '.join(unknown)}." if unknown else "No base given."
+              print(f"::error::{problem} The catalog lists {', '.join(known)}.")
+              sys.exit(1)
+          with open(os.environ["GITHUB_OUTPUT"], "a") as output:
+              output.write(f"ids={json.dumps(ids)}\nlist={' '.join(ids)}\n")
+          print("Bases:", " ".join(ids))
+          PYTHON
+      - name: Check the signing key
+        # Before hours of building: without the right key the catalog can't be published.
+        env:
+          CATALOG_SIGNING_KEY: ${{ secrets.CATALOG_SIGNING_KEY }}
+        run: |
+          if [ -z "$CATALOG_SIGNING_KEY" ]; then
+            echo "::error::The repository secret CATALOG_SIGNING_KEY is missing (Settings > Secrets and variables > Actions; README.md, Catalog)."
+            exit 1
+          fi
+          Tools/Catalog/sign-catalog.sh --check-key
+
+  build:
+    name: Build ${{ matrix.id }}
+    needs: plan
+    # Arm64 like the guest: with KVM if the runner offers it, else emulated (TCG), which takes hours.
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      matrix:
+        id: ${{ fromJSON(needs.plan.outputs.ids) }}
+    env:
+      IMAGE: ${{ matrix.id }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Check hardware acceleration
+        run: |
+          if [ -e /dev/kvm ]; then
+            sudo chmod 666 /dev/kvm
+            echo "/dev/kvm is available: the guest runs with KVM."
+          else
+            echo "::notice title=No KVM::This runner has no /dev/kvm; $IMAGE is built emulated (TCG), which takes hours."
+          fi
+          nproc
+          free -h
+          df -h .
+      - name: Install QEMU
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qemu-system-arm qemu-efi-aarch64 qemu-utils xorriso zstd
+      - name: Build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 Tools/GuestImage/build_image.py "$IMAGE"
+      - name: Keep the image for publishing
+        uses: actions/upload-artifact@v4
+        with:
+          name: image-${{ matrix.id }}
+          path: |
+            Tools/GuestImage/build/${{ matrix.id }}/${{ matrix.id }}.runfernimage
+            Tools/GuestImage/build/${{ matrix.id }}/${{ matrix.id }}.sha256
+            Tools/GuestImage/build/${{ matrix.id }}/${{ matrix.id }}.json
+          if-no-files-found: error
+          retention-days: 3
+          # The disk inside is compressed qcow2 already.
+          compression-level: 0
+          overwrite: true
+      - name: Keep the console log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: console-${{ matrix.id }}
+          path: Tools/GuestImage/build/${{ matrix.id }}/work/console.log
+          if-no-files-found: ignore
+          retention-days: 7
+          overwrite: true
+
+  publish:
+    name: Publish
+    # Runs only if every build succeeded (needs' default), so a catalog never lists half a request.
+    needs: [plan, build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      contents: write
+    # One publish at a time in the whole repository: release tags and the catalog are shared, and
+    # each publish continues from the catalog the previous one pushed.
+    concurrency:
+      group: publish-linux-base
+      cancel-in-progress: false
+    env:
+      IDS: ${{ needs.plan.outputs.list }}
+      BRANCH: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The branch as it is now, not the commit the run started on: image versions continue
+          # from the newest catalog.
+          ref: ${{ github.ref }}
+          fetch-depth: 0
+      - name: Check the signing key
+        env:
+          CATALOG_SIGNING_KEY: ${{ secrets.CATALOG_SIGNING_KEY }}
+        run: |
+          if [ -z "$CATALOG_SIGNING_KEY" ]; then
+            echo "::error::The repository secret CATALOG_SIGNING_KEY is missing (Settings > Secrets and variables > Actions; README.md, Catalog)."
+            exit 1
+          fi
+          Tools/Catalog/sign-catalog.sh --check-key
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: image-*
+          merge-multiple: true
+          path: ${{ runner.temp }}/images
+      - name: Publish the images
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for id in $IDS; do
+            mkdir -p "Tools/GuestImage/build/$id"
+            mv "$RUNNER_TEMP/images/$id".* "Tools/GuestImage/build/$id/"
+            Tools/Catalog/publish-image.sh "$id"
+          done
+      - name: Sign the catalog
+        env:
+          CATALOG_SIGNING_KEY: ${{ secrets.CATALOG_SIGNING_KEY }}
+        run: |
+          python3 Tools/Catalog/catalog_release.py finish
+          Tools/Catalog/sign-catalog.sh
+      - name: Commit and push the catalog
+        run: |
+          version="$(jq .catalogVersion Catalog/catalog.json)"
+          tags=""
+          for id in $IDS; do
+            tags="$tags $id-v$(jq --arg id "$id" '.baseImages[] | select(.id == $id) | .catalogVersion' Catalog/catalog.json)"
+          done
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Catalog v$version: publish$tags" -- Catalog/catalog.json Catalog/catalog.json.sig
+          git pull --rebase origin "$BRANCH"
+          # Whatever landed meanwhile, only a catalog that verifies is pushed.
+          Tools/Catalog/verify-catalog.sh
+          git push origin "HEAD:$BRANCH"
+      - name: Summary
+        run: |
+          {
+            echo "### Catalog version $(jq .catalogVersion Catalog/catalog.json) on $BRANCH"
+            echo
+            echo "| Base | Image version | Size | Download |"
+            echo "| --- | --- | --- | --- |"
+            for id in $IDS; do
+              jq -r --arg id "$id" '.baseImages[] | select(.id == $id)
+                | "| \(.id) | \(.catalogVersion) | \((.downloadSizeBytes / 1e5 | round) / 10) MB | \(.source.url) |"' Catalog/catalog.json
+            done
+          } >> "$GITHUB_STEP_SUMMARY"

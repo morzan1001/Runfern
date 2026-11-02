@@ -1,0 +1,38 @@
+# Guards the signed catalog. Apps load Catalog/catalog.json only if its signature matches the
+# publisher key built into the app and fall back to an empty catalog otherwise, so every change to
+# the catalog, its tools, or the app's key is checked before it reaches main.
+#
+# Commits the "Publish Linux Base" workflow pushes don't start other workflows (GitHub's rule for
+# GITHUB_TOKEN); that workflow runs the same check itself before it pushes.
+
+name: Catalog
+
+on:
+  push:
+    paths:
+      - Catalog/**
+      - Tools/Catalog/**
+      - Runfern/Catalog/CatalogStore.swift
+      - .github/workflows/catalog.yml
+  pull_request:
+    paths:
+      - Catalog/**
+      - Tools/Catalog/**
+      - Runfern/Catalog/CatalogStore.swift
+      - .github/workflows/catalog.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verify the catalog
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Check the catalog and its signature
+        run: Tools/Catalog/verify-catalog.sh
