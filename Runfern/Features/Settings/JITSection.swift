@@ -22,7 +22,9 @@ struct JITSection: View {
     private struct SetupRequest: Identifiable {
         let id = UUID()
         /// Runs at once, to check a pairing file that is already there.
-        var startsAutomatically: Bool
+        var startsAutomatically = false
+        /// Creates a new pairing file although one is stored.
+        var forcesPairing = false
     }
 
     private var method: Binding<JITMethod> {
@@ -76,8 +78,9 @@ struct JITSection: View {
                     pairingState = PairingFile.state
                 }
             }
-            .sheet(item: $setup, onDismiss: pairingFileChanged) { request in
-                JITSetupView(startsAutomatically: request.startsAutomatically)
+            // The setup keeps its own result in `BuiltInJIT.lastError`, so closing it only refreshes.
+            .sheet(item: $setup, onDismiss: { pairingState = PairingFile.state }) { request in
+                JITSetupView(startsAutomatically: request.startsAutomatically, forcesPairing: request.forcesPairing)
             }
         }
     }
@@ -105,7 +108,7 @@ struct JITSection: View {
     private var builtInRows: some View {
         LabeledContent {
             switch pairingState {
-            case .ready: Text("Imported")
+            case .ready: Text("Ready")
             case .missing: Text("Missing")
             case .unusable: Text("Wrong Format")
             }
@@ -116,6 +119,12 @@ struct JITSection: View {
             Button("Check JIT", systemImage: "checkmark.shield") {
                 message = nil
                 setup = SetupRequest(startsAutomatically: true)
+            }
+            if canCreatePairingFile {
+                Button("Pair Again…", systemImage: "arrow.triangle.2.circlepath") {
+                    message = nil
+                    setup = SetupRequest(forcesPairing: true)
+                }
             }
         } else if canCreatePairingFile {
             Button("Set Up JIT…", systemImage: "wand.and.stars") {

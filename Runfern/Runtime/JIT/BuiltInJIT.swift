@@ -56,8 +56,9 @@ enum BuiltInJIT {
         }
 
         let wakeLock = WakeLock()
+        let vpn: LoopbackTunnel.Lease
         do {
-            try await LoopbackTunnel.connect()
+            vpn = try await LoopbackTunnel.connect()
         } catch {
             wakeLock.release()
             return fail(error.localizedDescription)
@@ -72,7 +73,7 @@ enum BuiltInJIT {
                 JITProtocol.Key.pairing: pairing,
             ])
         } catch {
-            await LoopbackTunnel.disconnect()
+            await vpn.release()
             wakeLock.release()
             return fail(error.localizedDescription)
         }
@@ -87,7 +88,7 @@ enum BuiltInJIT {
                 let stage = response.stage.map { " (stage \($0))" } ?? ""
                 DiagnosticsLog.record(response.success ? .info : .warning, .runtime, "JIT helper\(stage): \(response.message)")
             }
-            await LoopbackTunnel.disconnect()
+            await vpn.release()
             wakeLock.release()
         }
         // The first attempt after a reboot also downloads and mounts the Developer Disk Image,
@@ -99,33 +100,47 @@ enum BuiltInJIT {
             // Taken before cancelling, which would replace a missing answer with a cancellation.
             let response = outcome.response
             helper.cancel()
-            await LoopbackTunnel.disconnect()
+            await vpn.release()
             wakeLock.release()
             return fail(response.map { explanation(of: $0) } ?? String(localized: "The debugger did not attach in time."))
         }
         return true
     }
 
+    /// The result of `check()`.
+    enum CheckResult: Equatable {
+        case ready
+        /// `needsNewPairing`: the iPad did not accept the pairing file.
+        case failed(String, needsNewPairing: Bool)
+        /// The check was cancelled before it had a result.
+        case cancelled
+    }
+
     /// Checks the whole way to the iPad's developer services without starting Linux: the VPN, the
     /// pairing file, and the Developer Disk Image, which is downloaded and mounted if needed, so the
-    /// next Linux start is quick. Returns nil when JIT is ready, otherwise what is wrong.
-    static func check() async -> String? {
-        if let unavailableReason { return unavailableReason }
+    /// next Linux start is quick.
+    static func check() async -> CheckResult {
+        if let unavailableReason { return checked(.failed(unavailableReason, needsNewPairing: false)) }
         let pairing: Data
         do {
-            guard let loaded = try PairingFile.load() else { return String(localized: "Set up JIT under Settings › Performance to use it.") }
+            guard let loaded = try PairingFile.load() else {
+                return checked(.failed(String(localized: "Set up JIT under Settings › Performance to use it."), needsNewPairing: false))
+            }
             pairing = loaded
         } catch {
-            return error.localizedDescription
+            return checked(.failed(error.localizedDescription, needsNewPairing: true))
         }
         let wakeLock = WakeLock()
         defer { wakeLock.release() }
+        let vpn: LoopbackTunnel.Lease
         do {
-            try await LoopbackTunnel.connect()
+            vpn = try await LoopbackTunnel.connect()
+        } catch is CancellationError {
+            return .cancelled
         } catch {
-            return error.localizedDescription
+            return checked(.failed(error.localizedDescription, needsNewPairing: false))
         }
-        let problem: String?
+        let result: CheckResult
         do {
             let signedRequest = try signed([
                 JITProtocol.Key.operation: JITProtocol.Operation.prepare,
@@ -133,14 +148,33 @@ enum BuiltInJIT {
             ])
             defer { signedRequest.discardToken() }
             let response = try await JITHelperClient.send(signedRequest.request)
-            problem = response.success ? nil : explanation(of: response)
+            if response.success {
+                result = .ready
+            } else {
+                result = .failed(explanation(of: response), needsNewPairing: response.stage == JITProtocol.Stage.pairing)
+            }
+        } catch is CancellationError {
+            result = .cancelled
         } catch {
-            problem = error.localizedDescription
+            result = .failed(error.localizedDescription, needsNewPairing: false)
         }
-        await LoopbackTunnel.disconnect()
-        lastError = problem
-        DiagnosticsLog.record(problem == nil ? .info : .warning, .runtime, "JIT check: \(problem ?? "ready")")
-        return problem
+        await vpn.release()
+        return result == .cancelled ? result : checked(result)
+    }
+
+    /// Records the result of a check that ran to its end, for Settings and the diagnostics.
+    private static func checked(_ result: CheckResult) -> CheckResult {
+        switch result {
+        case .ready:
+            lastError = nil
+            DiagnosticsLog.record(.info, .runtime, "JIT check: ready")
+        case .failed(let message, _):
+            lastError = message
+            DiagnosticsLog.record(.warning, .runtime, "JIT check: \(message)")
+        case .cancelled:
+            break
+        }
+        return result
     }
 
     /// Removes the cached Developer Disk Image, so the next attempt downloads it again.

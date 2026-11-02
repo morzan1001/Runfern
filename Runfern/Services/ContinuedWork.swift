@@ -17,6 +17,8 @@ final class ContinuedWork {
         private var completed: Int64 = 0
         private var total: Int64 = 1
         private var subtitle: String?
+        /// Set once the work has ended, so a task that iPadOS hands over afterwards ends at once.
+        private var outcome: Bool?
 
         func report(completed: Int, of total: Int, subtitle: String? = nil) {
             self.completed = Int64(completed)
@@ -35,6 +37,10 @@ final class ContinuedWork {
         }
 
         fileprivate func attach(_ task: BGContinuedProcessingTask) {
+            if let outcome {
+                task.setTaskCompleted(success: outcome)
+                return
+            }
             self.task = task
             task.expirationHandler = { [weak self] in
                 Task { @MainActor in self?.onExpiration?() }
@@ -43,6 +49,7 @@ final class ContinuedWork {
         }
 
         fileprivate func finish(success: Bool) {
+            outcome = success
             task?.setTaskCompleted(success: success)
             task = nil
         }

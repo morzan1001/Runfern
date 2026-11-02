@@ -7,8 +7,8 @@ import UserNotifications
 ///
 /// Runfern advertises itself as a pairable host (`PairingHost`), the person picks it under
 /// Settings › Privacy & Security › Developer Mode and types the code Runfern shows, and the
-/// resulting file is stored like an imported one. Settings is in front meanwhile, so the work asks
-/// iPadOS to continue in the background (`ContinuedWork`) and also sends the code as a notification.
+/// resulting file is stored like an imported one. Settings is in front meanwhile, so the caller
+/// runs this as background work (`ContinuedWork`), and the code also arrives as a notification.
 @MainActor
 @Observable
 final class OnDevicePairing {
@@ -32,63 +32,40 @@ final class OnDevicePairing {
     }
 
     private(set) var phase: Phase = .idle
-    private var task: Task<Void, Never>?
+    /// The last attempt failed because Runfern may not use the local network.
+    private(set) var needsLocalNetworkPermission = false
 
-    var isRunning: Bool { task != nil }
-
-    /// Starts a pairing. Must be called as a direct result of a person's action.
-    func start() {
-        guard task == nil else { return }
+    /// Runs a pairing to its end in the calling task, reporting to the caller's background work.
+    /// Returns whether a pairing file was stored. Cancelling the calling task ends the pairing.
+    func pairToEnd(progress: ContinuedWork.Handle) async -> Bool {
         phase = .idle
-        task = Task {
-            await run()
-            task = nil
-        }
-    }
-
-    /// Runs a pairing to its end, for a caller that continues afterwards. Returns whether a pairing
-    /// file was stored. Must be called as a direct result of a person's action.
-    func pairToEnd() async -> Bool {
-        guard task == nil else { return false }
-        phase = .idle
-        let running = Task { await run() }
-        task = running
-        await running.value
-        task = nil
-        if case .done = phase { return true }
-        return false
-    }
-
-    func cancel() {
-        task?.cancel()
-    }
-
-    private static let notificationID = "nrw.cyber.runfern.pairing-code"
-    /// Progress units per step of the pairing (advertising, connected, code shown, saved).
-    private static let stage = 100
-
-    private func run() async {
+        needsLocalNetworkPermission = false
         #if canImport(IDevice)
         let notifications = UNUserNotificationCenter.current()
-        _ = try? await notifications.requestAuthorization(options: [.alert, .sound])
         defer {
             notifications.removePendingNotificationRequests(withIdentifiers: [Self.notificationID])
             notifications.removeDeliveredNotifications(withIdentifiers: [Self.notificationID])
         }
         do {
-            try await ContinuedWork.shared.run(title: String(localized: "Pairing This iPad"),
-                                               subtitle: String(localized: "Waiting for Settings")) { handle in
-                try await self.pair(progress: handle)
-            }
+            try await pair(progress: progress)
         } catch is CancellationError {
             phase = .failed(PairingHost.HostError.cancelled.localizedDescription)
+        } catch BonjourAdvertiser.AdvertiserError.localNetworkDenied {
+            needsLocalNetworkPermission = true
+            phase = .failed(BonjourAdvertiser.AdvertiserError.localNetworkDenied.localizedDescription)
         } catch {
             phase = .failed(error.localizedDescription)
         }
         #else
         phase = .failed(String(localized: "This build of Runfern cannot create pairing files."))
         #endif
+        if case .done = phase { return true }
+        return false
     }
+
+    private static let notificationID = "nrw.cyber.runfern.pairing-code"
+    /// Progress units per step of the pairing (advertising, connected, code shown, saved).
+    private static let stage = 100
 
     #if canImport(IDevice)
     private func pair(progress: ContinuedWork.Handle) async throws {

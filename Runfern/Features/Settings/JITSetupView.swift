@@ -7,15 +7,18 @@ import UIKit
 struct JITSetupView: View {
     /// Starts right away, for example to check a pairing file that was just imported.
     var startsAutomatically = false
+    /// Creates a new pairing file even if one is stored.
+    var forcesPairing = false
 
     @Environment(\.dismiss) private var dismiss
     @State private var setup = JITSetup()
+    @State private var didStartAutomatically = false
 
     var body: some View {
         NavigationStack {
             Form {
                 Section {
-                    Text("Runfern sets up JIT by itself. You only confirm two things: Runfern's VPN, and the pairing with this iPad in Settings.")
+                    Text("Runfern sets up JIT by itself. You only answer what iPadOS asks: allow Runfern's VPN, local network access, and notifications, and confirm the pairing with this iPad in Settings.")
                 }
                 Section {
                     StepRow(title: "Allow Runfern's VPN", detail: "iPadOS asks once.", state: setup.vpn)
@@ -23,19 +26,33 @@ struct JITSetupView: View {
                     if setup.pairingStep == .running {
                         pairingDetails
                     }
+                    if !setup.isRunning, setup.pairing.needsLocalNetworkPermission {
+                        Button("Open Runfern's Settings", systemImage: "network") {
+                            openFirst(UIApplication.openSettingsURLString)
+                        }
+                    }
                     StepRow(title: "Check the Connection",
                             detail: "The first time, this downloads the Developer Disk Image, which needs the internet and can take a few minutes.",
                             state: setup.check)
                 }
                 Section {
                     if setup.isDone {
-                        Label("JIT is ready. Linux uses it from its next start.", systemImage: "checkmark.seal.fill")
+                        if QEMULauncher.launchedBackend == nil {
+                            Label("JIT is ready. Linux uses it from its next start.", systemImage: "checkmark.seal.fill")
+                        } else {
+                            Label("JIT is ready. Restart Runfern to use it.", systemImage: "checkmark.seal.fill")
+                        }
                     } else if !setup.isRunning {
+                        if setup.canPairAgain {
+                            Button("Pair Again", systemImage: "arrow.triangle.2.circlepath") {
+                                setup.start(forcingPairing: true)
+                            }
+                        }
                         // Two buttons rather than a conditional title, which would not be localized.
                         if hasFailed {
                             Button("Try Again", systemImage: "arrow.clockwise") { setup.start() }
                         } else {
-                            Button("Start", systemImage: "play.fill") { setup.start() }
+                            Button("Start", systemImage: "play.fill") { setup.start(forcingPairing: forcesPairing) }
                         }
                     }
                 }
@@ -60,7 +77,9 @@ struct JITSetupView: View {
         }
         .interactiveDismissDisabled(setup.isRunning)
         .onAppear {
-            if startsAutomatically { setup.start() }
+            guard startsAutomatically, !didStartAutomatically else { return }
+            didStartAutomatically = true
+            setup.start(forcingPairing: forcesPairing)
         }
         .onDisappear { setup.cancel() }
     }
@@ -109,10 +128,17 @@ struct JITSetupView: View {
     /// Opens Settings as close to Developer Mode as iPadOS allows: these addresses are not public,
     /// so each one that fails falls back to the next, ending with Runfern's own page in Settings.
     private func openSettings() {
-        let candidates = ["App-prefs:Privacy&path=DEVELOPER_MODE", "App-prefs:Privacy", "App-prefs:", UIApplication.openSettingsURLString]
+        openFirst("App-prefs:Privacy&path=DEVELOPER_MODE", "App-prefs:Privacy", "App-prefs:", UIApplication.openSettingsURLString)
+    }
+
+    /// Opens the first of `candidates` that iPadOS accepts.
+    private func openFirst(_ candidates: String...) {
         Task {
             for candidate in candidates {
-                if let url = URL(string: candidate), await UIApplication.shared.open(url) { return }
+                if let url = URL(string: candidate), await UIApplication.shared.open(url) {
+                    DiagnosticsLog.record(.info, .app, "Opened Settings with \(candidate)")
+                    return
+                }
             }
         }
     }
