@@ -6,6 +6,7 @@ import UniformTypeIdentifiers
 struct ImportProjectView: View {
     @Environment(ProjectStore.self) private var store
     @Environment(Provisioner.self) private var provisioner
+    @Environment(ImageLibrary.self) private var images
     @Environment(\.dismiss) private var dismiss
 
     let onImported: (Project) -> Void
@@ -38,8 +39,19 @@ struct ImportProjectView: View {
         _archive = State(initialValue: Archive(url: archive))
     }
 
+    /// What the package needs and this iPad can't get: components the catalog doesn't list, and a
+    /// base it lists but hasn't published (and that isn't installed).
+    private var unavailableComponents: [String] {
+        guard let preview else { return [] }
+        var missing = preview.missingComponents
+        if let id = preview.recipe?.base.id, let base = Catalog.baseImage(id: id), !images.isOffered(base) {
+            missing.append(String(localized: "\(base.displayName) (not published yet)"))
+        }
+        return missing
+    }
+
     private var canImport: Bool {
-        guard let preview, preview.missingComponents.isEmpty, !isWorking, !isImporting,
+        guard let preview, unavailableComponents.isEmpty, !isWorking, !isImporting,
               !preview.projectName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return false }
         return storageMode == .appInternal || folder != nil
     }
@@ -65,9 +77,10 @@ struct ImportProjectView: View {
                     } footer: {
                         Text("All files were verified against the package’s checksum list. A Linux environment is set up from the recipe after importing.")
                     }
-                    if !preview.missingComponents.isEmpty {
+                    let unavailable = unavailableComponents
+                    if !unavailable.isEmpty {
                         Section {
-                            ForEach(preview.missingComponents, id: \.self) { component in
+                            ForEach(unavailable, id: \.self) { component in
                                 StatusLabel(component)
                             }
                         } header: {

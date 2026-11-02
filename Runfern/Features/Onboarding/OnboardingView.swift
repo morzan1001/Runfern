@@ -5,6 +5,8 @@ import SwiftUI
 struct OnboardingView: View {
     @Environment(ProjectStore.self) private var store
     @Environment(Provisioner.self) private var provisioner
+    @Environment(ImageLibrary.self) private var images
+    @Environment(CatalogStore.self) private var catalog
 
     let finish: (_ createOwnProject: Bool) -> Void
     let createdSample: (Project) -> Void
@@ -14,12 +16,19 @@ struct OnboardingView: View {
     /// The icon column grows with the `.title2` symbols it holds.
     @ScaledMetric(relativeTo: .title2) private var iconWidth: CGFloat = 36
 
-    private var sampleImage: BaseImage { Catalog.baseImages[0] }
+    /// The first base this iPad can get that runs Python. `nil` until one is published; the
+    /// catalog check at launch may bring one while this screen is open.
+    private var sampleImage: BaseImage? {
+        images.offered(catalog.baseImages).first { $0.supportedToolchains.contains("python-3") }
+    }
     /// Only Python: the sample is a small Python project, and the base supports many more languages.
     private var sampleToolchains: [ToolchainProfile] { Catalog.toolchain(id: "python-3").map { [$0] } ?? [] }
-    private var sampleDownload: Int64 {
-        sampleImage.downloadSizeBytes + sampleToolchains.reduce(0) { $0 + $1.estimatedSizeBytes }
+    private func sampleDownload(_ image: BaseImage) -> Int64 {
+        (images.status(of: image) == .available ? 0 : image.downloadSizeBytes)
+            + sampleToolchains.reduce(0) { $0 + $1.estimatedSizeBytes }
     }
+    /// For the storage estimate; any listed base is about the same size.
+    private var typicalBaseSize: Int64 { (sampleImage ?? catalog.baseImages.first)?.downloadSizeBytes ?? 0 }
 
     var body: some View {
         ScrollView {
@@ -32,7 +41,7 @@ struct OnboardingView: View {
                 point("square.stack.3d.up", "Project and Environment",
                       "Each project gets its own Linux environment. Resetting it never touches your files.")
                 point("internaldrive", "Storage",
-                      "A Linux base needs about \(sampleImage.downloadSizeBytes.formattedBytes) once, plus the tools of each project.")
+                      "A Linux base needs about \(typicalBaseSize.formattedBytes) once, plus the tools of each project.")
                 point("wifi", "Internet Only for Downloads",
                       "Once set up, projects work offline.")
                 if !DeviceProfile.current.meetsTarget {
@@ -48,14 +57,29 @@ struct OnboardingView: View {
         .safeAreaBar(edge: .bottom) {
             GlassEffectContainer {
                 VStack(spacing: 12) {
-                    Button(action: createSample) {
-                        Text("Create Sample Project").frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.glassProminent)
-                    .keyboardShortcut(.defaultAction)
-                    Text("Downloads about \(sampleDownload.formattedBytes).")
+                    if let sampleImage {
+                        Button { createSample(with: sampleImage) } label: {
+                            Text("Create Sample Project").frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.glassProminent)
+                        .keyboardShortcut(.defaultAction)
+                        Text("Downloads about \(sampleDownload(sampleImage).formattedBytes).")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    } else {
+                        // Nothing to download yet: the sample can't be set up. Two texts rather than a
+                        // conditional string, which would not be localized.
+                        Group {
+                            if catalog.isChecking {
+                                Text("Looking for Linux bases…")
+                            } else {
+                                Text("No Linux base has been published yet. Runfern looks for new ones by itself.")
+                            }
+                        }
                         .font(.footnote)
                         .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                    }
                     Button { finish(true) } label: {
                         Text("Create Your Own Project").frame(maxWidth: .infinity)
                     }
@@ -86,11 +110,11 @@ struct OnboardingView: View {
         .accessibilityElement(children: .combine)
     }
 
-    private func createSample() {
+    private func createSample(with image: BaseImage) {
         do {
             let project = try store.createProject(
                 name: String(localized: "Python Sample"), details: String(localized: "A small starter project to try things out"),
-                source: .pythonStarter, baseImage: sampleImage,
+                source: .pythonStarter, baseImage: image,
                 toolchains: sampleToolchains, binding: .appInternal()
             )
             provisioner.start(project)

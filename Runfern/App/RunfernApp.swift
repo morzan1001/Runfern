@@ -30,7 +30,7 @@ import UIKit
         let adapter: EmulatorAdapter = QEMULauncher.isAvailable ? QEMUEmulatorAdapter() : SimulatedEmulatorAdapter()
         let store = ProjectStore()
         let sync = SyncCenter()
-        let images = ImageLibrary()
+        let images = ImageLibrary(offersUnpublished: adapter.isSimulated)
         let packages = PackageLibrary()
         let connectivity = Connectivity()
         // Reads the stored sync state after launch; the journals and working-copy scans run detached.
@@ -65,6 +65,7 @@ import UIKit
             // When returning, re-check access and pull in external changes for the active session (Plan 2.5).
             // The access check runs first, off the main thread, then the sync.
             guard phase == .active else { return }
+            Task { await catalog.checkIfDue(isOnline: connectivity.isOnline) }
             Task {
                 await store.refreshAccess()
                 if let id = runtime.activeProjectID, let project = store.project(id: id), let binding = store.binding(for: project) {
@@ -78,6 +79,9 @@ import UIKit
         withServices(ProjectOverviewView())
             .onAppear { applyNetworkPolicy() }
             .onChange(of: downloadsOnlyOnWiFi) { applyNetworkPolicy() }
+            // At launch and whenever the connection comes back: newly published Linux bases
+            // reach the app through the signed catalog on GitHub.
+            .task(id: connectivity.isOnline) { await catalog.checkIfDue(isOnline: connectivity.isOnline) }
     }
 
     /// Large downloads follow the global “Wi-Fi only” setting (OFF05).

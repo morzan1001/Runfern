@@ -55,7 +55,7 @@ struct PresetsView: View {
 
 extension EnvironmentPreset {
     static var blank: EnvironmentPreset {
-        EnvironmentPreset(id: UUID(), name: "", baseImageId: Catalog.baseImages.first?.id ?? "",
+        EnvironmentPreset(id: UUID(), name: "", baseImageId: ImageLibrary.preferredBase?.id ?? "",
                           toolchainIds: [], extensionIds: [], resources: .standard, editorSettings: nil)
     }
 

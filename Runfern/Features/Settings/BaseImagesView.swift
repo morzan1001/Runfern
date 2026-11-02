@@ -1,49 +1,78 @@
 import SwiftUI
 
-/// Pre-downloads verified Linux bases for offline setup (OFF04).
+/// The Linux bases this iPad can use: published in the signed catalog or already installed. They
+/// download by themselves when a project needs one; here they can be fetched ahead for offline
+/// setup (OFF04) or deleted when no project uses them.
 struct BaseImagesView: View {
     @Environment(ImageLibrary.self) private var images
+    @Environment(CatalogStore.self) private var catalog
+    @Environment(ProjectStore.self) private var store
     @Environment(Connectivity.self) private var connectivity
-    @State private var errorMessage: String?
+    @State private var downloadError: String?
+    @State private var deletionError: String?
+    @State private var confirmingDeletion: BaseImage?
 
     var body: some View {
+        // Read once per pass: every lookup checks the file system.
+        let offered = images.offered(catalog.baseImages)
+        let referenced = store.referencedImageDirectories
         Form {
-            Section {
-                ForEach(Catalog.baseImages) { image in
-                    let status = images.status(of: image)
-                    VStack(alignment: .leading, spacing: 6) {
-                        HStack {
-                            Text(image.displayName).font(.headline)
-                            Spacer()
-                            Text(image.downloadSizeBytes.formattedBytes).foregroundStyle(.secondary)
-                        }
-                        Text(status.title).font(.caption).foregroundStyle(.secondary)
-                        if case .downloading(let fraction) = status {
-                            ProgressView(value: fraction)
-                        }
-                        Text("Offline setup possible with: \(Catalog.toolchains(for: image).map(\.name).formatted(.list(type: .and)))")
-                            .font(.caption).foregroundStyle(.secondary)
-                        // Bordered, so only the button reacts, not a tap on the row's text.
-                        action(for: image, status: status)
-                            .buttonStyle(.bordered)
+            if !offered.isEmpty {
+                Section {
+                    ForEach(offered) { image in
+                        row(for: image, status: images.status(of: image),
+                            isInUse: referenced.contains(AppPaths.imageDirectoryName(image.id, version: image.catalogVersion)))
                     }
-                    .padding(.vertical, 4)
-                }
-                if let errorMessage { StatusLabel(errorMessage, tint: .red) }
-            } footer: {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Shared by all projects.")
-                    if !connectivity.isOnline {
-                        Text("Downloading needs an internet connection.")
+                } footer: {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Shared by all projects. A base downloads by itself the first time a project needs it.")
+                        if !connectivity.isOnline {
+                            Text("Downloading needs an internet connection.")
+                        }
                     }
                 }
             }
         }
+        .overlay {
+            if offered.isEmpty {
+                ContentUnavailableView {
+                    Label("No Linux Bases", systemImage: "shippingbox")
+                } description: {
+                    Text("None has been published yet. New Linux bases arrive with catalog updates.")
+                }
+            }
+        }
         .navigationTitle("Linux Bases")
+        .errorAlert("Couldn’t Download Linux Base", message: $downloadError)
+        .errorAlert("Couldn’t Delete Linux Base", message: $deletionError)
+    }
+
+    private func row(for image: BaseImage, status: ImageLibrary.Status, isInUse: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Text(image.displayName).font(.headline)
+                Spacer()
+                Text(image.downloadSizeBytes.formattedBytes).foregroundStyle(.secondary)
+            }
+            Text(status.title).font(.caption).foregroundStyle(.secondary)
+            if case .downloading(let fraction) = status {
+                ProgressView(value: fraction)
+            }
+            Text("Offline setup possible with: \(Catalog.toolchains(for: image).map(\.name).formatted(.list(type: .and)))")
+                .font(.caption).foregroundStyle(.secondary)
+            if status == .available, isInUse {
+                Text("Used by projects on this iPad.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+            // Bordered, so only the button reacts, not a tap on the row's text.
+            action(for: image, status: status, isInUse: isInUse)
+                .buttonStyle(.bordered)
+        }
+        .padding(.vertical, 4)
     }
 
     @ViewBuilder
-    private func action(for image: BaseImage, status: ImageLibrary.Status) -> some View {
+    private func action(for image: BaseImage, status: ImageLibrary.Status, isInUse: Bool) -> some View {
         switch status {
         case .downloading, .verifying:
             Button("Cancel Download", systemImage: "xmark.circle", role: .cancel) { images.cancel(image) }
@@ -56,8 +85,32 @@ struct BaseImagesView: View {
                 }
             }
             .disabled(!connectivity.isOnline)
+        case .available where !isInUse:
+            Button("Delete…", systemImage: "trash", role: .destructive) { confirmingDeletion = image }
+                // On the button, so on iPad the dialog points at it.
+                .confirmationDialog("Delete \(image.displayName)?", isPresented: deletionBinding(for: image),
+                                    titleVisibility: .visible) {
+                    Button("Delete", role: .destructive) { delete(image) }
+                } message: {
+                    Text("It downloads again when a project needs it.")
+                }
         case .available, .notPublished:
             EmptyView()
+        }
+    }
+
+    private func deletionBinding(for image: BaseImage) -> Binding<Bool> {
+        Binding(get: { confirmingDeletion?.id == image.id },
+                set: { if !$0 { confirmingDeletion = nil } })
+    }
+
+    private func delete(_ image: BaseImage) {
+        Task {
+            do {
+                try await images.remove(image)
+            } catch {
+                deletionError = error.localizedDescription
+            }
         }
     }
 
@@ -68,9 +121,12 @@ struct BaseImagesView: View {
                                                    subtitle: image.downloadSizeBytes.formattedBytes) { _ in
                     try await images.ensureAvailable(image, isOnline: connectivity.isOnline)
                 }
-                errorMessage = nil
+            } catch is CancellationError {
+                // Cancelled in the system's progress UI: nothing to report.
+            } catch let error as URLError where error.code == .cancelled {
+                // Cancelled with Cancel Download: nothing to report.
             } catch {
-                errorMessage = error.localizedDescription
+                downloadError = error.localizedDescription
             }
         }
     }

@@ -50,12 +50,23 @@ nonisolated struct CatalogVerifier: Sendable {
 nonisolated let activeCatalog = Mutex<CatalogDocument>(CatalogStore.loadInitialDocument())
 
 /// Manages the active catalog: bundled baseline, verified cache, and updates (Plan 4.2, OFF05).
+/// Checks for a newer catalog by itself at launch, on returning to the app, and when the
+/// connection comes back, at most every `automaticCheckInterval`; Settings can check at once.
 @Observable
 final class CatalogStore {
     private(set) var catalogVersion: Int
     private(set) var publishedAt: Date
+    /// The active catalog's bases. Observable, unlike `Catalog.baseImages`, so screens that list
+    /// bases update when a newer catalog arrives while they are open.
+    private(set) var baseImages: [BaseImage]
+    /// The last check the person started failed; automatic checks only log their failures.
     private(set) var lastError: String?
     private(set) var isChecking = false
+
+    /// Automatic checks run at most this often. A new catalog is small, but the person may be on
+    /// a metered connection, and catalogs change rarely.
+    nonisolated static let automaticCheckInterval: Duration = .seconds(6 * 60 * 60)
+    private static let lastCheckKey = "catalogLastCheckedAt"
 
     /// The published catalog in the Runfern repository (`Catalog/catalog.json`); its signature
     /// lies next to it. Whoever serves the files doesn't matter: only a catalog signed with the
@@ -64,13 +75,17 @@ final class CatalogStore {
 
     private let verifier: CatalogVerifier
     private let cacheURL: URL
+    private let defaults: UserDefaults
 
-    init(verifier: CatalogVerifier = CatalogVerifier(), cacheURL: URL = AppPaths.catalogCache) {
+    init(verifier: CatalogVerifier = CatalogVerifier(), cacheURL: URL = AppPaths.catalogCache,
+         defaults: UserDefaults = .standard) {
         self.verifier = verifier
         self.cacheURL = cacheURL
+        self.defaults = defaults
         let current = activeCatalog.withLock { $0 }
         catalogVersion = current.catalogVersion
         publishedAt = current.publishedAt
+        baseImages = current.baseImages
     }
 
     /// Installs a signed catalog if it is valid and newer than the active one.
@@ -87,11 +102,27 @@ final class CatalogStore {
         activeCatalog.withLock { $0 = document }
         catalogVersion = document.catalogVersion
         publishedAt = document.publishedAt
+        baseImages = document.baseImages
         lastError = nil
+        DiagnosticsLog.record(.info, .catalog, "Installed catalog version \(document.catalogVersion)")
     }
 
-    /// Downloads `catalog.json` and its signature from the update location.
-    func checkForUpdate(isOnline: Bool) async {
+    /// Checks for a newer catalog if `isCheckDue`.
+    func checkIfDue(isOnline: Bool) async {
+        guard Self.isCheckDue(lastCheck: defaults.object(forKey: Self.lastCheckKey) as? Date, now: .now) else { return }
+        await checkForUpdate(isOnline: isOnline, isAutomatic: true)
+    }
+
+    /// Due without a successful check yet, when the last one is older than
+    /// `automaticCheckInterval`, or when it lies in the future because the clock was changed.
+    nonisolated static func isCheckDue(lastCheck: Date?, now: Date) -> Bool {
+        guard let lastCheck, lastCheck <= now else { return true }
+        return now.timeIntervalSince(lastCheck) >= Double(automaticCheckInterval.components.seconds)
+    }
+
+    /// Downloads `catalog.json` and its signature from the update location. `isAutomatic` checks
+    /// don't show their failures in Settings: the person didn't ask, and the next one retries.
+    func checkForUpdate(isOnline: Bool, isAutomatic: Bool = false) async {
         guard let url = Self.updateURL, isOnline, !isChecking else { return }
         isChecking = true
         defer { isChecking = false }
@@ -99,10 +130,13 @@ final class CatalogStore {
             async let document = Self.fetch(url)
             async let signature = Self.fetch(Self.signatureURL(for: url))
             try install(data: await document, signature: await signature)
+            defaults.set(Date.now, forKey: Self.lastCheckKey)
         } catch CatalogVerifier.VerificationError.outdated {
+            // The catalog on GitHub is the one in use: up to date.
+            defaults.set(Date.now, forKey: Self.lastCheckKey)
             lastError = nil
         } catch {
-            lastError = error.localizedDescription
+            if !isAutomatic { lastError = error.localizedDescription }
             DiagnosticsLog.record(.warning, .catalog, "Catalog update failed: \(error.localizedDescription)")
         }
     }

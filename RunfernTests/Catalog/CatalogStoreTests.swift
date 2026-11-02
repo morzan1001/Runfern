@@ -68,4 +68,30 @@ import Testing
         }
         #expect(!FileManager.default.fileExists(atPath: cache.path(percentEncoded: false)))
     }
+
+    /// Newly published bases reach the app by itself, but not on every return to it.
+    @Test func automaticChecksRunAtMostEverySixHours() {
+        let now = Date.now
+        #expect(CatalogStore.isCheckDue(lastCheck: nil, now: now))
+        #expect(!CatalogStore.isCheckDue(lastCheck: now.addingTimeInterval(-60), now: now))
+        #expect(!CatalogStore.isCheckDue(lastCheck: now.addingTimeInterval(-5 * 3600), now: now))
+        #expect(CatalogStore.isCheckDue(lastCheck: now.addingTimeInterval(-6 * 3600), now: now))
+        // A last check in the future means the clock was set back: check rather than wait.
+        #expect(CatalogStore.isCheckDue(lastCheck: now.addingTimeInterval(3600), now: now))
+    }
+
+    @MainActor
+    @Test func installingANewerCatalogUpdatesItsBases() throws {
+        let cache = URL.temporaryDirectory.appending(path: "catalog-\(UUID().uuidString).json")
+        defer { try? FileManager.default.removeItem(at: cache) }
+        let original = activeCatalog.withLock { $0 }
+        defer { activeCatalog.withLock { $0 = original } }
+        let store = CatalogStore(verifier: verifier, cacheURL: cache)
+        let (data, signature) = try signedCatalog(version: original.catalogVersion + 1)
+
+        try store.install(data: data, signature: signature)
+
+        #expect(store.catalogVersion == original.catalogVersion + 1)
+        #expect(store.baseImages.map(\.id) == original.baseImages.map(\.id))
+    }
 }

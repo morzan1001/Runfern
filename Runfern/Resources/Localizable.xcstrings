@@ -479,6 +479,16 @@
         }
       }
     },
+    "%@ (not published yet)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (noch nicht veröffentlicht)"
+          }
+        }
+      }
+    },
     "A base is counted only once, even if several projects use it." : {
       "localizations" : {
         "de" : {
@@ -1246,6 +1256,26 @@
         }
       }
     },
+    "Couldn’t Delete Linux Base" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Linux-Basis konnte nicht gelöscht werden"
+          }
+        }
+      }
+    },
+    "Couldn’t Download Linux Base" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Linux-Basis konnte nicht geladen werden"
+          }
+        }
+      }
+    },
     "Couldn’t Duplicate Project" : {
       "localizations" : {
         "de" : {
@@ -1446,6 +1476,16 @@
         }
       }
     },
+    "Delete %@?" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ löschen?"
+          }
+        }
+      }
+    },
     "Delete Data Anyway" : {
       "localizations" : {
         "de" : {
@@ -1482,6 +1522,16 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "In Runfern gelöscht, in „Dateien“ geändert"
+          }
+        }
+      }
+    },
+    "Delete…" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Löschen …"
           }
         }
       }
@@ -2513,6 +2563,16 @@
         }
       }
     },
+    "It downloads again when a project needs it." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sie wird erneut geladen, wenn ein Projekt sie braucht."
+          }
+        }
+      }
+    },
     "It needs Wi-Fi and a pairing file of this iPad (a Remote Pairing file, not a lockdown record)." : {
       "localizations" : {
         "de" : {
@@ -2825,6 +2885,16 @@
         }
       }
     },
+    "Looking for Linux bases…" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suche nach Linux-Basen …"
+          }
+        }
+      }
+    },
     "Memory" : {
       "localizations" : {
         "de" : {
@@ -3025,6 +3095,26 @@
         }
       }
     },
+    "No Linux base has been published yet. Runfern looks for new ones by itself." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bisher ist keine Linux-Basis veröffentlicht. Runfern sucht selbst nach neuen."
+          }
+        }
+      }
+    },
+    "No Linux Bases" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Linux-Basen"
+          }
+        }
+      }
+    },
     "No longer available in the catalog: %@" : {
       "localizations" : {
         "de" : {
@@ -3091,6 +3181,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Keine"
+          }
+        }
+      }
+    },
+    "None Available" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine verfügbar"
+          }
+        }
+      }
+    },
+    "None has been published yet. New Linux bases arrive with catalog updates." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bisher ist keine veröffentlicht. Neue Linux-Basen kommen mit Katalogaktualisierungen."
           }
         }
       }
@@ -4111,6 +4221,16 @@
         }
       }
     },
+    "Runfern downloads a Linux base the first time a project needs it. None has been published yet; new ones arrive with catalog updates." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Runfern lädt eine Linux-Basis, sobald ein Projekt sie zum ersten Mal braucht. Bisher ist keine veröffentlicht; neue kommen mit Katalogaktualisierungen."
+          }
+        }
+      }
+    },
     "Runfern downloads it again at the next check or Linux start." : {
       "localizations" : {
         "de" : {
@@ -4521,12 +4641,12 @@
         }
       }
     },
-    "Shared by all projects." : {
+    "Shared by all projects. A base downloads by itself the first time a project needs it." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Von allen Projekten gemeinsam genutzt."
+            "value" : "Von allen Projekten gemeinsam genutzt. Eine Basis wird automatisch geladen, sobald ein Projekt sie zum ersten Mal braucht."
           }
         }
       }
@@ -5825,6 +5945,16 @@
         }
       }
     },
+    "This Linux base was built for an older version of Runfern and doesn’t support “%@”. Install a current build of the base." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Linux-Basis wurde für eine ältere Version von Runfern erstellt und unterstützt „%@“ nicht. Installiere einen aktuellen Build der Basis."
+          }
+        }
+      }
+    },
     "This Remote Pairing record comes from pymobiledevice3, which the built-in JIT cannot use. Create a pairing file on this iPad, or on a computer as described in How Runfern Works." : {
       "localizations" : {
         "de" : {
@@ -5951,6 +6081,16 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Verwende ein persönliches Zugriffstoken mit den geringsten Berechtigungen, die deine Arbeit erfordert."
+          }
+        }
+      }
+    },
+    "Used by projects on this iPad." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wird von Projekten auf diesem iPad genutzt."
           }
         }
       }

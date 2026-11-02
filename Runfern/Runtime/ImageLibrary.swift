@@ -44,14 +44,44 @@ final class ImageLibrary {
     /// Mirrors the global setting “Large downloads over Wi-Fi only” (OFF05).
     var allowsExpensiveNetwork = false
 
+    /// The simulated runtime downloads nothing, so it can offer every base the catalog lists.
+    private let offersUnpublished: Bool
     private var transient: [String: Status] = [:]
     private var tasks: [String: URLSessionDownloadTask] = [:]
 
+    init(offersUnpublished: Bool = false) {
+        self.offersUnpublished = offersUnpublished
+    }
+
     func status(of image: BaseImage) -> Status {
         if let status = transient[image.id] { return status }
-        if FileManager.default.fileExists(atPath: AppPaths.image(image.id, version: image.catalogVersion).path(percentEncoded: false)) { return .available }
+        if Self.isInstalled(image) { return .available }
         guard image.source != nil else { return .notPublished }
         return FileManager.default.fileExists(atPath: resumeDataURL(image).path(percentEncoded: false)) ? .partial : .missing
+    }
+
+    /// Whether a project can be set up with this base: it is published for download or already on
+    /// this iPad. The catalog also lists bases that are planned but not published yet; those are
+    /// not offered for new projects and presets.
+    func isOffered(_ image: BaseImage) -> Bool {
+        offersUnpublished || image.source != nil || status(of: image) == .available
+    }
+
+    /// The bases of `bases` that `isOffered`, in their order. Screens pass `CatalogStore.baseImages`,
+    /// so they update when a newer catalog arrives.
+    func offered(_ bases: [BaseImage]) -> [BaseImage] {
+        bases.filter { isOffered($0) }
+    }
+
+    /// The base a new project or preset starts with: the first one that is published or installed,
+    /// otherwise the catalog's first, so a selection always exists. Static, so a view can choose it
+    /// in its initializer, before the environment is available.
+    nonisolated static var preferredBase: BaseImage? {
+        Catalog.baseImages.first { $0.source != nil || isInstalled($0) } ?? Catalog.baseImages.first
+    }
+
+    nonisolated static func isInstalled(_ image: BaseImage) -> Bool {
+        FileManager.default.fileExists(atPath: AppPaths.image(image.id, version: image.catalogVersion).path(percentEncoded: false))
     }
 
     /// Downloads the image if needed, verifies it, and stores it as immutable.
@@ -79,6 +109,25 @@ final class ImageLibrary {
             transient[image.id] = (error as? URLError)?.code == .cancelled ? nil : .failed(error.localizedDescription)
             throw error
         }
+    }
+
+    /// Deletes an installed base and any partial download of it. Callers make sure no environment
+    /// builds on it (`ProjectStore.referencedImageDirectories`). The directory moves aside at once,
+    /// so the base reads as not downloaded right away; its files go in the background.
+    func remove(_ image: BaseImage) async throws {
+        let directory = AppPaths.image(image.id, version: image.catalogVersion)
+        let resumeData = resumeDataURL(image)
+        transient[image.id] = nil
+        try await Task.detached(priority: .userInitiated) {
+            let fm = FileManager.default
+            try? fm.removeItem(at: resumeData)
+            guard fm.fileExists(atPath: directory.path(percentEncoded: false)) else { return }
+            try fm.createDirectory(at: AppPaths.trash, withIntermediateDirectories: true)
+            let aside = AppPaths.trash.appending(path: UUID().uuidString, directoryHint: .isDirectory)
+            try fm.moveItem(at: directory, to: aside)
+            // Bases are installed immutable; ImageBundle.remove lifts that first.
+            Task.detached(priority: .background) { try? ImageBundle.remove(aside) }
+        }.value
     }
 
     /// Cancels a download; data already received is kept for resuming.

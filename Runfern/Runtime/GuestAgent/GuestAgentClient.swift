@@ -7,6 +7,8 @@ actor GuestAgentClient {
         case timeout(String)
         case disconnected
         case rejected(String)
+        /// The guest's agent does not know the command: the base was built for an older Runfern.
+        case unsupported(command: String)
         case protocolMismatch(Int)
         case frameTooLarge
 
@@ -15,6 +17,8 @@ actor GuestAgentClient {
             case .timeout(let command): String(localized: "The Linux environment did not respond in time (\(command)).")
             case .disconnected: String(localized: "The connection to the Linux environment was lost.")
             case .rejected(let reason): String(localized: "The Linux environment reported an error: \(reason)")
+            case .unsupported(let command):
+                String(localized: "This Linux base was built for an older version of Runfern and doesn’t support “\(command)”. Install a current build of the base.")
             case .protocolMismatch(let version): String(localized: "The Linux environment uses an incompatible agent (protocol \(version)).")
             case .frameTooLarge: String(localized: "The Linux environment sent an oversized message.")
             }
@@ -39,7 +43,8 @@ actor GuestAgentClient {
         readTask = Task { await readLoop() }
     }
 
-    /// Sends a command and waits for its reply. A negative reply becomes `AgentError.rejected`.
+    /// Sends a command and waits for its reply. A negative reply becomes `AgentError.rejected`, or
+    /// `AgentError.unsupported` for a command the guest's agent doesn't know.
     @discardableResult
     func send(_ command: AgentCommand, timeout: Duration = .seconds(30)) async throws -> AgentReply {
         guard !isClosed else { throw AgentError.disconnected }
@@ -56,7 +61,15 @@ actor GuestAgentClient {
             defer { group.cancelAll() }
             return try await group.next()!
         }
-        guard reply.ok else { throw AgentError.rejected(reply.error ?? "unknown") }
+        guard reply.ok else {
+            let reason = reply.error ?? "unknown"
+            // The agent's wording for a command it has no handler for (runfern-agent.py).
+            let unknownCommand = "unknown command "
+            if reason.hasPrefix(unknownCommand) {
+                throw AgentError.unsupported(command: String(reason.dropFirst(unknownCommand.count)))
+            }
+            throw AgentError.rejected(reason)
+        }
         return reply
     }
 

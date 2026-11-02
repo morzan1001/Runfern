@@ -4,7 +4,8 @@ import Synchronization
 /// Read access to the active signed catalog (see `CatalogStore`).
 /// Only combinations that are explicitly listed in the catalog are offered.
 nonisolated enum Catalog {
-    /// Images without `source` are not published yet; URL and checksum are added after G1.
+    /// Every base the catalog lists. Bases without `source` are planned but not published yet;
+    /// screens offer only what `ImageLibrary.isOffered` allows.
     static var baseImages: [BaseImage] { activeCatalog.withLock { $0.baseImages } }
 
     static var toolchains: [ToolchainProfile] { activeCatalog.withLock { $0.toolchains } }
@@ -21,9 +22,9 @@ nonisolated enum Catalog {
         toolchains.filter { image.supportedToolchains.contains($0.id) }
     }
 
-    /// Distributions with their releases, in catalog order.
-    static var baseImageFamilies: [BaseImageFamily] {
-        grouped(baseImages, by: \.distribution).map { BaseImageFamily(distribution: $0.key, releases: $0.items) }
+    /// The distributions of `bases` with their releases, in catalog order.
+    static func families(of bases: [BaseImage]) -> [BaseImageFamily] {
+        grouped(bases, by: \.distribution).map { BaseImageFamily(distribution: $0.key, releases: $0.items) }
     }
 
     /// Languages and tools a base offers, each with its versions in catalog order.
