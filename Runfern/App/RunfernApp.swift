@@ -75,7 +75,20 @@ import UIKit
         }
     }
 
+    @ViewBuilder
     private var mainWindow: some View {
+        #if DEBUG
+        if let screen = ScreenshotView.requested {
+            ScreenshotView(screen: screen)
+        } else {
+            projectWindow
+        }
+        #else
+        projectWindow
+        #endif
+    }
+
+    private var projectWindow: some View {
         withServices(ProjectOverviewView())
             .onAppear { applyNetworkPolicy() }
             .onChange(of: downloadsOnlyOnWiFi) { applyNetworkPolicy() }

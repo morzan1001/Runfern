@@ -1,0 +1,104 @@
+idevice — d32c8189c51c2789496b0768039419c3705498c3
+Source: https://github.com/jkcoxson/idevice/tree/d32c8189c51c2789496b0768039419c3705498c3
+
+===== LICENSE.txt =====
+Copyright 2026 Jackson Coxson
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+
+===== ffi/plist.h =====
+// THIS FILE IS UNDER ITS ORIGINAL LICENSE FROM LIBIMOBILEDEVICE
+// THIS IS NOT PART OF IDEVICE AND ITS LICENSE
+// MORE INFORMATION CAN BE FOUND AT https://github.com/libimobiledevice/libplist
+
+/**
+ * @file plist/plist.h
+ * @brief Main include of libplist
+ * \internal
+ *
+ * Copyright (c) 2012-2023 Nikias Bassen, All Rights Reserved.
+ * Copyright (c) 2008-2009 Jonathan Beck, All Rights Reserved.
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
+
+
+
+===== idevice/src/xpc/xpc_macro.rs =====
+// Jackson Coxson
+// Ported from serde's json! and the plist! macro
+
+/// Construct an `XPCObject` from a JSON-like literal.
+///
+/// The `xpc!` macro allows you to construct `XPCObject` values with a syntax
+/// similar to JSON. It supports signed and unsigned integers, which is a key
+/// feature of XPC.
+///
+/// ```
+/// # use my_crate::xpc; // Replace with your crate name
+/// # use my_crate::xpc_macro::*;
+/// #
+/// let value = xpc!({
+///     "message": "hello",
+///     "is_reply": true,
+///     "signed_value": -42,
+///     "unsigned_value": 42u64,
+///     "payload": {
+///         "items": [1, 2, 3],
+///         "metadata": null // Becomes an empty string
+///     }
+/// });
+/// ```
+///
+/// ### Interpolation
+/// You can interpolate variables and expressions directly into the macro.
+/// Any interpolated value must implement the `XpcConvertible` trait.
+///
+/// ```
+/// # use my_crate::xpc;
+/// # use my_crate::xpc_macro::*;
+/// #
+/// let user_id = 1001u64;
+/// let is_admin = false;
+///
+/// let request = xpc!({
+///     "user_id": user_id,
+///     "is_admin": is_admin,
+///     "permissions": ["read", "write"],
+/// });
+/// ```
+///
+/// ### Optional Fields and Merging
+/// The macro supports optional fields using `?` and dictionary merging
+/// using `:<` for cleaner construction of complex objects.
+///
+/// ```
+/// # use my_crate::xpc;
+/// # use my_crate::xpc_macro::*;
+/// #
+/// let maybe_tag: Option<&str> = Some("important");
+/// let base_config = xpc!({ "timeout": 5000u64 });
+///
+/// let message = xpc!({
+///     "message_id": "msg-123",
+///     "tag":? maybe_tag,
+///     :< base_config,
+/// });
+/// ```

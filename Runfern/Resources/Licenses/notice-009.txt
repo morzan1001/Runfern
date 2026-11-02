@@ -1,0 +1,121 @@
+libucontext — 9b1d8f01a6e99166f9808c79966abe10786de8b6
+Source: https://github.com/utmapp/libucontext.git/tree/9b1d8f01a6e99166f9808c79966abe10786de8b6
+
+===== LICENSE =====
+Copyright (c) 2018-2020 Ariadne Conill <ariadne@dereferenced.org>
+
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted, provided that the above
+copyright notice and this permission notice appear in all copies.
+
+This software is provided 'as is' and without any warranty, express or
+implied.  In no event shall the authors be liable for any damages arising
+from the use of this software.
+
+
+===== arch/aarch64/getcontext.S, arch/aarch64/setcontext.S, arch/arm/getcontext.S, arch/arm/makecontext.c, arch/arm/setcontext.S, arch/arm/swapcontext.S, arch/s390x/getcontext.S, arch/s390x/makecontext.c, arch/s390x/setcontext.S, arch/s390x/startcontext.S, arch/s390x/swapcontext.S, arch/x86/getcontext.S, arch/x86/setcontext.S, arch/x86/swapcontext.S, arch/x86_64/getcontext.S, arch/x86_64/setcontext.S, arch/x86_64/swapcontext.S =====
+/*
+ * Copyright (c) 2018, 2020 Ariadne Conill <ariadne@dereferenced.org>
+ *
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
+ * This software is provided 'as is' and without any warranty, express or
+ * implied.  In no event shall the authors be liable for any damages arising
+ * from the use of this software.
+ */
+
+
+
+===== arch/aarch64/makecontext.c, arch/aarch64/swapcontext.S, arch/ppc/startcontext.S, arch/ppc64/startcontext.S, arch/riscv64/makecontext.c, arch/x86_64/makecontext.c =====
+/*
+ * Copyright (c) 2018 Ariadne Conill <ariadne@dereferenced.org>
+ *
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
+ * This software is provided 'as is' and without any warranty, express or
+ * implied.  In no event shall the authors be liable for any damages arising
+ * from the use of this software.
+ */
+
+
+
+===== arch/common/common-trampoline.c, arch/m68k/getcontext.S, arch/m68k/makecontext.c, arch/m68k/setcontext.S, arch/m68k/swapcontext.S, arch/mips/getcontext.S, arch/mips/makecontext.S, arch/mips/setcontext.S, arch/mips/startcontext.S, arch/mips/swapcontext.S, arch/mips64/getcontext.S, arch/mips64/setcontext.S, arch/mips64/startcontext.S, arch/mips64/swapcontext.S, arch/riscv64/getcontext.S, arch/riscv64/setcontext.S, arch/riscv64/swapcontext.S, arch/sh/getcontext.S, arch/sh/makecontext.c, arch/sh/setcontext.S, arch/sh/swapcontext.S, libucontext_posix.c =====
+/*
+ * Copyright (c) 2020 Ariadne Conill <ariadne@dereferenced.org>
+ *
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
+ * This software is provided 'as is' and without any warranty, express or
+ * implied.  In no event shall the authors be liable for any damages arising
+ * from the use of this software.
+ */
+
+
+
+===== arch/mips64/makecontext.S =====
+/*
+ * Copyright (c) 2020 Ariadne Conill <ariadne@dereferenced.org>
+ *
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
+ * This software is provided 'as is' and without any warranty, express or
+ * implied.  In no event shall the authors be liable for any damages arising
+ * from the use of this software.
+ */
+
+/* $gp + 5 args */
+
+
+===== arch/ppc/getcontext.S, arch/ppc/setcontext.S, arch/ppc/swapcontext.S, arch/ppc64/getcontext.S, arch/ppc64/setcontext.S, arch/ppc64/swapcontext.S =====
+/*
+ * Copyright (c) 2019 Bobby Bingham <koorogi@koorogi.info>
+ *
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
+ * This software is provided 'as is' and without any warranty, express or
+ * implied.  In no event shall the authors be liable for any damages arising
+ * from the use of this software.
+ */
+
+
+
+===== arch/ppc/makecontext.c, arch/ppc/retfromsyscall.c, arch/ppc64/makecontext.c, arch/ppc64/retfromsyscall.c =====
+/*
+ * Copyright (c) 2018 Ariadne Conill <ariadne@dereferenced.org>
+ * Copyright (c) 2019 Bobby Bingham <koorogi@koorogi.info>
+ *
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
+ * This software is provided 'as is' and without any warranty, express or
+ * implied.  In no event shall the authors be liable for any damages arising
+ * from the use of this software.
+ */
+
+
+
+===== arch/x86/makecontext.c =====
+/*
+ * Copyright (c) 2018 Ariadne Conill <ariadne@dereferenced.org>
+ * Copyright (c) 2019 A. Wilcox <awilfox@adelielinux.org>
+ *
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
+ * This software is provided 'as is' and without any warranty, express or
+ * implied.  In no event shall the authors be liable for any damages arising
+ * from the use of this software.
+ */
+

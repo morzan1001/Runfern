@@ -1,0 +1,888 @@
+Rust crate: rand — 0.9.2
+Source: https://static.crates.io/crates/rand/rand-0.9.2.crate
+
+===== COPYRIGHT =====
+Copyrights in the Rand project are retained by their contributors. No
+copyright assignment is required to contribute to the Rand project.
+
+For full authorship information, see the version control history.
+
+Except as otherwise noted (below and/or in individual files), Rand is
+licensed under the Apache License, Version 2.0 <LICENSE-APACHE> or
+<http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+<LICENSE-MIT> or <http://opensource.org/licenses/MIT>, at your option.
+
+The Rand project includes code from the Rust project
+published under these same licenses.
+
+
+===== LICENSE-APACHE =====
+                              Apache License
+                        Version 2.0, January 2004
+                     https://www.apache.org/licenses/
+
+TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+
+1. Definitions.
+
+   "License" shall mean the terms and conditions for use, reproduction,
+   and distribution as defined by Sections 1 through 9 of this document.
+
+   "Licensor" shall mean the copyright owner or entity authorized by
+   the copyright owner that is granting the License.
+
+   "Legal Entity" shall mean the union of the acting entity and all
+   other entities that control, are controlled by, or are under common
+   control with that entity. For the purposes of this definition,
+   "control" means (i) the power, direct or indirect, to cause the
+   direction or management of such entity, whether by contract or
+   otherwise, or (ii) ownership of fifty percent (50%) or more of the
+   outstanding shares, or (iii) beneficial ownership of such entity.
+
+   "You" (or "Your") shall mean an individual or Legal Entity
+   exercising permissions granted by this License.
+
+   "Source" form shall mean the preferred form for making modifications,
+   including but not limited to software source code, documentation
+   source, and configuration files.
+
+   "Object" form shall mean any form resulting from mechanical
+   transformation or translation of a Source form, including but
+   not limited to compiled object code, generated documentation,
+   and conversions to other media types.
+
+   "Work" shall mean the work of authorship, whether in Source or
+   Object form, made available under the License, as indicated by a
+   copyright notice that is included in or attached to the work
+   (an example is provided in the Appendix below).
+
+   "Derivative Works" shall mean any work, whether in Source or Object
+   form, that is based on (or derived from) the Work and for which the
+   editorial revisions, annotations, elaborations, or other modifications
+   represent, as a whole, an original work of authorship. For the purposes
+   of this License, Derivative Works shall not include works that remain
+   separable from, or merely link (or bind by name) to the interfaces of,
+   the Work and Derivative Works thereof.
+
+   "Contribution" shall mean any work of authorship, including
+   the original version of the Work and any modifications or additions
+   to that Work or Derivative Works thereof, that is intentionally
+   submitted to Licensor for inclusion in the Work by the copyright owner
+   or by an individual or Legal Entity authorized to submit on behalf of
+   the copyright owner. For the purposes of this definition, "submitted"
+   means any form of electronic, verbal, or written communication sent
+   to the Licensor or its representatives, including but not limited to
+   communication on electronic mailing lists, source code control systems,
+   and issue tracking systems that are managed by, or on behalf of, the
+   Licensor for the purpose of discussing and improving the Work, but
+   excluding communication that is conspicuously marked or otherwise
+   designated in writing by the copyright owner as "Not a Contribution."
+
+   "Contributor" shall mean Licensor and any individual or Legal Entity
+   on behalf of whom a Contribution has been received by Licensor and
+   subsequently incorporated within the Work.
+
+2. Grant of Copyright License. Subject to the terms and conditions of
+   this License, each Contributor hereby grants to You a perpetual,
+   worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+   copyright license to reproduce, prepare Derivative Works of,
+   publicly display, publicly perform, sublicense, and distribute the
+   Work and such Derivative Works in Source or Object form.
+
+3. Grant of Patent License. Subject to the terms and conditions of
+   this License, each Contributor hereby grants to You a perpetual,
+   worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+   (except as stated in this section) patent license to make, have made,
+   use, offer to sell, sell, import, and otherwise transfer the Work,
+   where such license applies only to those patent claims licensable
+   by such Contributor that are necessarily infringed by their
+   Contribution(s) alone or by combination of their Contribution(s)
+   with the Work to which such Contribution(s) was submitted. If You
+   institute patent litigation against any entity (including a
+   cross-claim or counterclaim in a lawsuit) alleging that the Work
+   or a Contribution incorporated within the Work constitutes direct
+   or contributory patent infringement, then any patent licenses
+   granted to You under this License for that Work shall terminate
+   as of the date such litigation is filed.
+
+4. Redistribution. You may reproduce and distribute copies of the
+   Work or Derivative Works thereof in any medium, with or without
+   modifications, and in Source or Object form, provided that You
+   meet the following conditions:
+
+   (a) You must give any other recipients of the Work or
+       Derivative Works a copy of this License; and
+
+   (b) You must cause any modified files to carry prominent notices
+       stating that You changed the files; and
+
+   (c) You must retain, in the Source form of any Derivative Works
+       that You distribute, all copyright, patent, trademark, and
+       attribution notices from the Source form of the Work,
+       excluding those notices that do not pertain to any part of
+       the Derivative Works; and
+
+   (d) If the Work includes a "NOTICE" text file as part of its
+       distribution, then any Derivative Works that You distribute must
+       include a readable copy of the attribution notices contained
+       within such NOTICE file, excluding those notices that do not
+       pertain to any part of the Derivative Works, in at least one
+       of the following places: within a NOTICE text file distributed
+       as part of the Derivative Works; within the Source form or
+       documentation, if provided along with the Derivative Works; or,
+       within a display generated by the Derivative Works, if and
+       wherever such third-party notices normally appear. The contents
+       of the NOTICE file are for informational purposes only and
+       do not modify the License. You may add Your own attribution
+       notices within Derivative Works that You distribute, alongside
+       or as an addendum to the NOTICE text from the Work, provided
+       that such additional attribution notices cannot be construed
+       as modifying the License.
+
+   You may add Your own copyright statement to Your modifications and
+   may provide additional or different license terms and conditions
+   for use, reproduction, or distribution of Your modifications, or
+   for any such Derivative Works as a whole, provided Your use,
+   reproduction, and distribution of the Work otherwise complies with
+   the conditions stated in this License.
+
+5. Submission of Contributions. Unless You explicitly state otherwise,
+   any Contribution intentionally submitted for inclusion in the Work
+   by You to the Licensor shall be under the terms and conditions of
+   this License, without any additional terms or conditions.
+   Notwithstanding the above, nothing herein shall supersede or modify
+   the terms of any separate license agreement you may have executed
+   with Licensor regarding such Contributions.
+
+6. Trademarks. This License does not grant permission to use the trade
+   names, trademarks, service marks, or product names of the Licensor,
+   except as required for reasonable and customary use in describing the
+   origin of the Work and reproducing the content of the NOTICE file.
+
+7. Disclaimer of Warranty. Unless required by applicable law or
+   agreed to in writing, Licensor provides the Work (and each
+   Contributor provides its Contributions) on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+   implied, including, without limitation, any warranties or conditions
+   of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
+   PARTICULAR PURPOSE. You are solely responsible for determining the
+   appropriateness of using or redistributing the Work and assume any
+   risks associated with Your exercise of permissions under this License.
+
+8. Limitation of Liability. In no event and under no legal theory,
+   whether in tort (including negligence), contract, or otherwise,
+   unless required by applicable law (such as deliberate and grossly
+   negligent acts) or agreed to in writing, shall any Contributor be
+   liable to You for damages, including any direct, indirect, special,
+   incidental, or consequential damages of any character arising as a
+   result of this License or out of the use or inability to use the
+   Work (including but not limited to damages for loss of goodwill,
+   work stoppage, computer failure or malfunction, or any and all
+   other commercial damages or losses), even if such Contributor
+   has been advised of the possibility of such damages.
+
+9. Accepting Warranty or Additional Liability. While redistributing
+   the Work or Derivative Works thereof, You may choose to offer,
+   and charge a fee for, acceptance of support, warranty, indemnity,
+   or other liability obligations and/or rights consistent with this
+   License. However, in accepting such obligations, You may act only
+   on Your own behalf and on Your sole responsibility, not on behalf
+   of any other Contributor, and only if You agree to indemnify,
+   defend, and hold each Contributor harmless for any liability
+   incurred by, or claims asserted against, such Contributor by reason
+   of your accepting any such warranty or additional liability.
+
+END OF TERMS AND CONDITIONS
+
+
+===== LICENSE-MIT =====
+Copyright 2018 Developers of the Rand project
+Copyright (c) 2014 The Rust Project Developers
+
+Permission is hereby granted, free of charge, to any
+person obtaining a copy of this software and associated
+documentation files (the "Software"), to deal in the
+Software without restriction, including without
+limitation the rights to use, copy, modify, merge,
+publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software
+is furnished to do so, subject to the following
+conditions:
+
+The above copyright notice and this permission notice
+shall be included in all copies or substantial portions
+of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
+ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
+TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
+SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
+IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+
+
+===== src/distr/bernoulli.rs =====
+// Copyright 2018 Developers of the Rand project.
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+
+//! The Bernoulli distribution `Bernoulli(p)`.
+
+
+
+===== src/distr/distribution.rs =====
+// Copyright 2018 Developers of the Rand project.
+// Copyright 2013-2017 The Rust Project Developers.
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+
+//! Distribution trait and associates
+
+
+
+===== src/distr/float.rs =====
+// Copyright 2018 Developers of the Rand project.
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+
+//! Basic floating-point number distributions
+
+
+
+===== src/distr/integer.rs =====
+// Copyright 2018 Developers of the Rand project.
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+
+//! The implementations of the `StandardUniform` distribution for integer types.
+
+
+
+===== src/distr/mod.rs =====
+// Copyright 2018 Developers of the Rand project.
+// Copyright 2013-2017 The Rust Project Developers.
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+
+//! Generating random samples from probability distributions
+//!
+//! This module is the home of the [`Distribution`] trait and several of its
+//! implementations. It is the workhorse behind some of the convenient
+//! functionality of the [`Rng`] trait, e.g. [`Rng::random`] and of course
+//! [`Rng::sample`].
+//!
+//! Abstractly, a [probability distribution] describes the probability of
+//! occurrence of each value in its sample space.
+//!
+//! More concretely, an implementation of `Distribution<T>` for type `X` is an
+//! algorithm for choosing values from the sample space (a subset of `T`)
+//! according to the distribution `X` represents, using an external source of
+//! randomness (an RNG supplied to the `sample` function).
+//!
+//! A type `X` may implement `Distribution<T>` for multiple types `T`.
+//! Any type implementing [`Distribution`] is stateless (i.e. immutable),
+//! but it may have internal parameters set at construction time (for example,
+//! [`Uniform`] allows specification of its sample space as a range within `T`).
+//!
+//!
+//! # The Standard Uniform distribution
+//!
+//! The [`StandardUniform`] distribution is important to mention. This is the
+//! distribution used by [`Rng::random`] and represents the "default" way to
+//! produce a random value for many different types, including most primitive
+//! types, tuples, arrays, and a few derived types. See the documentation of
+//! [`StandardUniform`] for more details.
+//!
+//! Implementing [`Distribution<T>`] for [`StandardUniform`] for user types `T` makes it
+//! possible to generate type `T` with [`Rng::random`], and by extension also
+//! with the [`random`] function.
+//!
+//! ## Other standard uniform distributions
+//!
+//! [`Alphanumeric`] is a simple distribution to sample random letters and
+//! numbers of the `char` type; in contrast [`StandardUniform`] may sample any valid
+//! `char`.
+//!
+//! There's also an [`Alphabetic`] distribution which acts similarly to [`Alphanumeric`] but
+//! doesn't include digits.
+//!
+//! For floats (`f32`, `f64`), [`StandardUniform`] samples from `[0, 1)`. Also
+//! provided are [`Open01`] (samples from `(0, 1)`) and [`OpenClosed01`]
+//! (samples from `(0, 1]`). No option is provided to sample from `[0, 1]`; it
+//! is suggested to use one of the above half-open ranges since the failure to
+//! sample a value which would have a low chance of being sampled anyway is
+//! rarely an issue in practice.
+//!
+//! # Parameterized Uniform distributions
+//!
+//! The [`Uniform`] distribution provides uniform sampling over a specified
+//! range on a subset of the types supported by the above distributions.
+//!
+//! Implementations support single-value-sampling via
+//! [`Rng::random_range(Range)`](Rng::random_range).
+//! Where a fixed (non-`const`) range will be sampled many times, it is likely
+//! faster to pre-construct a [`Distribution`] object using
+//! [`Uniform::new`], [`Uniform::new_inclusive`] or `From<Range>`.
+//!
+//! # Non-uniform sampling
+//!
+//! Sampling a simple true/false outcome with a given probability has a name:
+//! the [`Bernoulli`] distribution (this is used by [`Rng::random_bool`]).
+//!
+//! For weighted sampling of discrete values see the [`weighted`] module.
+//!
+//! This crate no longer includes other non-uniform distributions; instead
+//! it is recommended that you use either [`rand_distr`] or [`statrs`].
+//!
+//!
+//! [probability distribution]: https://en.wikipedia.org/wiki/Probability_distribution
+//! [`rand_distr`]: https://crates.io/crates/rand_distr
+//! [`statrs`]: https://crates.io/crates/statrs
+
+//! [`random`]: crate::random
+//! [`rand_distr`]: https://crates.io/crates/rand_distr
+//! [`statrs`]: https://crates.io/crates/statrs
+
+
+
+===== src/distr/other.rs =====
+// Copyright 2018 Developers of the Rand project.
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+
+//! The implementations of the `StandardUniform` distribution for other built-in types.
+
+
+
+===== src/distr/slice.rs =====
+// Copyright 2021 Developers of the Rand project.
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+
+//! Distributions over slices
+
+
+
+===== src/distr/uniform.rs =====
+// Copyright 2018-2020 Developers of the Rand project.
+// Copyright 2017 The Rust Project Developers.
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+
+//! A distribution uniformly sampling numbers within a given range.
+//!
+//! [`Uniform`] is the standard distribution to sample uniformly from a range;
+//! e.g. `Uniform::new_inclusive(1, 6).unwrap()` can sample integers from 1 to 6, like a
+//! standard die. [`Rng::random_range`] is implemented over [`Uniform`].
+//!
+//! # Example usage
+//!
+//! ```
+//! use rand::Rng;
+//! use rand::distr::Uniform;
+//!
+//! let mut rng = rand::rng();
+//! let side = Uniform::new(-10.0, 10.0).unwrap();
+//!
+//! // sample between 1 and 10 points
+//! for _ in 0..rng.random_range(1..=10) {
+//!     // sample a point from the square with sides -10 - 10 in two dimensions
+//!     let (x, y) = (rng.sample(side), rng.sample(side));
+//!     println!("Point: {}, {}", x, y);
+//! }
+//! ```
+//!
+//! # Extending `Uniform` to support a custom type
+//!
+//! To extend [`Uniform`] to support your own types, write a back-end which
+//! implements the [`UniformSampler`] trait, then implement the [`SampleUniform`]
+//! helper trait to "register" your back-end. See the `MyF32` example below.
+//!
+//! At a minimum, the back-end needs to store any parameters needed for sampling
+//! (e.g. the target range) and implement `new`, `new_inclusive` and `sample`.
+//! Those methods should include an assertion to check the range is valid (i.e.
+//! `low < high`). The example below merely wraps another back-end.
+//!
+//! The `new`, `new_inclusive`, `sample_single` and `sample_single_inclusive`
+//! functions use arguments of
+//! type `SampleBorrow<X>` to support passing in values by reference or
+//! by value. In the implementation of these functions, you can choose to
+//! simply use the reference returned by [`SampleBorrow::borrow`], or you can choose
+//! to copy or clone the value, whatever is appropriate for your type.
+//!
+//! ```
+//! use rand::prelude::*;
+//! use rand::distr::uniform::{Uniform, SampleUniform,
+//!         UniformSampler, UniformFloat, SampleBorrow, Error};
+//!
+//! struct MyF32(f32);
+//!
+//! #[derive(Clone, Copy, Debug)]
+//! struct UniformMyF32(UniformFloat<f32>);
+//!
+//! impl UniformSampler for UniformMyF32 {
+//!     type X = MyF32;
+//!
+//!     fn new<B1, B2>(low: B1, high: B2) -> Result<Self, Error>
+//!         where B1: SampleBorrow<Self::X> + Sized,
+//!               B2: SampleBorrow<Self::X> + Sized
+//!     {
+//!         UniformFloat::<f32>::new(low.borrow().0, high.borrow().0).map(UniformMyF32)
+//!     }
+//!     fn new_inclusive<B1, B2>(low: B1, high: B2) -> Result<Self, Error>
+//!         where B1: SampleBorrow<Self::X> + Sized,
+//!               B2: SampleBorrow<Self::X> + Sized
+//!     {
+//!         UniformFloat::<f32>::new_inclusive(low.borrow().0, high.borrow().0).map(UniformMyF32)
+//!     }
+//!     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
+//!         MyF32(self.0.sample(rng))
+//!     }
+//! }
+//!
+//! impl SampleUniform for MyF32 {
+//!     type Sampler = UniformMyF32;
+//! }
+//!
+//! let (low, high) = (MyF32(17.0f32), MyF32(22.0f32));
+//! let uniform = Uniform::new(low, high).unwrap();
+//! let x = uniform.sample(&mut rand::rng());
+//! ```
+//!
+//! [`SampleUniform`]: crate::distr::uniform::SampleUniform
+//! [`UniformSampler`]: crate::distr::uniform::UniformSampler
+//! [`UniformInt`]: crate::distr::uniform::UniformInt
+//! [`UniformFloat`]: crate::distr::uniform::UniformFloat
+//! [`UniformDuration`]: crate::distr::uniform::UniformDuration
+//! [`SampleBorrow::borrow`]: crate::distr::uniform::SampleBorrow::borrow
+
+
+
+===== src/distr/uniform_float.rs =====
+// Copyright 2018-2020 Developers of the Rand project.
+// Copyright 2017 The Rust Project Developers.
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+
+//! `UniformFloat` implementation
+
+
+
+===== src/distr/uniform_int.rs =====
+// Copyright 2018-2020 Developers of the Rand project.
+// Copyright 2017 The Rust Project Developers.
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+
+//! `UniformInt` implementation
+
+
+
+===== src/distr/uniform_other.rs =====
+// Copyright 2018-2020 Developers of the Rand project.
+// Copyright 2017 The Rust Project Developers.
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+
+//! `UniformChar`, `UniformDuration` implementations
+
+
+
+===== src/distr/utils.rs =====
+// Copyright 2018 Developers of the Rand project.
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+
+//! Math helper functions
+
+
+
+===== src/distr/weighted/mod.rs =====
+// Copyright 2018 Developers of the Rand project.
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+
+//! Weighted (index) sampling
+//!
+//! Primarily, this module houses the [`WeightedIndex`] distribution.
+//! See also [`rand_distr::weighted`] for alternative implementations supporting
+//! potentially-faster sampling or a more easily modifiable tree structure.
+//!
+//! [`rand_distr::weighted`]: https://docs.rs/rand_distr/latest/rand_distr/weighted/index.html
+
+
+
+===== src/distr/weighted/weighted_index.rs, src/rngs/xoshiro128plusplus.rs, src/rngs/xoshiro256plusplus.rs =====
+// Copyright 2018 Developers of the Rand project.
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+
+
+
+===== src/lib.rs =====
+// Copyright 2018 Developers of the Rand project.
+// Copyright 2013-2017 The Rust Project Developers.
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+
+//! Utilities for random number generation
+//!
+//! Rand provides utilities to generate random numbers, to convert them to
+//! useful types and distributions, and some randomness-related algorithms.
+//!
+//! # Quick Start
+//!
+//! ```
+//! // The prelude import enables methods we use below, specifically
+//! // Rng::random, Rng::sample, SliceRandom::shuffle and IndexedRandom::choose.
+//! use rand::prelude::*;
+//!
+//! // Get an RNG:
+//! let mut rng = rand::rng();
+//!
+//! // Try printing a random unicode code point (probably a bad idea)!
+//! println!("char: '{}'", rng.random::<char>());
+//! // Try printing a random alphanumeric value instead!
+//! println!("alpha: '{}'", rng.sample(rand::distr::Alphanumeric) as char);
+//!
+//! // Generate and shuffle a sequence:
+//! let mut nums: Vec<i32> = (1..100).collect();
+//! nums.shuffle(&mut rng);
+//! // And take a random pick (yes, we didn't need to shuffle first!):
+//! let _ = nums.choose(&mut rng);
+//! ```
+//!
+//! # The Book
+//!
+//! For the user guide and further documentation, please read
+//! [The Rust Rand Book](https://rust-random.github.io/book).
+
+
+
+===== src/prelude.rs =====
+// Copyright 2018 Developers of the Rand project.
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+
+//! Convenience re-export of common members
+//!
+//! Like the standard library's prelude, this module simplifies importing of
+//! common items. Unlike the standard prelude, the contents of this module must
+//! be imported manually:
+//!
+//! ```
+//! use rand::prelude::*;
+//! # let mut r = StdRng::from_rng(&mut rand::rng());
+//! # let _: f32 = r.random();
+//! ```
+
+
+
+===== src/rng.rs =====
+// Copyright 2018 Developers of the Rand project.
+// Copyright 2013-2017 The Rust Project Developers.
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+
+//! [`Rng`] trait
+
+
+
+===== src/rngs/mock.rs =====
+// Copyright 2018 Developers of the Rand project.
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+
+//! Mock random number generator
+
+
+
+===== src/rngs/mod.rs =====
+// Copyright 2018 Developers of the Rand project.
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+
+//! Random number generators and adapters
+//!
+//! This crate provides a small selection of non-[portable] generators.
+//! See also [Types of generators] and [Our RNGs] in the book.
+//!
+//! ## Generators
+//!
+//! This crate provides a small selection of non-[portable] random number generators:
+//!
+//! -   [`OsRng`] is a stateless interface over the operating system's random number
+//!     source. This is typically secure with some form of periodic re-seeding.
+//! -   [`ThreadRng`], provided by [`crate::rng()`], is a handle to a
+//!     thread-local generator with periodic seeding from [`OsRng`]. Because this
+//!     is local, it is typically much faster than [`OsRng`]. It should be
+//!     secure, but see documentation on [`ThreadRng`].
+//! -   [`StdRng`] is a CSPRNG chosen for good performance and trust of security
+//!     (based on reviews, maturity and usage). The current algorithm is ChaCha12,
+//!     which is well established and rigorously analysed.
+//!     [`StdRng`] is the deterministic generator used by [`ThreadRng`] but
+//!     without the periodic reseeding or thread-local management.
+//! -   [`SmallRng`] is a relatively simple, insecure generator designed to be
+//!     fast, use little memory, and pass various statistical tests of
+//!     randomness quality.
+//!
+//! The algorithms selected for [`StdRng`] and [`SmallRng`] may change in any
+//! release and may be platform-dependent, therefore they are not
+//! [reproducible][portable].
+//!
+//! ### Additional generators
+//!
+//! -   The [`rdrand`] crate provides an interface to the RDRAND and RDSEED
+//!     instructions available in modern Intel and AMD CPUs.
+//! -   The [`rand_jitter`] crate provides a user-space implementation of
+//!     entropy harvesting from CPU timer jitter, but is very slow and has
+//!     [security issues](https://github.com/rust-random/rand/issues/699).
+//! -   The [`rand_chacha`] crate provides [portable] implementations of
+//!     generators derived from the [ChaCha] family of stream ciphers
+//! -   The [`rand_pcg`] crate provides [portable] implementations of a subset
+//!     of the [PCG] family of small, insecure generators
+//! -   The [`rand_xoshiro`] crate provides [portable] implementations of the
+//!     [xoshiro] family of small, insecure generators
+//!
+//! For more, search [crates with the `rng` tag].
+//!
+//! ## Traits and functionality
+//!
+//! All generators implement [`RngCore`] and thus also [`Rng`][crate::Rng].
+//! See also the [Random Values] chapter in the book.
+//!
+//! Secure RNGs may additionally implement the [`CryptoRng`] trait.
+//!
+//! Use the [`rand_core`] crate when implementing your own RNGs.
+//!
+//! [portable]: https://rust-random.github.io/book/crate-reprod.html
+//! [Types of generators]: https://rust-random.github.io/book/guide-gen.html
+//! [Our RNGs]: https://rust-random.github.io/book/guide-rngs.html
+//! [Random Values]: https://rust-random.github.io/book/guide-values.html
+//! [`Rng`]: crate::Rng
+//! [`RngCore`]: crate::RngCore
+//! [`CryptoRng`]: crate::CryptoRng
+//! [`SeedableRng`]: crate::SeedableRng
+//! [`rdrand`]: https://crates.io/crates/rdrand
+//! [`rand_jitter`]: https://crates.io/crates/rand_jitter
+//! [`rand_chacha`]: https://crates.io/crates/rand_chacha
+//! [`rand_pcg`]: https://crates.io/crates/rand_pcg
+//! [`rand_xoshiro`]: https://crates.io/crates/rand_xoshiro
+//! [crates with the `rng` tag]: https://crates.io/keywords/rng
+//! [chacha]: https://cr.yp.to/chacha.html
+//! [PCG]: https://www.pcg-random.org/
+//! [xoshiro]: https://prng.di.unimi.it/
+
+
+
+===== src/rngs/reseeding.rs =====
+// Copyright 2018 Developers of the Rand project.
+// Copyright 2013 The Rust Project Developers.
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+
+//! A wrapper around another PRNG that reseeds it after it
+//! generates a certain number of random bytes.
+
+
+
+===== src/rngs/small.rs =====
+// Copyright 2018 Developers of the Rand project.
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+
+//! A small fast RNG
+
+
+
+===== src/rngs/std.rs =====
+// Copyright 2018 Developers of the Rand project.
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+
+//! The standard RNG
+
+
+
+===== src/rngs/thread.rs =====
+// Copyright 2018 Developers of the Rand project.
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+
+//! Thread-local random number generator
+
+
+
+===== src/seq/coin_flipper.rs, src/seq/increasing_uniform.rs =====
+// Copyright 2018-2023 Developers of the Rand project.
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+
+
+
+===== src/seq/index.rs =====
+// Copyright 2018 Developers of the Rand project.
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+
+//! Low-level API for sampling indices
+
+
+===== src/seq/iterator.rs =====
+// Copyright 2018-2024 Developers of the Rand project.
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+
+//! `IteratorRandom`
+
+
+
+===== src/seq/mod.rs =====
+// Copyright 2018-2023 Developers of the Rand project.
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+
+//! Sequence-related functionality
+//!
+//! This module provides:
+//!
+//! *   [`IndexedRandom`] for sampling slices and other indexable lists
+//! *   [`IndexedMutRandom`] for sampling slices and other mutably indexable lists
+//! *   [`SliceRandom`] for mutating slices
+//! *   [`IteratorRandom`] for sampling iterators
+//! *   [`index::sample`] low-level API to choose multiple indices from
+//!     `0..length`
+//!
+//! Also see:
+//!
+//! *   [`crate::distr::weighted::WeightedIndex`] distribution which provides
+//!     weighted index sampling.
+//!
+//! In order to make results reproducible across 32-64 bit architectures, all
+//! `usize` indices are sampled as a `u32` where possible (also providing a
+//! small performance boost in some cases).
+
+
+
+===== src/seq/slice.rs =====
+// Copyright 2018-2023 Developers of the Rand project.
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+
+//! `IndexedRandom`, `IndexedMutRandom`, `SliceRandom`
+

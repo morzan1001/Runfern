@@ -6165,6 +6165,16 @@
         }
       }
     },
+    "Version unavailable" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version nicht verfügbar"
+          }
+        }
+      }
+    },
     "VS Code can be shown in one window at a time." : {
       "localizations" : {
         "de" : {
