@@ -112,6 +112,8 @@ Do not ship an artifact solely because checksum verification passes.
 * `upstream/`: public download cache, never commit this or the archive/source trees.
 
 The source archive has normalized ordering, timestamps, owners and permissions.
+Upstream notice texts remain byte-identical; whitespace checks are disabled only for those
+verbatim documents in `.gitattributes`.
 Given identical source inputs and build configurations, repeated generation produces
 identical bytes. Build configuration may contain local source paths; review these
 before public distribution. Executable shell scripts retain execute permission.
