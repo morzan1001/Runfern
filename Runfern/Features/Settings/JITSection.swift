@@ -38,6 +38,28 @@ struct JITSection: View {
                 Toggle(isOn: $isEnabled) {
                     Label("JIT Compilation", systemImage: "bolt")
                 }
+                // Presentations hang on this one row, which is always there: on the Section, a
+                // List would attach them to every row, which then all try to present at once.
+                .fileImporter(isPresented: $isImporting, allowedContentTypes: [.propertyList, .data]) { result in
+                    do {
+                        try PairingFile.importFile(at: result.get())
+                        message = nil
+                        pairingFileChanged()
+                        // Finish the setup with the imported file and check it right away, once
+                        // the file picker has gone.
+                        Task {
+                            try? await Task.sleep(for: .milliseconds(600))
+                            setup = SetupRequest(startsAutomatically: true)
+                        }
+                    } catch {
+                        message = error.localizedDescription
+                        pairingState = PairingFile.state
+                    }
+                }
+                // The setup keeps its own result in `BuiltInJIT.lastError`, so closing it only refreshes.
+                .sheet(item: $setup, onDismiss: { pairingState = PairingFile.state }) { request in
+                    JITSetupView(startsAutomatically: request.startsAutomatically, forcesPairing: request.forcesPairing)
+                }
                 if isEnabled {
                     Picker(selection: method) {
                         // A choice that is no longer available stays visible, so it is never
@@ -65,22 +87,6 @@ struct JITSection: View {
                 Text("Performance")
             } footer: {
                 footer
-            }
-            .fileImporter(isPresented: $isImporting, allowedContentTypes: [.propertyList, .data]) { result in
-                do {
-                    try PairingFile.importFile(at: result.get())
-                    message = nil
-                    pairingFileChanged()
-                    // Finish the setup with the imported file and check it right away.
-                    setup = SetupRequest(startsAutomatically: true)
-                } catch {
-                    message = error.localizedDescription
-                    pairingState = PairingFile.state
-                }
-            }
-            // The setup keeps its own result in `BuiltInJIT.lastError`, so closing it only refreshes.
-            .sheet(item: $setup, onDismiss: { pairingState = PairingFile.state }) { request in
-                JITSetupView(startsAutomatically: request.startsAutomatically, forcesPairing: request.forcesPairing)
             }
         }
     }
