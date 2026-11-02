@@ -59,8 +59,9 @@ libimobiledevice) does not work. Ways to create the file:
   itself as a pairable host (`_remotepairing-pairable-host._tcp`, idevice's `pairable_host_*`
   functions from `Vendor/JIT/IDevice.xcframework`); the iPad offers “Pair with Runfern-…” under
   Settings › Privacy & Security › Developer Mode and asks for the code Runfern shows.
-- **On a computer**: `Tools/JIT/create-pairing-file.sh` pairs over USB (or, with `--wifi`, lets
-  the iPad pair with the computer) using idevice's own tools and checks the result against the iPad.
+- **On a computer**: `Tools/JIT/create-pairing-file.sh` pairs over USB using idevice's own tools and
+  checks the result against the iPad (with `--wifi`, it lets the iPad pair with the computer
+  instead, without that check).
   On Windows, idevice_pair 1.1.0 or iloader 2.4.1 (Manage Pairing File › Export) do the same. Send
   the file to the iPad and import it under Settings › Performance.
 

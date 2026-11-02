@@ -202,6 +202,10 @@ nonisolated final class PairingHost: @unchecked Sendable {
                 Darwin.close(accepted)
                 continue
             }
+            // idevice writes with send(), which raises SIGPIPE on a closed socket unless the socket
+            // says otherwise. The flag belongs to the socket, so idevice's dup() of it has it too.
+            var noSigPipe: Int32 = 1
+            _ = Darwin.setsockopt(accepted, SOL_SOCKET, SO_NOSIGPIPE, &noSigPipe, socklen_t(MemoryLayout<Int32>.size))
             let isStopped = lock.withLock {
                 if stopReason == nil { connection = accepted }
                 return stopReason != nil
@@ -237,8 +241,9 @@ nonisolated final class PairingHost: @unchecked Sendable {
     private static func listen() throws -> (fd: Int32, port: UInt16) {
         let fd = Darwin.socket(AF_INET, SOCK_STREAM, 0)
         guard fd >= 0 else { throw HostError.setup(lastSystemError()) }
-        var reuse: Int32 = 1
-        _ = Darwin.setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &reuse, socklen_t(MemoryLayout<Int32>.size))
+        var on: Int32 = 1
+        _ = Darwin.setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &on, socklen_t(MemoryLayout<Int32>.size))
+        _ = Darwin.setsockopt(fd, SOL_SOCKET, SO_NOSIGPIPE, &on, socklen_t(MemoryLayout<Int32>.size))
         var address = sockaddr_in()
         address.sin_len = UInt8(MemoryLayout<sockaddr_in>.size)
         address.sin_family = sa_family_t(AF_INET)

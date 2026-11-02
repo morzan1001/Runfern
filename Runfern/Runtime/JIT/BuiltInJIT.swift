@@ -34,8 +34,13 @@ enum BuiltInJIT {
         return nil
     }
 
-    /// The last failure, shown in Settings until the next attempt.
+    /// The last failure, shown in Settings until the next attempt or until the pairing file changes.
     private(set) static var lastError: String?
+
+    /// Forgets the last failure, for example because a new pairing file may fix it.
+    static func clearLastError() {
+        lastError = nil
+    }
 
     /// Attaches the debugger before QEMU's first start. Returns once it is attached, ready for
     /// QEMU's breakpoint; the helper's request ends later, when the script has detached.
@@ -91,10 +96,12 @@ enum BuiltInJIT {
             outcome.response.map { !$0.success } ?? false
         }
         guard attached else {
+            // Taken before cancelling, which would replace a missing answer with a cancellation.
+            let response = outcome.response
             helper.cancel()
             await LoopbackTunnel.disconnect()
             wakeLock.release()
-            return fail(outcome.response.map { explanation(of: $0) } ?? String(localized: "The debugger did not attach in time."))
+            return fail(response.map { explanation(of: $0) } ?? String(localized: "The debugger did not attach in time."))
         }
         return true
     }
