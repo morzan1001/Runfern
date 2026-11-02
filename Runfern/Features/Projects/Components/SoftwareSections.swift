@@ -3,8 +3,9 @@ import SwiftUI
 /// Tools and VS Code extensions of an environment, edited the same way everywhere: new projects,
 /// presets, and the installed software of an existing project.
 ///
-/// Selecting a tool also selects the extensions it suggests; each of them can be turned off.
-/// Further extensions come from Open VSX and are named `publisher.name`.
+/// Languages are chosen in a list with checkmarks and can also be swiped away here. Selecting a
+/// tool also selects the extensions it suggests; each of them can be turned off. Further
+/// extensions come from Open VSX and are named `publisher.name`.
 struct SoftwareSections: View {
     let base: BaseImage?
     @Binding var selection: SoftwareSelection
@@ -29,11 +30,13 @@ struct SoftwareSections: View {
         Section("Tools") {
             ForEach(selection.toolchains) { tool in
                 toolRow(tool)
+                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                        Button("Remove", systemImage: "trash", role: .destructive) {
+                            withAnimation { selection.setTool(tool.id, selected: false) }
+                        }
+                    }
             }
-            .onDelete { offsets in
-                for tool in offsets.map({ selection.toolchains[$0] }) { selection.setTool(tool.id, selected: false) }
-            }
-            Button("Add Language…", systemImage: "plus") { addingLanguage = true }
+            Button("Choose Languages…", systemImage: "plus") { addingLanguage = true }
                 .sheet(isPresented: $addingLanguage) {
                     ToolchainCatalogView(base: base, selection: $selection)
                 }
@@ -61,7 +64,7 @@ struct SoftwareSections: View {
         .disabled(softwareLocked)
     }
 
-    /// A chosen language: its version can be changed in place; swiping removes it.
+    /// A chosen language: its version can be changed in place; swiping or the language list removes it.
     @ViewBuilder
     private func toolRow(_ tool: ToolchainProfile) -> some View {
         let family = families.first { $0.id == tool.family }

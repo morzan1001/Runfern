@@ -636,26 +636,6 @@
         }
       }
     },
-    "Add Language" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sprache hinzufügen"
-          }
-        }
-      }
-    },
-    "Add Language…" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sprache hinzufügen …"
-          }
-        }
-      }
-    },
     "Added" : {
       "localizations" : {
         "de" : {
@@ -1032,6 +1012,16 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Ordner auswählen …"
+          }
+        }
+      }
+    },
+    "Choose Languages…" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sprachen auswählen …"
           }
         }
       }
@@ -2303,6 +2293,16 @@
         }
       }
     },
+    "Languages" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sprachen"
+          }
+        }
+      }
+    },
     "Large Downloads over Wi-Fi Only" : {
       "localizations" : {
         "de" : {
@@ -2927,6 +2927,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Einmalig; erneut nur nach einer Änderung des Codes."
+          }
+        }
+      }
+    },
+    "One version of a language can be installed at a time. Tap the chosen version again to remove the language." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Von einer Sprache lässt sich jeweils eine Version installieren. Tippe erneut auf die gewählte Version, um die Sprache zu entfernen."
           }
         }
       }

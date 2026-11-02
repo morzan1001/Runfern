@@ -1,7 +1,9 @@
 import SwiftUI
 
-/// The languages and tools a base offers, searchable. Choosing one adds it to the selection; for a
-/// language with several versions, the version is chosen on the next page.
+/// The languages and tools a base offers, searchable, as a list with checkmarks: tapping a language
+/// adds or removes it, and the list stays open until Done. For a language with several versions,
+/// the version is chosen on the next page, where tapping the chosen one removes the language.
+/// Changes apply to the selection right away.
 struct ToolchainCatalogView: View {
     let base: BaseImage?
     @Binding var selection: SoftwareSelection
@@ -22,11 +24,12 @@ struct ToolchainCatalogView: View {
             List(families) { family in
                 if family.versions.count == 1, let only = family.versions.first {
                     Button {
-                        add(only)
+                        toggle(only)
                     } label: {
                         row(family, detail: only.summary)
                     }
                     .foregroundStyle(.primary)
+                    .accessibilityAddTraits(selection.toolchainIds.contains(only.id) ? .isSelected : [])
                 } else {
                     NavigationLink {
                         versions(of: family)
@@ -39,11 +42,11 @@ struct ToolchainCatalogView: View {
                 if families.isEmpty { ContentUnavailableView.search(text: query) }
             }
             .searchable(text: $query, prompt: Text("Search Languages"))
-            .navigationTitle("Add Language")
+            .navigationTitle("Languages")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel", role: .cancel) { dismiss() }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done", role: .confirm) { dismiss() }
                 }
             }
         }
@@ -68,32 +71,41 @@ struct ToolchainCatalogView: View {
     }
 
     private func versions(of family: ToolchainFamily) -> some View {
-        List(family.versions) { version in
-            Button {
-                add(version)
-            } label: {
-                HStack {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(version.version)
-                        Text("\(version.summary) · \(version.estimatedSizeBytes.formattedBytes)")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
+        List {
+            Section {
+                ForEach(family.versions) { version in
+                    Button {
+                        toggle(version)
+                    } label: {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(version.version)
+                                Text("\(version.summary) · \(version.estimatedSizeBytes.formattedBytes)")
+                                    .font(.footnote)
+                                    .foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            if selection.toolchainIds.contains(version.id) {
+                                Image(systemName: "checkmark")
+                                    .foregroundStyle(.tint)
+                                    .accessibilityHidden(true)
+                            }
+                        }
                     }
-                    Spacer()
-                    if selection.toolchainIds.contains(version.id) {
-                        Image(systemName: "checkmark").foregroundStyle(.tint)
-                    }
+                    .foregroundStyle(.primary)
+                    .accessibilityAddTraits(selection.toolchainIds.contains(version.id) ? .isSelected : [])
                 }
+            } footer: {
+                Text("One version of a language can be installed at a time. Tap the chosen version again to remove the language.")
             }
-            .foregroundStyle(.primary)
         }
         .navigationTitle(family.name)
         .navigationBarTitleDisplayMode(.inline)
     }
 
-    private func add(_ tool: ToolchainProfile) {
-        selection.setTool(tool.id, selected: true)
-        dismiss()
+    /// Adds `tool`, replacing another version of its language, or removes it if it is chosen.
+    private func toggle(_ tool: ToolchainProfile) {
+        selection.setTool(tool.id, selected: !selection.toolchainIds.contains(tool.id))
     }
 }
 
