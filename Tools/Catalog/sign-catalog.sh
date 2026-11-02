@@ -4,10 +4,11 @@
 # afterwards; apps pick the catalog up from GitHub.
 #
 # The key is the base64-encoded 32-byte Ed25519 private key that sign.swift keygen creates, taken
-# from the environment variable CATALOG_SIGNING_KEY (the repository secret in GitHub Actions) or
-# else from Tools/Catalog/catalog_signing_key (never committed). Before signing, the script checks
-# that the key belongs to the publisher key built into the app (Runfern/Catalog/CatalogStore.swift),
-# and it replaces Catalog/catalog.json.sig only once verify-catalog.sh accepts the new signature.
+# from the environment variable CATALOG_SIGNING_KEY (in GitHub Actions the secret of the
+# environment "catalog") or else from Tools/Catalog/catalog_signing_key (never committed).
+# Before signing, the script checks that the key belongs to the publisher key built into the app
+# (Runfern/Catalog/CatalogStore.swift), and it replaces Catalog/catalog.json.sig only once
+# verify-catalog.sh accepts the new signature.
 # Signs with sign.swift (CryptoKit) on a Mac with Xcode, else with OpenSSL 3.
 #
 # Apps install a catalog from GitHub only if its catalogVersion is higher than the one they

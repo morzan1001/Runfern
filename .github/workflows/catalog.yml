@@ -1,9 +1,11 @@
 # Guards the signed catalog. Apps load Catalog/catalog.json only if its signature matches the
 # publisher key built into the app and fall back to an empty catalog otherwise, so every change to
-# the catalog, its tools, or the app's key is checked before it reaches main.
+# the catalog, its tools, or the app's key is checked before it reaches main. Apps also install only
+# a catalog whose catalogVersion is higher than theirs, so a changed catalog must raise it.
 #
 # Commits the "Publish Linux Base" workflow pushes don't start other workflows (GitHub's rule for
-# GITHUB_TOKEN); that workflow runs the same check itself before it pushes.
+# GITHUB_TOKEN); that workflow runs verify-catalog.sh itself before it pushes, and raises
+# catalogVersion with every catalog it changes.
 
 name: Catalog
 
@@ -34,5 +36,18 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+          # The history holds the previous catalog for the version check.
+          fetch-depth: 0
       - name: Check the catalog and its signature
         run: Tools/Catalog/verify-catalog.sh
+      - name: Check that a changed catalog has a higher version
+        env:
+          # The pull request's base, or the branch before this push (zeros for a new branch).
+          PREVIOUS: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          if [ -z "$PREVIOUS" ] || ! git cat-file -e "$PREVIOUS:Catalog/catalog.json" 2>/dev/null; then
+            echo "No earlier catalog to compare with."
+            exit 0
+          fi
+          git show "$PREVIOUS:Catalog/catalog.json" > "$RUNNER_TEMP/previous-catalog.json"
+          python3 Tools/Catalog/catalog_release.py newer-than "$RUNNER_TEMP/previous-catalog.json"

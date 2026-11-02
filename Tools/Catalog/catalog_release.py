@@ -6,17 +6,25 @@ so the catalog is always written the same way as update_catalog.py writes it and
 
 Every build of a base is a release of its own, named after the image's catalogVersion
 (<id>-v<version>). Published builds are never replaced: environments remember the version they
-were created with, so a new build of a published base gets the next version.
+were created with, so a new build of a published base gets the next version. The catalog lists
+only the newest build of each base, though, so environments created on an earlier one can't
+download it again; that's why building a published base again takes --rebuild.
 
-Usage: catalog_release.py [--catalog <file>] next-version <id>
+Usage: catalog_release.py [--catalog <file>] next-version [--rebuild] <id>
            prints the catalogVersion a new build of <id> gets: the current one while the base
-           is unpublished, else one higher
+           is unpublished, else (only with --rebuild) one higher
+       catalog_release.py [--catalog <file>] published-version <id> <sha256>
+           prints the base's catalogVersion if the catalog lists the build with this checksum
+           already, else nothing
        catalog_release.py [--catalog <file>] set-source <id> <version> <url> <sha256> <size>
            enters a published build: the base's catalogVersion, source, and downloadSizeBytes
        catalog_release.py [--catalog <file>] finish
            raises the catalog's catalogVersion (apps only install newer catalogs) and sets publishedAt
        catalog_release.py [--catalog <file>] check
            checks what apps rely on; sign-catalog.sh and verify-catalog.sh run it
+       catalog_release.py [--catalog <file>] newer-than <previous catalog>
+           fails if the catalog differs from the previous one without a higher catalogVersion,
+           which apps would ignore; the "Catalog" workflow runs it
 
 <file> defaults to Catalog/catalog.json. Runs with the Python 3.9 of macOS.
 """
@@ -76,19 +84,37 @@ def is_https(url):
     return isinstance(url, str) and url.startswith("https://") and len(url) > 8 and not re.search(r"\s", url)
 
 
-def next_version(catalog, image_id):
+def next_version(catalog, image_id, rebuild=False):
     image = base_image(catalog, image_id)
-    return image["catalogVersion"] + 1 if image.get("source") else image["catalogVersion"]
+    if not image.get("source"):
+        return image["catalogVersion"]
+    if not rebuild:
+        raise CatalogError(
+            f"{image_id} is published as version {image['catalogVersion']} already. The catalog lists one build "
+            f"per base, so a new build takes its place there, and environments created on version "
+            f"{image['catalogVersion']} can't download their base anymore. Build it again only on purpose: "
+            f"--rebuild (in the workflow: rebuild).")
+    return image["catalogVersion"] + 1
+
+
+def published_version(catalog, image_id, sha256):
+    """The base's catalogVersion if its source is the build with this checksum, else None."""
+    image = base_image(catalog, image_id)
+    source = image.get("source")
+    if isinstance(source, dict) and str(source.get("sha256", "")).lower() == sha256.lower():
+        return image["catalogVersion"]
+    return None
 
 
 def set_source(catalog, image_id, version, url, sha256, size):
     image = base_image(catalog, image_id)
     if not is_count(version):
         raise CatalogError(f"the version of {image_id} must be a positive number, not {version!r}.")
-    if version < next_version(catalog, image_id):
+    lowest = next_version(catalog, image_id, rebuild=True)
+    if version < lowest:
         raise CatalogError(f"{image_id} is published as version {image['catalogVersion']} already; "
                            f"published builds are never replaced, so a new build needs version "
-                           f"{next_version(catalog, image_id)} or higher.")
+                           f"{lowest} or higher.")
     if not is_https(url):
         raise CatalogError(f"the address of {image_id} must be an https URL, not {url!r}.")
     if not isinstance(sha256, str) or not SHA256.fullmatch(sha256):
@@ -101,6 +127,19 @@ def set_source(catalog, image_id, version, url, sha256, size):
     problems = image_problems(image)
     if problems:
         raise CatalogError(" ".join(problems))
+
+
+def version_problem(data, previous_data):
+    """Why apps would ignore the catalog `data` (bytes) once they have `previous_data`: they install
+    only catalogs with a higher catalogVersion, so every change needs one. None if there's no problem."""
+    if data == previous_data:
+        return None
+    version, previous = json.loads(data)["catalogVersion"], json.loads(previous_data).get("catalogVersion")
+    if is_count(previous) and not (is_count(version) and version > previous):
+        return (f"the catalog differs from the previous one but has catalogVersion {version!r}, not more than "
+                f"{previous}: apps that have the previous one would ignore it. Raise it (catalog_release.py "
+                f"finish) and sign again (sign-catalog.sh).")
+    return None
 
 
 def finish(catalog, now=None):
@@ -195,7 +234,11 @@ def main(arguments=None):
     parser.add_argument("--catalog", default=str(CATALOG), help="catalog file (default: Catalog/catalog.json)")
     commands = parser.add_subparsers(dest="command", required=True)
     command = commands.add_parser("next-version", help="prints the catalogVersion a new build of a base gets")
+    command.add_argument("--rebuild", action="store_true", help="also for a base that is published already")
     command.add_argument("id")
+    command = commands.add_parser("published-version", help="prints the version if the catalog lists this build")
+    command.add_argument("id")
+    command.add_argument("sha256")
     command = commands.add_parser("set-source", help="enters a published build of a base")
     command.add_argument("id")
     command.add_argument("version", type=int)
@@ -204,15 +247,29 @@ def main(arguments=None):
     command.add_argument("size", type=int)
     commands.add_parser("finish", help="raises catalogVersion and sets publishedAt to now")
     commands.add_parser("check", help="checks the catalog's shape")
+    command = commands.add_parser("newer-than", help="checks that a changed catalog has a higher catalogVersion")
+    command.add_argument("previous")
     options = parser.parse_args(arguments)
 
     try:
         catalog = load(options.catalog)
         if options.command == "next-version":
-            print(next_version(catalog, options.id))
+            print(next_version(catalog, options.id, options.rebuild))
+        elif options.command == "published-version":
+            version = published_version(catalog, options.id, options.sha256)
+            if version is not None:
+                print(version)
         elif options.command == "set-source":
             set_source(catalog, options.id, options.version, options.url, options.sha256, options.size)
             save(options.catalog, catalog)
+        elif options.command == "newer-than":
+            # Bytes: the signature covers them, so any change at all counts.
+            data, previous = pathlib.Path(options.catalog).read_bytes(), pathlib.Path(options.previous).read_bytes()
+            problem = version_problem(data, previous)
+            if problem:
+                raise CatalogError(problem)
+            print("The catalog is unchanged." if data == previous else
+                  f"Catalog version {catalog['catalogVersion']} follows {json.loads(previous).get('catalogVersion')!r}.")
         elif options.command == "finish":
             finish(catalog)
             save(options.catalog, catalog)
