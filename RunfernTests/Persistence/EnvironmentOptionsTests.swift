@@ -67,6 +67,6 @@ import Testing
         #expect(families.first { $0.id == "nodejs" }?.versions.map(\.version) == ["24", "26"])
         #expect(families.first { $0.id == "java" }?.versions.map(\.version) == ["21", "25", "27"])
         #expect(Set(families.map(\.id)).count == families.count)
-        #expect(Catalog.baseImageFamilies.first { $0.distribution == "Ubuntu" }?.releases.map(\.release) == ["24.04", "26.04"])
+        #expect(Catalog.families(of: Catalog.baseImages).first { $0.distribution == "Ubuntu" }?.releases.map(\.release) == ["24.04", "26.04"])
     }
 }

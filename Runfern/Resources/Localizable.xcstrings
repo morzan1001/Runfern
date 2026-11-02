@@ -1256,16 +1256,6 @@
         }
       }
     },
-    "Couldn’t Delete Linux Base" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Linux-Basis konnte nicht gelöscht werden"
-          }
-        }
-      }
-    },
     "Couldn’t Download Linux Base" : {
       "localizations" : {
         "de" : {
@@ -1332,6 +1322,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zugangsdaten konnten nicht entfernt werden"
+          }
+        }
+      }
+    },
+    "Couldn’t Remove Linux Base" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Linux-Basis konnte nicht entfernt werden"
           }
         }
       }
@@ -1476,16 +1476,6 @@
         }
       }
     },
-    "Delete %@?" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ löschen?"
-          }
-        }
-      }
-    },
     "Delete Data Anyway" : {
       "localizations" : {
         "de" : {
@@ -1522,16 +1512,6 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "In Runfern gelöscht, in „Dateien“ geändert"
-          }
-        }
-      }
-    },
-    "Delete…" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Löschen …"
           }
         }
       }
@@ -2563,12 +2543,22 @@
         }
       }
     },
-    "It downloads again when a project needs it." : {
+    "It isn’t published for download, so it can’t be downloaded again." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sie wird erneut geladen, wenn ein Projekt sie braucht."
+            "value" : "Sie ist nicht zum Laden veröffentlicht und kann daher nicht erneut geladen werden."
+          }
+        }
+      }
+    },
+    "It must be downloaded again before an offline setup." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vor einer Einrichtung ohne Internet musst du sie erneut laden."
           }
         }
       }
@@ -3095,12 +3085,22 @@
         }
       }
     },
-    "No Linux base has been published yet. Runfern looks for new ones by itself." : {
+    "No Linux base is available on this iPad yet. New ones arrive with catalog updates." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bisher ist keine Linux-Basis veröffentlicht. Runfern sucht selbst nach neuen."
+            "value" : "Auf diesem iPad ist noch keine Linux-Basis verfügbar. Neue kommen mit Katalogaktualisierungen."
+          }
+        }
+      }
+    },
+    "No Linux base is available yet. Runfern looks for new ones by itself." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noch ist keine Linux-Basis verfügbar. Runfern sucht selbst nach neuen."
           }
         }
       }
@@ -3185,22 +3185,12 @@
         }
       }
     },
-    "None Available" : {
+    "None available" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Keine verfügbar"
-          }
-        }
-      }
-    },
-    "None has been published yet. New Linux bases arrive with catalog updates." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bisher ist keine veröffentlicht. Neue Linux-Basen kommen mit Katalogaktualisierungen."
           }
         }
       }
@@ -3921,6 +3911,16 @@
         }
       }
     },
+    "Remove %@?" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ entfernen?"
+          }
+        }
+      }
+    },
     "Remove Credential?" : {
       "localizations" : {
         "de" : {
@@ -4221,12 +4221,12 @@
         }
       }
     },
-    "Runfern downloads a Linux base the first time a project needs it. None has been published yet; new ones arrive with catalog updates." : {
+    "Runfern downloads a Linux base the first time a project needs it. None is available on this iPad yet; new ones arrive with catalog updates." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Runfern lädt eine Linux-Basis, sobald ein Projekt sie zum ersten Mal braucht. Bisher ist keine veröffentlicht; neue kommen mit Katalogaktualisierungen."
+            "value" : "Runfern lädt eine Linux-Basis, sobald ein Projekt sie zum ersten Mal braucht. Auf diesem iPad ist noch keine verfügbar; neue kommen mit Katalogaktualisierungen."
           }
         }
       }
@@ -4257,6 +4257,16 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Verbindung wird wiederhergestellt …"
+          }
+        }
+      }
+    },
+    "Runfern looks for Linux bases once this iPad is online." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Runfern sucht nach Linux-Basen, sobald dieses iPad online ist."
           }
         }
       }
@@ -5945,12 +5955,12 @@
         }
       }
     },
-    "This Linux base was built for an older version of Runfern and doesn’t support “%@”. Install a current build of the base." : {
+    "This Linux base was built for an older version of Runfern and doesn’t support “%@”. Create a new project with the current base." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Diese Linux-Basis wurde für eine ältere Version von Runfern erstellt und unterstützt „%@“ nicht. Installiere einen aktuellen Build der Basis."
+            "value" : "Diese Linux-Basis wurde für eine ältere Version von Runfern erstellt und unterstützt „%@“ nicht. Lege ein neues Projekt mit der aktuellen Basis an."
           }
         }
       }

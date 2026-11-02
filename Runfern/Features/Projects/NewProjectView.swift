@@ -134,7 +134,12 @@ struct NewProjectView: View {
                     Text("Environment")
                 } footer: {
                     if offered.isEmpty, preset == nil {
-                        Text("Runfern downloads a Linux base the first time a project needs it. None has been published yet; new ones arrive with catalog updates.")
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Runfern downloads a Linux base the first time a project needs it. None is available on this iPad yet; new ones arrive with catalog updates.")
+                            if CatalogStore.updateURL != nil, !connectivity.isOnline {
+                                Text("Checking for updates needs an internet connection.")
+                            }
+                        }
                     } else if isUnavailable, let baseImage {
                         StatusLabel("\(baseImage.displayName) is not available for download yet.")
                     }
@@ -217,7 +222,7 @@ struct NewProjectView: View {
     /// Shown instead of the pickers while no base can be set up on this iPad.
     @ViewBuilder
     private var noBaseAvailable: some View {
-        LabeledContent("Linux Base", value: String(localized: "None Available"))
+        LabeledContent("Linux Base", value: String(localized: "None available"))
         if CatalogStore.updateURL != nil {
             Button {
                 Task { await catalog.checkForUpdate(isOnline: connectivity.isOnline) }
