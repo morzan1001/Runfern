@@ -796,6 +796,36 @@
         }
       }
     },
+    "Built-In (Unavailable)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eingebaut (nicht verfügbar)"
+          }
+        }
+      }
+    },
+    "Built-In does not work inside LiveContainer. Use StikDebug instead." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„Eingebaut“ funktioniert nicht in LiveContainer. Nutze stattdessen StikDebug."
+          }
+        }
+      }
+    },
+    "Built-In needs a pairing file of this iPad. Create it here (iPadOS 27) or on a computer, as described in How Runfern Works." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„Eingebaut“ braucht eine Pairing-Datei dieses iPads. Erstelle sie hier (iPadOS 27) oder auf einem Computer, wie unter „So funktioniert Runfern“ beschrieben."
+          }
+        }
+      }
+    },
     "Cancel" : {
       "localizations" : {
         "de" : {
@@ -1016,6 +1046,26 @@
         }
       }
     },
+    "Connected" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbunden"
+          }
+        }
+      }
+    },
+    "Connected…" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbunden …"
+          }
+        }
+      }
+    },
     "Connection Lost" : {
       "localizations" : {
         "de" : {
@@ -1086,6 +1136,26 @@
         }
       }
     },
+    "Create on This iPad…" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auf diesem iPad erstellen …"
+          }
+        }
+      }
+    },
+    "Create Pairing File" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pairing-Datei erstellen"
+          }
+        }
+      }
+    },
     "Create Preset" : {
       "localizations" : {
         "de" : {
@@ -1142,6 +1212,16 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Erstellt"
+          }
+        }
+      }
+    },
+    "Debugger for JIT" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Debugger für JIT"
           }
         }
       }
@@ -1446,12 +1526,52 @@
         }
       }
     },
+    "Enter %@ in Settings › Privacy & Security › Developer Mode." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gib %@ unter Einstellungen › Datenschutz & Sicherheit › Entwicklermodus ein."
+          }
+        }
+      }
+    },
+    "Enter %@ on this iPad" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gib %@ auf diesem iPad ein"
+          }
+        }
+      }
+    },
     "Enter a host, a user name, and a token." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Gib einen Host, einen Benutzernamen und ein Token ein."
+          }
+        }
+      }
+    },
+    "Enter the code Runfern shows here and in a notification." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gib den Code ein, den Runfern hier und in einer Mitteilung anzeigt."
+          }
+        }
+      }
+    },
+    "Enter this code on the iPad" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gib diesen Code auf dem iPad ein"
           }
         }
       }
@@ -2043,6 +2163,16 @@
         }
       }
     },
+    "It needs Developer Mode, Wi-Fi, and a pairing file of this iPad (a Remote Pairing file, not a lockdown record). On iPadOS 27, create it under Settings › Performance › Create on This iPad: Runfern then appears under Settings › Privacy & Security › Developer Mode, and you confirm it there with the code Runfern shows." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dafür braucht es den Entwicklermodus, WLAN und eine Pairing-Datei dieses iPads (eine Remote-Pairing-Datei, keinen Lockdown-Record). Unter iPadOS 27 erstellst du sie unter Einstellungen › Leistung › Auf diesem iPad erstellen: Runfern erscheint dann unter Einstellungen › Datenschutz & Sicherheit › Entwicklermodus, und du bestätigst dort mit dem Code, den Runfern anzeigt."
+          }
+        }
+      }
+    },
     "JIT Compilation" : {
       "localizations" : {
         "de" : {
@@ -2059,6 +2189,16 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Beide behalten"
+          }
+        }
+      }
+    },
+    "Keep this iPad on Wi-Fi. No internet connection is needed." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lass dieses iPad mit dem WLAN verbunden. Eine Internetverbindung ist nicht nötig."
           }
         }
       }
@@ -2701,6 +2841,26 @@
         }
       }
     },
+    "Open Settings › Privacy & Security › Developer Mode" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffne Einstellungen › Datenschutz & Sicherheit › Entwicklermodus"
+          }
+        }
+      }
+    },
+    "Open Settings › Privacy & Security › Developer Mode and tap “Pair with %@”." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffne Einstellungen › Datenschutz & Sicherheit › Entwicklermodus und tippe auf „Mit %@ koppeln“."
+          }
+        }
+      }
+    },
     "Open VSX Not Reachable" : {
       "localizations" : {
         "de" : {
@@ -2717,6 +2877,36 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Übersicht"
+          }
+        }
+      }
+    },
+    "Paired with %@. JIT is used from the next Linux start." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit %@ gekoppelt. JIT wird ab dem nächsten Linux-Start genutzt."
+          }
+        }
+      }
+    },
+    "Paired. JIT is used from the next Linux start." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gekoppelt. JIT wird ab dem nächsten Linux-Start genutzt."
+          }
+        }
+      }
+    },
+    "Pairing Code" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pairing-Code"
           }
         }
       }
@@ -2747,6 +2937,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pairing-Datei unbrauchbar"
+          }
+        }
+      }
+    },
+    "Pairing This iPad" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieses iPad wird gekoppelt"
+          }
+        }
+      }
+    },
+    "Pairing with this iPad for JIT" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pairing mit diesem iPad für JIT"
           }
         }
       }
@@ -3281,6 +3491,36 @@
         }
       }
     },
+    "Runfern and its JIT helper share no app group in this installation." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Runfern und sein JIT-Helfer teilen in dieser Installation keine App-Gruppe."
+          }
+        }
+      }
+    },
+    "Runfern could not appear on the local network (error %lld). Check that Wi-Fi is on." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Runfern konnte sich nicht im lokalen Netzwerk anmelden (Fehler %lld). Prüfe, ob WLAN eingeschaltet ist."
+          }
+        }
+      }
+    },
+    "Runfern could not prepare the pairing: %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Runfern konnte das Pairing nicht vorbereiten: %@"
+          }
+        }
+      }
+    },
     "Runfern does not transmit source code, project files, or diagnostic data." : {
       "localizations" : {
         "de" : {
@@ -3307,6 +3547,16 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Verbindung wird wiederhergestellt …"
+          }
+        }
+      }
+    },
+    "Runfern may not use the local network. Allow it under Settings › Apps › Runfern › Local Network, then try again." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Runfern darf das lokale Netzwerk nicht nutzen. Erlaube es unter Einstellungen › Apps › Runfern › Lokales Netzwerk und versuche es dann erneut."
           }
         }
       }
@@ -3721,6 +3971,16 @@
         }
       }
     },
+    "Start" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starten"
+          }
+        }
+      }
+    },
     "Start and Open" : {
       "localizations" : {
         "de" : {
@@ -3813,6 +4073,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "StikDebug"
+          }
+        }
+      }
+    },
+    "StikJIT is missing from this installation. Build Runfern again after running Tools/JIT/build-jit-vendor.sh." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "StikJIT fehlt in dieser Installation. Baue Runfern neu, nachdem du Tools/JIT/build-jit-vendor.sh ausgeführt hast."
           }
         }
       }
@@ -4067,6 +4337,16 @@
         }
       }
     },
+    "Tap Start, and allow Runfern to find devices on your local network." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tippe auf „Starten“ und erlaube Runfern, Geräte in deinem lokalen Netzwerk zu finden."
+          }
+        }
+      }
+    },
     "The archive contains an unsafe path: %@" : {
       "localizations" : {
         "de" : {
@@ -4217,6 +4497,16 @@
         }
       }
     },
+    "The debugger could not prepare Linux for JIT." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Debugger konnte Linux nicht für JIT vorbereiten."
+          }
+        }
+      }
+    },
     "The debugger did not attach in time." : {
       "localizations" : {
         "de" : {
@@ -4233,6 +4523,26 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Die Löschung wird beim nächsten Abgleich auch im Projektordner ausgeführt."
+          }
+        }
+      }
+    },
+    "The Developer Disk Image could not be downloaded. The first JIT start after restarting the iPad needs the internet." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Developer Disk Image konnte nicht geladen werden. Der erste JIT-Start nach einem Neustart des iPads braucht das Internet."
+          }
+        }
+      }
+    },
+    "The Developer Disk Image could not be mounted. Reset it in Settings › Performance and try again." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Developer Disk Image konnte nicht eingebunden werden. Setze es unter Einstellungen › Leistung zurück und versuche es erneut."
           }
         }
       }
@@ -4338,6 +4648,16 @@
         }
       }
     },
+    "The iPad's developer services could not be reached through Runfern's VPN. Check that Developer Mode is on and Wi-Fi is connected, and that no other VPN took over." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Entwicklerdienste des iPads waren über das VPN von Runfern nicht erreichbar. Prüfe, ob der Entwicklermodus aktiv und WLAN verbunden ist und ob kein anderes VPN übernommen hat."
+          }
+        }
+      }
+    },
     "The JIT helper did not start." : {
       "localizations" : {
         "de" : {
@@ -4384,6 +4704,16 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Der Schlüsselbund hat einen Fehler gemeldet (%lld)."
+          }
+        }
+      }
+    },
+    "The keys in this pairing file do not belong together. Create a new pairing file." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Schlüssel in dieser Pairing-Datei gehören nicht zusammen. Erstelle eine neue Pairing-Datei."
           }
         }
       }
@@ -4535,6 +4865,36 @@
         }
       }
     },
+    "The pairing failed: %@. If you typed the code, check it and try again." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Pairing ist fehlgeschlagen: %@. Falls du den Code eingegeben hast, prüfe ihn und versuche es erneut."
+          }
+        }
+      }
+    },
+    "The pairing took too long. Try again." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Pairing hat zu lange gedauert. Versuche es erneut."
+          }
+        }
+      }
+    },
+    "The pairing was cancelled." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Pairing wurde abgebrochen."
+          }
+        }
+      }
+    },
     "The project folder could not be fully synced. See the storage location for details." : {
       "localizations" : {
         "de" : {
@@ -4605,6 +4965,16 @@
         }
       }
     },
+    "This build of Runfern cannot create pairing files." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieser Build von Runfern kann keine Pairing-Dateien erstellen."
+          }
+        }
+      }
+    },
     "This combination of Linux base and toolchain profile is not supported." : {
       "localizations" : {
         "de" : {
@@ -4665,6 +5035,16 @@
         }
       }
     },
+    "This installation may not use Runfern's VPN. Built-In needs signing with the Network Extension capability, for example from Xcode with a paid developer account; AltStore, SideStore, and iloader cannot add it. Use StikDebug instead." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Installation darf das VPN von Runfern nicht nutzen. „Eingebaut“ braucht eine Signatur mit der Network-Extension-Berechtigung, zum Beispiel aus Xcode mit einem kostenpflichtigen Entwicklerkonto; AltStore, SideStore und iloader können sie nicht hinzufügen. Nutze stattdessen StikDebug."
+          }
+        }
+      }
+    },
     "This iPad" : {
       "localizations" : {
         "de" : {
@@ -4675,12 +5055,22 @@
         }
       }
     },
-    "This is a lockdown pairing record, as Finder or idevicepair create it. The built-in JIT needs a Remote Pairing file instead; see How Runfern Works for how to create one." : {
+    "This iPad did not accept the pairing file. Create a new one; this is needed after the passcode was changed or removed, or if the file comes from another iPad." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Das ist ein Lockdown-Pairing-Record, wie ihn Finder oder idevicepair anlegen. Das integrierte JIT braucht stattdessen eine Remote-Pairing-Datei; wie man sie erstellt, steht unter „So funktioniert Runfern“."
+            "value" : "Dieses iPad hat die Pairing-Datei nicht akzeptiert. Erstelle eine neue; das ist nötig, nachdem der Code geändert oder entfernt wurde oder wenn die Datei von einem anderen iPad stammt."
+          }
+        }
+      }
+    },
+    "This is a lockdown pairing record, as Finder or libimobiledevice create it. The built-in JIT needs a Remote Pairing file instead: create one on this iPad, or on a computer as described in How Runfern Works." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das ist ein Lockdown-Pairing-Record, wie ihn Finder oder libimobiledevice anlegen. Das integrierte JIT braucht stattdessen eine Remote-Pairing-Datei: Erstelle sie auf diesem iPad oder auf einem Computer, wie unter „So funktioniert Runfern“ beschrieben."
           }
         }
       }
@@ -4705,12 +5095,22 @@
         }
       }
     },
-    "This needs a pairing file of this iPad, created once on a Mac that trusts it, for example with idevice_pair. Send it to the iPad and import it under Settings › Performance." : {
+    "This Remote Pairing record comes from pymobiledevice3, which the built-in JIT cannot use. Create a pairing file on this iPad, or on a computer as described in How Runfern Works." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dafür braucht es eine Pairing-Datei dieses iPads, einmalig erstellt auf einem Mac, dem es vertraut, zum Beispiel mit idevice_pair. Die Datei aufs iPad schicken und unter Einstellungen › Leistung importieren."
+            "value" : "Dieser Remote-Pairing-Record stammt von pymobiledevice3 und ist für das integrierte JIT nicht nutzbar. Erstelle eine Pairing-Datei auf diesem iPad oder auf einem Computer, wie unter „So funktioniert Runfern“ beschrieben."
+          }
+        }
+      }
+    },
+    "Tip: Keep Settings and Runfern side by side, as windows or in Stage Manager, to see the code while you type it." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tipp: Halte die Einstellungen und Runfern nebeneinander, als Fenster oder im Stage Manager, damit du den Code beim Eingeben siehst."
           }
         }
       }
@@ -4771,6 +5171,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Erneut versuchen"
+          }
+        }
+      }
+    },
+    "Unavailable" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht verfügbar"
           }
         }
       }
@@ -4945,6 +5355,26 @@
         }
       }
     },
+    "Waiting for Settings" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warten auf die Einstellungen"
+          }
+        }
+      }
+    },
+    "Waiting for “Pair with %@” in Settings" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warten auf „Mit %@ koppeln“ in den Einstellungen"
+          }
+        }
+      }
+    },
     "Warning" : {
       "localizations" : {
         "de" : {
@@ -5005,12 +5435,12 @@
         }
       }
     },
-    "With JIT, Linux runs several times faster. Before the first Linux start after opening Runfern, its VPN connects briefly so a debugger can attach to Runfern; afterwards the VPN disconnects again." : {
+    "With JIT, Linux runs several times faster. Before the first Linux start after opening Runfern, its VPN connects briefly so a debugger can attach to Runfern; afterwards the VPN disconnects again. The first time after the iPad restarts, this also downloads the Developer Disk Image from the internet." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mit JIT läuft Linux um ein Vielfaches schneller. Vor dem ersten Linux-Start nach dem Öffnen verbindet sich das VPN von Runfern kurz, damit sich ein Debugger an Runfern anhängen kann; danach trennt sich das VPN wieder."
+            "value" : "Mit JIT läuft Linux um ein Vielfaches schneller. Vor dem ersten Linux-Start nach dem Öffnen verbindet sich das VPN von Runfern kurz, damit sich ein Debugger an Runfern anhängen kann; danach trennt sich das VPN wieder. Beim ersten Mal nach einem Neustart des iPads wird dabei auch das Developer Disk Image aus dem Internet geladen."
           }
         }
       }
@@ -5032,6 +5462,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ja"
+          }
+        }
+      }
+    },
+    "You can also create it on a computer the iPad trusts, with Tools/JIT/create-pairing-file.sh from Runfern's source, idevice_pair, or iloader, and import it under Settings › Performance. Create a new pairing file after changing or removing the iPad's passcode." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Du kannst sie auch auf einem Computer erstellen, dem das iPad vertraut, mit Tools/JIT/create-pairing-file.sh aus dem Quellcode von Runfern, idevice_pair oder iloader, und sie unter Einstellungen › Leistung importieren. Erstelle nach dem Ändern oder Entfernen des iPad-Codes eine neue Pairing-Datei."
           }
         }
       }

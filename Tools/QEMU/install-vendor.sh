@@ -41,6 +41,16 @@ install_platform () {
     du -sh "$target"/*.framework
 }
 
+# Whether the binary contains the instruction `brk #0x69` at an instruction boundary.
+has_jit_handshake () {
+    perl -0777 -ne '
+        my $pattern = "\x20\x0d\x20\xd4";
+        my $at = -1;
+        while (($at = index($_, $pattern, $at + 1)) >= 0) { exit 0 if $at % 4 == 0 }
+        exit 1;
+    ' "$1"
+}
+
 # Adds QEMU with the JIT backend next to the interpreter build, renamed so both can be embedded.
 # It links against the same libraries, which the interpreter build already installed.
 install_jit () {
@@ -50,6 +60,12 @@ install_jit () {
     if [ ! -d "$source" ] || [ ! -d "$target" ]; then
         echo "Skipping JIT for $2: no build in $source or no interpreter build installed"
         return
+    fi
+    # QEMU must ask the debugger to prepare its code region (`brk #0x69`, encoded 20 0d 20 d4), or
+    # StikJIT's script waits for it forever. UTM's QEMU does so from v10.0.12-utm (UTM 5.0.4) on.
+    if ! has_jit_handshake "$source/$ROOT_FRAMEWORK"; then
+        echo "error: $source lacks the JIT handshake (brk #0x69); build it from UTM 5.0.4 or later." >&2
+        exit 1
     fi
     rm -rf "$target/$name.framework"
     cp -R "$source" "$target/$name.framework"

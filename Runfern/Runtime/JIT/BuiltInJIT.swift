@@ -1,16 +1,38 @@
 #if RUNFERN_JIT
 import Foundation
+import UIKit
 
 /// Runfern's own way to JIT: its loopback VPN reaches the iPad's developer services, and its helper
 /// extension attaches StikJIT as the debugger (StikJIT INTEGRATION.md, “Built-in StikJIT”). Only
 /// the pairing file comes from outside, once.
 ///
 /// The VPN is connected only for this: from the request until the helper has detached, or until
-/// the attempt failed or timed out.
+/// the attempt failed or timed out. Meanwhile the iPad does not lock by itself, because a lock
+/// would cut the debugger's connection while QEMU waits at its breakpoint.
 @MainActor
 enum BuiltInJIT {
     /// The VPN, the helper, and the debugger-friendly signing are part of this installation.
-    static var isAvailable: Bool { LoopbackTunnel.isAvailable && JITHelperClient.isInstalled }
+    static var isAvailable: Bool { unavailableReason == nil }
+
+    /// Why this installation cannot use the built-in method, or nil if it can.
+    static var unavailableReason: String? {
+        if !JITSupport.allowsTunnel {
+            return String(localized: "This installation may not use Runfern's VPN. Built-In needs signing with the Network Extension capability, for example from Xcode with a paid developer account; AltStore, SideStore, and iloader cannot add it. Use StikDebug instead.")
+        }
+        if !LoopbackTunnel.isInstalled || !JITHelperClient.isInstalled {
+            return String(localized: "The JIT helper is missing from this installation.")
+        }
+        if !hasStikJIT {
+            return String(localized: "StikJIT is missing from this installation. Build Runfern again after running Tools/JIT/build-jit-vendor.sh.")
+        }
+        if ProcessInfo.processInfo.environment["LC_HOME_PATH"] != nil {
+            return String(localized: "Built-In does not work inside LiveContainer. Use StikDebug instead.")
+        }
+        if FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: JITProtocol.appGroup) == nil {
+            return String(localized: "Runfern and its JIT helper share no app group in this installation.")
+        }
+        return nil
+    }
 
     /// The last failure, shown in Settings until the next attempt.
     private(set) static var lastError: String?
@@ -19,7 +41,7 @@ enum BuiltInJIT {
     /// QEMU's breakpoint; the helper's request ends later, when the script has detached.
     static func attachDebugger() async -> Bool {
         lastError = nil
-        guard isAvailable else { return fail(String(localized: "The JIT helper is missing from this installation.")) }
+        if let unavailableReason { return fail(unavailableReason) }
         let pairing: Data
         do {
             guard let loaded = try PairingFile.load() else { return fail(String(localized: "Import a pairing file to use JIT.")) }
@@ -27,34 +49,41 @@ enum BuiltInJIT {
         } catch {
             return fail(error.localizedDescription)
         }
+
+        let wakeLock = WakeLock()
         do {
             try await LoopbackTunnel.connect()
         } catch {
+            wakeLock.release()
             return fail(error.localizedDescription)
         }
 
         let outcome = Outcome()
-        let request: [String: Any]
+        let signedRequest: SignedRequest
         do {
-            request = try signed([
+            signedRequest = try signed([
                 JITProtocol.Key.operation: JITProtocol.Operation.enable,
                 JITProtocol.Key.pid: NSNumber(value: getpid()),
                 JITProtocol.Key.pairing: pairing,
             ])
         } catch {
             await LoopbackTunnel.disconnect()
+            wakeLock.release()
             return fail(error.localizedDescription)
         }
         let helper = Task {
             do {
-                outcome.response = try await JITHelperClient.send(request)
+                outcome.response = try await JITHelperClient.send(signedRequest.request)
             } catch {
                 outcome.response = .init(success: false, message: error.localizedDescription)
             }
+            signedRequest.discardToken()
             if let response = outcome.response {
-                DiagnosticsLog.record(response.success ? .info : .warning, .runtime, "JIT helper: \(response.message)")
+                let stage = response.stage.map { " (stage \($0))" } ?? ""
+                DiagnosticsLog.record(response.success ? .info : .warning, .runtime, "JIT helper\(stage): \(response.message)")
             }
             await LoopbackTunnel.disconnect()
+            wakeLock.release()
         }
         // The first attempt after a reboot also downloads and mounts the Developer Disk Image,
         // which can take a few minutes.
@@ -64,7 +93,8 @@ enum BuiltInJIT {
         guard attached else {
             helper.cancel()
             await LoopbackTunnel.disconnect()
-            return fail(outcome.response?.message ?? String(localized: "The debugger did not attach in time."))
+            wakeLock.release()
+            return fail(outcome.response.map { explanation(of: $0) } ?? String(localized: "The debugger did not attach in time."))
         }
         return true
     }
@@ -72,23 +102,63 @@ enum BuiltInJIT {
     /// Removes the cached Developer Disk Image, so the next attempt downloads it again.
     static func resetDiskImage() async -> String? {
         do {
-            let response = try await JITHelperClient.send(try signed([JITProtocol.Key.operation: JITProtocol.Operation.resetDiskImage]))
+            let signedRequest = try signed([JITProtocol.Key.operation: JITProtocol.Operation.resetDiskImage])
+            defer { signedRequest.discardToken() }
+            let response = try await JITHelperClient.send(signedRequest.request)
             return response.success ? nil : response.message
         } catch {
             return error.localizedDescription
         }
     }
 
-    /// Adds a fresh one-time token to `request` and leaves it in the shared container, where only
-    /// Runfern's own helper can read it (see `JITProtocol.appGroup`).
-    private static func signed(_ request: [String: Any]) throws -> [String: Any] {
-        guard let container = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: JITProtocol.appGroup) else {
-            throw JITHelperClient.ClientError.missingHelper
+    /// What a failed answer of the helper means for the person, followed by StikJIT's own message.
+    static func explanation(of response: JITHelperClient.Response) -> String {
+        let meaning: String? = switch response.stage ?? "" {
+        case JITProtocol.Stage.reachability:
+            String(localized: "The iPad's developer services could not be reached through Runfern's VPN. Check that Developer Mode is on and Wi-Fi is connected, and that no other VPN took over.")
+        case JITProtocol.Stage.pairing:
+            String(localized: "This iPad did not accept the pairing file. Create a new one; this is needed after the passcode was changed or removed, or if the file comes from another iPad.")
+        case JITProtocol.Stage.diskImageDownload:
+            String(localized: "The Developer Disk Image could not be downloaded. The first JIT start after restarting the iPad needs the internet.")
+        case JITProtocol.Stage.diskImageMount:
+            String(localized: "The Developer Disk Image could not be mounted. Reset it in Settings › Performance and try again.")
+        case JITProtocol.Stage.debugger:
+            String(localized: "The debugger could not prepare Linux for JIT.")
+        default:
+            nil
         }
+        guard let meaning else { return response.message }
+        return response.message.isEmpty ? meaning : "\(meaning) (\(response.message))"
+    }
+
+    /// StikJIT is embedded where the helper loads it from.
+    private static var hasStikJIT: Bool {
+        guard let url = Bundle.main.privateFrameworksURL?.appending(path: "StikJIT.framework/StikJIT") else { return false }
+        return FileManager.default.fileExists(atPath: url.path(percentEncoded: false))
+    }
+
+    /// A request with a fresh one-time token, and the token's file in the shared container, where
+    /// only Runfern's own helper can read it (see `JITProtocol.appGroup`).
+    private struct SignedRequest {
+        var request: [String: Any]
+        var tokenFile: URL
+
+        /// The helper deletes the token when it reads it; this removes it if the helper never did.
+        func discardToken() {
+            try? FileManager.default.removeItem(at: tokenFile)
+        }
+    }
+
+    private static func signed(_ request: [String: Any]) throws -> SignedRequest {
+        guard let container = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: JITProtocol.appGroup) else {
+            throw JITHelperClient.ClientError.missingAppGroup
+        }
+        let id = UUID()
         let token = SessionToken.generate()
-        try Data(token.utf8).write(to: container.appending(path: JITProtocol.requestTokenFile),
-                                   options: [.atomic, .completeFileProtection])
-        return request.merging([JITProtocol.Key.token: token]) { $1 }
+        let tokenFile = container.appending(path: JITProtocol.requestTokenFile(for: id))
+        try Data(token.utf8).write(to: tokenFile, options: [.atomic, .completeFileProtection])
+        let fields: [String: Any] = [JITProtocol.Key.requestID: id.uuidString, JITProtocol.Key.token: token]
+        return SignedRequest(request: request.merging(fields) { $1 }, tokenFile: tokenFile)
     }
 
     private static func fail(_ message: String) -> Bool {
@@ -99,6 +169,27 @@ enum BuiltInJIT {
     /// The helper's answer, once its request has ended.
     private final class Outcome {
         var response: JITHelperClient.Response?
+    }
+
+    /// Keeps the iPad from locking by itself while held. Holds may overlap; the iPad may lock again
+    /// once the last one is released, as it could before the first.
+    private final class WakeLock {
+        private static var holders = 0
+        private static var wasDisabled = false
+        private var isHeld = true
+
+        init() {
+            if Self.holders == 0 { Self.wasDisabled = UIApplication.shared.isIdleTimerDisabled }
+            Self.holders += 1
+            UIApplication.shared.isIdleTimerDisabled = true
+        }
+
+        func release() {
+            guard isHeld else { return }
+            isHeld = false
+            Self.holders -= 1
+            if Self.holders == 0 { UIApplication.shared.isIdleTimerDisabled = Self.wasDisabled }
+        }
     }
 }
 #endif

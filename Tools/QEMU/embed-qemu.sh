@@ -36,16 +36,10 @@ if [ "${RUNFERN_JIT:-NO}" = "YES" ] && [ "$PLATFORM_NAME" = "iphoneos" ] \
     stikjit="$TARGET_BUILD_DIR/$FRAMEWORKS_FOLDER_PATH/StikJIT.framework"
     rsync -a --delete --exclude Headers --exclude Modules \
         "$SRCROOT/Vendor/JIT/StikJIT.xcframework/ios-arm64/StikJIT.framework/" "$stikjit/"
-    # The release ships without the Info.plist that iPadOS requires of embedded frameworks.
+    # StikJIT ships the Info.plist that iPadOS requires of embedded frameworks since 2.0.1.
     if [ ! -f "$stikjit/Info.plist" ]; then
-        plutil -create xml1 "$stikjit/Info.plist"
-        plutil -insert CFBundleExecutable -string StikJIT "$stikjit/Info.plist"
-        plutil -insert CFBundleIdentifier -string "$PRODUCT_BUNDLE_IDENTIFIER.StikJIT" "$stikjit/Info.plist"
-        plutil -insert CFBundleName -string StikJIT "$stikjit/Info.plist"
-        plutil -insert CFBundlePackageType -string FMWK "$stikjit/Info.plist"
-        plutil -insert CFBundleShortVersionString -string 1.9.0 "$stikjit/Info.plist"
-        plutil -insert CFBundleVersion -string 1 "$stikjit/Info.plist"
-        plutil -insert MinimumOSVersion -string 17.4 "$stikjit/Info.plist"
+        echo "error: Vendor/JIT/StikJIT.xcframework predates StikJIT 2.0.1; run Tools/JIT/build-jit-vendor.sh." >&2
+        exit 1
     fi
     sign "$stikjit"
 fi

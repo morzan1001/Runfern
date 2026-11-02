@@ -3,8 +3,12 @@ Vendor/QEMU/
 # Guest image build output
 Tools/GuestImage/build/
 
-# StikJIT for the built-in JIT (Tools/JIT/build-jit-vendor.sh)
+# StikJIT, idevice, and idevice's tools for the built-in JIT (Tools/JIT)
 Vendor/JIT/
+# Pairing files are secrets
+pairingFile*.plist
+host_pairing_file.plist
+*.mobiledevicepairing
 
 # Local clutter
 .DS_Store

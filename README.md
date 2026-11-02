@@ -17,14 +17,16 @@ and everything works offline. No cloud, no remote server.
 | `Tools/GuestImage/` | Building the Linux base images |
 | `Tools/Catalog/` | Signing the catalog and publishing images |
 | `Tools/Build/` | Building the App Store and the JIT variant |
-| `Tools/JIT/` | Fetching StikJIT for JIT builds |
+| `Tools/JIT/` | Fetching StikJIT and idevice for JIT builds; creating the pairing file on a computer |
 | `Design/` | App icon source |
 
 ## Building
 
 1. Build QEMU and place it in `Vendor/QEMU/` (`Tools/QEMU/README.md`). Without it, the app
    builds with a simulated Linux runtime.
-2. For JIT builds, fetch StikJIT: `Tools/JIT/build-jit-vendor.sh`.
+2. For JIT builds, fetch StikJIT and idevice: `Tools/JIT/build-jit-vendor.sh`. Built-in JIT also
+   needs a pairing file of the iPad, which Runfern creates on iPadOS 27 itself, or
+   `Tools/JIT/create-pairing-file.sh` on a computer (`Tools/QEMU/README.md`, “Built-in JIT”).
 3. Open `Runfern.xcodeproj` and run the `Runfern` scheme, or build a distributable variant:
 
 ```sh
@@ -62,5 +64,6 @@ respective projects, used only to identify the languages.
 
 Runfern's own code is under the MIT License (`LICENSE`). Builds embed third-party components
 that are not part of this repository and keep their licenses: QEMU (GPLv2, including UTM's
-patches), its libraries, and, in JIT builds, StikJIT (MPL-2.0). Distributing the app requires
-meeting their terms, in particular providing QEMU's corresponding source.
+patches), its libraries, and, in JIT builds, StikJIT (MPL-2.0) and idevice (MIT, with the Rust
+crates it links). Distributing the app requires meeting their terms, in particular providing
+QEMU's corresponding source and shipping the license texts.
