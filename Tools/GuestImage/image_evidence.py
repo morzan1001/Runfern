@@ -37,6 +37,7 @@ LICENSE_TEXTS = {
     "Artistic-2.0": "bae466ac8d7100c304fe76632ccc627203a3897d3f7166f3cce00fb9df8c2074",
     "metamail": "a4b1dbdddeccbaad4687f2777ef43222eecf29ba4d9b196b1e46d11a2d57f008",
     "TermReadKey": "2739578644b799505e1f5ca5e63bfafcb0c0da9b3f5a63e9f9f0017947746d0f",
+    "TTWL": "bc2c29906ea52dfa77744560479c1f0fc2218fdc6907b8d98ec08df2b77f5e53",
 }
 RUNFERN_SOURCES = ["LICENSE", "Version.xcconfig", "Tools/GuestImage/build_image.py",
                    "Tools/GuestImage/image_evidence.py", "Tools/GuestImage/extension/extension.js",
