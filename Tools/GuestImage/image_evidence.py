@@ -23,6 +23,16 @@ LICENSE_TEXTS = {
     "MIT": "b05785f9f18e6716bab63424b11454513b9943a222595b70411009202fc592b5",
     "GPL-2.0-or-later": "aaf135472f81c5b4a0dca9367e5bb5e9750032b5bebe5442b36e4c0a47430df3",
     "MPL-2.0": "66a3107d5ad6a058aab753eaac2047ccb2ed0e39465dd0fe5844da3e300d5172",
+    "BSD-2-Clause": "f32fb3b417a194167cfad068223fc975ba96c5960513a10f66a3c28720aec1df",
+    "BSD-3-Clause": "5a93d5831e1297ab10fe643e1a631e83be392896da14ee2951285a79012df69d",
+    "CDDL-1.0": "fde9ef48461569987d09cac803379245dfda04e7751075f39b578a0ce927d470",
+    "Linux-OpenIB": "6503d0418051ea29997c4c4d950386fcc356c9459a73a62d5d67707d04739b92",
+    "GPL-1.0-or-later": "da37ffd5fcdf0a7d76af862a4330ea1076e1443b51782b2f912148357b7acabe",
+    "GPL-2.0-only": "aaf135472f81c5b4a0dca9367e5bb5e9750032b5bebe5442b36e4c0a47430df3",
+    "LGPL-2.0-or-later": "86dc99d7e5060915ab1dfc1378b7dd351c62088bfa74067e8aa1868c6fdba7d8",
+    "LGPL-2.1-only": "5749785c8bdefafcb5d798270ed0a967036fe2ca63dcedade1627565dfef81d2",
+    "LGPL-2.1-or-later": "5749785c8bdefafcb5d798270ed0a967036fe2ca63dcedade1627565dfef81d2",
+    "Linux-syscall-note": "5bcef4fedbfc08776630e65d5d0d074dd31208037eddb167ca46a9ec4f737764",
 }
 RUNFERN_SOURCES = ["LICENSE", "Version.xcconfig", "Tools/GuestImage/build_image.py",
                    "Tools/GuestImage/image_evidence.py", "Tools/GuestImage/extension/extension.js",
@@ -218,6 +228,16 @@ def rpm_source(package, destination):
     return source
 
 
+def license_texts(names, output):
+    require(names and set(names) <= set(LICENSE_TEXTS), "Unreviewed standard license or exception")
+    result = []
+    for name in sorted(names):
+        target = output / "sources/license-texts" / (name + ".txt")
+        fetch(LICENSE_TEXT_URL + name + ".txt", target, LICENSE_TEXTS[name])
+        result.append(target)
+    return result
+
+
 def ca_certificate_notices(package, output):
     identity = package["sourceRPM"]
     require(package["name"] == "ca-certificates" and identity.startswith("ca-certificates-")
@@ -237,10 +257,7 @@ def ca_certificate_notices(package, output):
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(data)
         notices.append(target)
-    for name, expected in LICENSE_TEXTS.items():
-        target = output / "sources/license-texts" / (name + ".txt")
-        fetch(LICENSE_TEXT_URL + name + ".txt", target, expected)
-        notices.append(target)
+    notices.extend(license_texts(("MIT", "GPL-2.0-or-later", "MPL-2.0"), output))
     return notices
 
 
@@ -251,6 +268,19 @@ def source_rpm_notices(package, output):
     destination.mkdir(parents=True, exist_ok=True)
     source = rpm_source(package, destination)
     notices = []
+    headers = identity.startswith("kernel-headers-")
+    header_count = 0
+    if headers:
+        specification = subprocess.check_output(["bsdtar", "-xOf", str(source), "kernel-headers.spec"])
+        declared = re.search(rb"(?m)^License:\s+(.+)$", specification)
+        require(declared and b" ".join(declared[1].split()) == b" ".join(package["license"].encode().split()),
+                "Kernel header source license differs from installed metadata")
+        identifiers = set(re.findall(r"[A-Za-z0-9.+-]+", package["license"])) - {"AND", "OR", "WITH"}
+        notices.extend(license_texts(identifiers, output))
+        target = output / "source-notices" / key / "kernel-headers.spec"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(specification)
+        notices.append(target)
 
     def collect_legal(archive, prefix):
         for member in command("bsdtar", "-tf", str(archive)).splitlines():
@@ -272,6 +302,20 @@ def source_rpm_notices(package, output):
                 with nested.open("wb") as stream:
                     subprocess.run(["bsdtar", "-xOf", str(source), member], stdout=stream, check=True)
                 collect_legal(nested, member + ":")
+                if headers:
+                    target = output / "source-notices" / key / f"original-headers-{index}.txt"
+                    with target.open("wb") as stream, tarfile.open(nested, mode="r|*") as archive:
+                        for header in archive:
+                            if header.isfile() and header.name.endswith(".h"):
+                                with archive.extractfile(header) as original:
+                                    data = original.read()
+                                require(data.strip() and b"\0" not in data,
+                                        f"Unreadable original kernel header: {header.name}")
+                                stream.write(f"\nOriginal source member: {member}:{header.name}\n".encode())
+                                stream.write(data)
+                                header_count += 1
+                    notices.append(target)
+    require(not headers or header_count > 0, "Kernel source archive contains no original header notices")
     public_domain = package.get("license") == "LicenseRef-Fedora-Public-Domain"
     if not notices and (identity.startswith("fedora-repos-") or public_domain):
         require(public_domain or package["license"] == "MIT", "Unreviewed Fedora repository metadata license")
@@ -284,9 +328,7 @@ def source_rpm_notices(package, output):
         target.write_bytes(specification)
         notices.append(target)
         if not public_domain:
-            license_file = output / "sources/license-texts/MIT.txt"
-            fetch(LICENSE_TEXT_URL + "MIT.txt", license_file, LICENSE_TEXTS["MIT"])
-            notices.append(license_file)
+            notices.extend(license_texts(("MIT",), output))
     return notices
 
 
@@ -327,8 +369,13 @@ def copy_notices(package, manager, output, providers):
         target = output / "notices" / key / f"{index:03d}.txt"
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(data)
-        origin = ({"sourceRPM": package["sourceRPM"], "sourceNotice": path.relative_to(output).as_posix()}
-                  if path.is_relative_to(output) else {"installedPath": str(path)})
+        if path.parent == output / "sources/license-texts":
+            require(path.stem in LICENSE_TEXTS, "Unreviewed standard license notice")
+            verify_digest(path, LICENSE_TEXTS[path.stem])
+            origin = {"sourceURL": LICENSE_TEXT_URL + path.name, "sha256": LICENSE_TEXTS[path.stem]}
+        else:
+            origin = ({"sourceRPM": package["sourceRPM"], "sourceNotice": path.relative_to(output).as_posix()}
+                      if path.is_relative_to(output) else {"installedPath": str(path)})
         result.append({"file": target.relative_to(output).as_posix(), **origin})
     return result
 
@@ -402,6 +449,10 @@ def collect(manager, output):
     sources["OpenVSCode Server " + editor["version"]] = {
         "files": source_files(output / "sources/editor"), "url": editor["sourceURL"]}
     sources["Node.js " + node_version] = {"files": source_files(output / "sources/node"), "url": node_base + node_name}
+    if (output / "sources/license-texts").is_dir():
+        sources["SPDX license texts"] = {"files": {f"sources/license-texts/{name}": value for name, value
+                                                  in source_files(output / "sources/license-texts").items()},
+                                        "url": LICENSE_TEXT_URL}
     for identity, prefix in [("OpenVSCode Server " + editor["version"], "editor"), ("Node.js " + node_version, "node")]:
         sources[identity]["files"] = {f"sources/{prefix}/{name}": value
                                      for name, value in sources[identity]["files"].items()}
