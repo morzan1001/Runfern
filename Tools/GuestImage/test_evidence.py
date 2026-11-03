@@ -195,12 +195,16 @@ class ImageEvidenceTests(unittest.TestCase):
                 patch.object(image_evidence.subprocess, "check_output",
                              return_value=b"Mozilla Public\nLicense, v. 2.0\nOriginal copyright notice"), \
                 patch.object(image_evidence, "fetch", side_effect=download) as fetch, \
+                patch.object(image_evidence, "verify_digest"), \
                 patch.object(image_evidence, "command", return_value=""):
             notices = image_evidence.copy_notices(package, "dnf", self.root, {})
         self.assertEqual(len(notices), 7)
-        self.assertTrue(all(notice["sourceRPM"] == package["sourceRPM"] for notice in notices))
+        self.assertEqual(sum(notice.get("sourceRPM") == package["sourceRPM"] for notice in notices), 4)
+        self.assertEqual({notice["sourceURL"] for notice in notices if "sourceURL" in notice},
+                         {image_evidence.LICENSE_TEXT_URL + name + ".txt"
+                          for name in ("MIT", "GPL-2.0-or-later", "MPL-2.0")})
         self.assertEqual({call.args[2] for call in fetch.call_args_list},
-                         set(image_evidence.LICENSE_TEXTS.values()))
+                         {image_evidence.LICENSE_TEXTS[name] for name in ("MIT", "GPL-2.0-or-later", "MPL-2.0")})
         package["license"] = "Unreviewed"
         with self.assertRaisesRegex(ValueError, "Unreviewed"):
             image_evidence.ca_certificate_notices(package, self.root)
@@ -270,6 +274,54 @@ class ImageEvidenceTests(unittest.TestCase):
             notices = image_evidence.source_rpm_notices(package, self.root)
         self.assertEqual(len(notices), 1)
         self.assertEqual(notices[0].read_bytes(), statement)
+
+    def test_kernel_header_notices_preserve_original_copyright_and_source_names(self):
+        package = {"name": "kernel-headers", "sourceRPM": "kernel-headers-7.2.4-200.fc44.src.rpm",
+                   "license": "((GPL-2.0-only WITH Linux-syscall-note) OR BSD-2-Clause) AND BSD-3-Clause "
+                              "AND CDDL-1.0 AND Linux-OpenIB AND GPL-1.0-or-later AND GPL-2.0-or-later "
+                              "AND LGPL-2.0-or-later AND LGPL-2.1-only AND LGPL-2.1-or-later AND MIT"}
+        header = self.root / "original.h"
+        header.write_text("/* SPDX-License-Identifier: GPL-2.0-only WITH Linux-syscall-note\n"
+                          " * Copyright original upstream author */\n")
+        nested = self.root / "headers.tar"
+        image_evidence.write_archive(nested, {"headers/include/uapi.h": header, "headers/asm/other.h": header})
+        def extract(args, stdout, check):
+            self.assertTrue(check)
+            stdout.write(nested.read_bytes())
+        with patch.object(image_evidence, "rpm_source", return_value=self.root / "exact.src.rpm"), \
+                patch.object(image_evidence.subprocess, "check_output",
+                             return_value=("License: " + package["license"] + "\n").encode()), \
+                patch.object(image_evidence, "license_texts", return_value=[]) as licenses, \
+                patch.object(image_evidence.subprocess, "run", side_effect=extract), \
+                patch.object(image_evidence, "command", side_effect=[
+                    "headers.tar.xz", "headers.tar.xz", "headers/include/uapi.h\nheaders/asm/other.h"]):
+            notices = image_evidence.source_rpm_notices(package, self.root)
+        self.assertEqual(licenses.call_args.args[0], set(image_evidence.LICENSE_TEXTS) - {"MPL-2.0"})
+        text = notices[-1].read_text()
+        self.assertIn("headers.tar.xz:headers/include/uapi.h", text)
+        self.assertIn("headers.tar.xz:headers/asm/other.h", text)
+        self.assertEqual(text.count(header.read_text()), 2)
+        with self.assertRaisesRegex(ValueError, "Unreviewed"):
+            image_evidence.license_texts({"Unknown-License"}, self.root)
+
+    def test_kernel_header_source_license_mismatch_blocks_collection(self):
+        package = {"name": "kernel-headers", "sourceRPM": "kernel-headers-7.2.4-200.fc44.src.rpm",
+                   "license": "GPL-2.0-only WITH Linux-syscall-note"}
+        with patch.object(image_evidence, "rpm_source", return_value=self.root / "exact.src.rpm"), \
+                patch.object(image_evidence.subprocess, "check_output", return_value=b"License: MIT\n"):
+            with self.assertRaisesRegex(ValueError, "source license differs"):
+                image_evidence.source_rpm_notices(package, self.root)
+
+    def test_kernel_header_license_texts_alone_do_not_replace_original_notices(self):
+        package = {"name": "kernel-headers", "sourceRPM": "kernel-headers-7.2.4-200.fc44.src.rpm",
+                   "license": "GPL-2.0-only WITH Linux-syscall-note"}
+        with patch.object(image_evidence, "rpm_source", return_value=self.root / "exact.src.rpm"), \
+                patch.object(image_evidence.subprocess, "check_output",
+                             return_value=("License: " + package["license"] + "\n").encode()), \
+                patch.object(image_evidence, "license_texts", return_value=[]), \
+                patch.object(image_evidence, "command", return_value="kernel-headers.spec"):
+            with self.assertRaisesRegex(ValueError, "no original header notices"):
+                image_evidence.source_rpm_notices(package, self.root)
 
     def test_customizer_survives_removing_cloud_init(self):
         config = json.loads(build_image.user_data(build_image.BASES[self.image_id]).split("\n", 1)[1])
