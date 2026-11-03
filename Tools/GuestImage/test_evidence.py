@@ -298,7 +298,7 @@ class ImageEvidenceTests(unittest.TestCase):
                     "headers.tar.xz", "headers.tar.xz", "headers/include/uapi.h\nheaders/asm/other.h"]):
             notices = image_evidence.source_rpm_notices(package, self.root)
         self.assertEqual(licenses.call_args.args[0],
-                         set(image_evidence.LICENSE_TEXTS) - {"MPL-2.0", "Artistic-1.0-Perl"})
+                         set(image_evidence.LICENSE_TEXTS) - {"MPL-2.0", "Artistic-1.0-Perl", "Artistic-2.0"})
         text = notices[-1].read_text()
         self.assertIn("headers.tar.xz:headers/include/uapi.h", text)
         self.assertIn("headers.tar.xz:headers/asm/other.h", text)
@@ -332,19 +332,21 @@ class ImageEvidenceTests(unittest.TestCase):
         module.write_text("=head1 COPYRIGHT\nCopyright original author\n=head1 LICENSE\n"
                           "Redistributable under the same terms as Perl itself.\n")
         nested = self.root / "perl.tar"
-        image_evidence.write_archive(nested, {"Carp/lib/Carp.pm": module, "Carp/README": module})
+        image_evidence.write_archive(nested, {"Carp/lib/Carp.pm": module, "Carp/README": module,
+                                            "Carp/data/table.ucm": module})
         def extract(args, stdout, check):
             stdout.write(nested.read_bytes())
         with patch.object(image_evidence, "rpm_source", return_value=self.root / "exact.src.rpm"), \
                 patch.object(image_evidence.subprocess, "check_output",
-                             return_value=("License: " + package["license"] + "\n").encode()), \
+                             return_value=("License: Artistic-2.0\n%package -n perl-Carp\nLicense: "
+                                           + package["license"] + "\n").encode()), \
                 patch.object(image_evidence, "license_texts", return_value=[]) as licenses, \
                 patch.object(image_evidence.subprocess, "run", side_effect=extract), \
                 patch.object(image_evidence, "command", side_effect=[
                     "Carp.tar.gz", "Carp.tar.gz", "Carp/lib/Carp.pm\nCarp/README"]):
             notices = image_evidence.source_rpm_notices(package, self.root)
         self.assertEqual(licenses.call_args.args[0], {"GPL-1.0-or-later", "Artistic-1.0-Perl"})
-        self.assertEqual(notices[-1].read_text().count(module.read_text()), 2)
+        self.assertEqual(notices[-1].read_text().count(module.read_text()), 3)
         package["license"] = "MIT"
         with patch.object(image_evidence, "rpm_source", return_value=self.root / "exact.src.rpm"), \
                 patch.object(image_evidence.subprocess, "check_output", return_value=b"License: Unknown\n"):
