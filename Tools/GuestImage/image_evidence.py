@@ -7,6 +7,7 @@ import json
 import pathlib
 import re
 import shutil
+import stat
 import subprocess
 import sys
 import tarfile
@@ -237,6 +238,19 @@ def copy_notices(package, manager, output, providers):
             selected = providers.get(package["sourceRPM"], [])
         if not any(path.is_file() for path in selected) and package["name"] == "ca-certificates":
             selected = ca_certificate_notices(package, output)
+        if not any(path.is_file() for path in selected):
+            entries = command("rpm", "-q", "--qf", "[%{FILENAMES}\t%{FILEMODES:octal}\n]",
+                              package["name"]).splitlines()
+            if all(stat.S_ISDIR(int(entry.split("\t")[1], 8)) for entry in entries):
+                package["kind"] = "directory-metadata"
+                target = output / "rpm-metadata" / (package["name"] + ".txt")
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text(f"{package['name']} {package['version']}\n"
+                                  f"RPM license declaration: {package['license']}\n"
+                                  "This package installs only directories or no files; no program or data files.\n"
+                                  f"Exact accompanying source RPM: {package['sourceRPM']}\n")
+                selected = [target]
+                print(f"Recorded directory-only RPM metadata: {package['name']}", flush=True)
     selected = sorted({p for p in selected if p.is_file()})
     require(selected, f"No installed copyright/license document for {package['name']}")
     key = hashlib.sha256((package["name"] + "=" + package["version"]).encode()).hexdigest()[:20]

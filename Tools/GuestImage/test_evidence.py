@@ -212,6 +212,19 @@ class ImageEvidenceTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "no verified distribution signature"):
                 image_evidence.rpm_source({"sourceRPM": source.name}, self.root)
 
+    def test_directory_only_rpm_metadata_does_not_excuse_unlicensed_files(self):
+        package = {"name": "cmake-filesystem", "version": "1", "sourceRPM": "cmake-1.src.rpm",
+                   "license": "BSD-3-Clause"}
+        with patch.object(image_evidence, "command",
+                          side_effect=["", "/usr/share/cmake\t40755"]):
+            notices = image_evidence.copy_notices(package, "dnf", self.root, {})
+        self.assertEqual(package["kind"], "directory-metadata")
+        self.assertEqual(len(notices), 1)
+        with patch.object(image_evidence, "command",
+                          side_effect=["", "/usr/share/cmake/actual-code\t100644"]):
+            with self.assertRaisesRegex(ValueError, "No installed copyright"):
+                image_evidence.copy_notices(package, "dnf", self.root, {})
+
     def test_customizer_survives_removing_cloud_init(self):
         config = json.loads(build_image.user_data(build_image.BASES[self.image_id]).split("\n", 1)[1])
         launcher = config["runcmd"][0][2]
