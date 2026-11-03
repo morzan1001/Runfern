@@ -12,6 +12,7 @@ import subprocess
 import sys
 import tarfile
 import tempfile
+import urllib.parse
 import urllib.request
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
@@ -186,18 +187,34 @@ def source_files(root):
 
 def rpm_source(package, destination):
     identity = package["sourceRPM"]
-    require(identity.endswith(".src.rpm"), f"Source RPM is incomplete: {identity}")
+    require(identity.endswith(".src.rpm") and pathlib.Path(identity).name == identity,
+            f"Source RPM is incomplete: {identity}")
     source = destination / identity
-    if not source.exists():
-        subprocess.run(["dnf", "download", "--srpm", "--enablerepo=fedora-source",
-                        "--enablerepo=updates-source", f"--destdir={destination}",
-                        identity.removesuffix(".rpm")], check=True)
-    require(source.is_file(), f"The exact source RPM was not downloaded: {identity}")
-    signature = command("env", "LC_ALL=C", "rpmkeys", "--checksig", "--verbose", str(source))
-    require(re.search(r"(?mi)^.*\bSignature\b.*:\s+OK\s*$", signature),
-            f"Source RPM has no verified distribution signature: {identity}")
-    require(command("rpm", "-qp", "--qf", "%{NAME}-%{VERSION}-%{RELEASE}.src.rpm", str(source)) == identity,
-            f"Source RPM version differs from installed binary: {identity}")
+    temporary = source.with_name(source.name + ".download")
+    try:
+        checked = source
+        if not source.exists():
+            signature = command("env", "LC_ALL=C", "rpm", "-q", "--qf", "%{RSAHEADER:pgpsig}", package["name"])
+            match = re.search(r"(?i)\bKey ID ([0-9a-f]{8,16})\b", signature)
+            require(match, f"Installed RPM has no distribution signing key: {package['name']}")
+            parts = identity.removesuffix(".src.rpm").rsplit("-", 2)
+            require(len(parts) == 3, f"Invalid source RPM version: {identity}")
+            path = "/".join(urllib.parse.quote(part, safe="") for part in
+                            (*parts, "data", "signed", match[1].lower()[-8:], "src", identity))
+            url = "https://kojipkgs.fedoraproject.org/packages/" + path
+            print(f"Downloading archived distribution-signed source: {identity}", flush=True)
+            with urllib.request.urlopen(url, timeout=120) as response, temporary.open("wb") as stream:
+                shutil.copyfileobj(response, stream)
+            checked = temporary
+        signature = command("env", "LC_ALL=C", "rpmkeys", "--checksig", "--verbose", str(checked))
+        require(re.search(r"(?mi)^.*\bSignature\b.*:\s+OK\s*$", signature),
+                f"Source RPM has no verified distribution signature: {identity}")
+        require(command("rpm", "-qp", "--qf", "%{NAME}-%{VERSION}-%{RELEASE}.src.rpm", str(checked)) == identity,
+                f"Source RPM version differs from installed binary: {identity}")
+        if checked == temporary:
+            temporary.replace(source)
+    finally:
+        temporary.unlink(missing_ok=True)
     return source
 
 

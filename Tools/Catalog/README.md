@@ -23,7 +23,7 @@ submitting its artifact through a PR manually.
 Linux-image releases are named `<id>-v<image version>`. Published images are not replaced.
 The publisher verifies each actual image, not a global clearance flag. Cloud images and the
 editor are immutable, checksum-verified inputs. Installed packages, copyright documents, exact
-Debian source packages or signed Fedora source RPMs, editor/Node sources and Runfern build
+Debian source packages or signed Fedora source RPMs from the Koji archive, editor/Node sources and Runfern build
 inputs are attached to the image release. Missing evidence or a failed boot/editor/toolchain
 smoke test stops publication. Unresolved native app/JIT license findings remain separate.
 Fedora's certificate package lacks standalone RPM license files. Its original notices are

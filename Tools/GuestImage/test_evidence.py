@@ -248,6 +248,18 @@ class ImageEvidenceTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "source license differs"):
                 image_evidence.source_rpm_notices(package, self.root)
 
+    def test_source_archive_uses_installed_signing_key_and_verifies_before_caching(self):
+        package = {"name": "crun", "sourceRPM": "crun-1.28-1.fc44.src.rpm"}
+        with patch.object(image_evidence, "command", side_effect=[
+                "RSA/SHA256, Key ID dbfcf71c6d9f90a6", "RSA Signature: OK", package["sourceRPM"]]), \
+                patch.object(image_evidence.urllib.request, "urlopen", return_value=io.BytesIO(b"source")) as fetch:
+            source = image_evidence.rpm_source(package, self.root)
+        self.assertEqual(source.read_bytes(), b"source")
+        self.assertEqual(fetch.call_args.args[0],
+                         "https://kojipkgs.fedoraproject.org/packages/crun/1.28/1.fc44/"
+                         "data/signed/6d9f90a6/src/crun-1.28-1.fc44.src.rpm")
+        self.assertFalse(source.with_name(source.name + ".download").exists())
+
     def test_customizer_survives_removing_cloud_init(self):
         config = json.loads(build_image.user_data(build_image.BASES[self.image_id]).split("\n", 1)[1])
         launcher = config["runcmd"][0][2]

@@ -93,7 +93,7 @@ FLAVORS = {
     "dnf": {
         "packages": COMMON_TOOLS + ["gcc", "gcc-c++", "make", "openssh-clients", "xz", "procps-ng", "pkgconf", "tzdata",
                                     "libicu", "libcurl-devel", "libxml2-devel", "ncurses-devel", "sqlite-devel",
-                                    "zlib-devel", "python3-devel", "libedit", "dracut", "dnf5-plugins", "bsdtar"],
+                                    "zlib-devel", "python3-devel", "libedit", "dracut", "bsdtar"],
         "install_packages": "dnf -y install --setopt=install_weak_deps=False {packages}",
         "install_kernel": "dnf -y install --setopt=install_weak_deps=False {kernel}",
         "quiet": "systemctl disable --now dnf-makecache.timer || true",
