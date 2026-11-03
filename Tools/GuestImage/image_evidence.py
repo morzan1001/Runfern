@@ -299,6 +299,15 @@ def source_rpm_notices(package, output):
     destination.mkdir(parents=True, exist_ok=True)
     source = rpm_source(package, destination)
     notices = []
+    if identity.removesuffix(".src.rpm").rsplit("-", 2)[0] == "shim":
+        macros = subprocess.check_output(["bsdtar", "-xOf", str(source), "shim.rpmmacros"])
+        version = re.findall(rb"(?m)^%global shimveraa64\s+(\S+)\s*$", macros)
+        name = re.findall(rb"(?m)^%global unsignedaa64\s+(\S+)\s*$", macros)
+        require(len(version) == len(name) == 1 and name[0] == b"shim-unsigned-aarch64",
+                "Unreviewed signed shim source mapping")
+        corresponding = (name[0] + b"-" + version[0] + b".src.rpm").decode()
+        source = rpm_source({**package, "sourceRPM": corresponding}, destination)
+        package["correspondingSourceRPM"] = corresponding
     headers = identity.startswith("kernel-headers-")
     perl = identity.startswith("perl-")
     header_count = 0
@@ -394,6 +403,8 @@ def copy_notices(package, manager, output, providers):
     else:
         paths = command("rpm", "-q", "--licensefiles", package["name"]).splitlines()
         selected = [pathlib.Path(p) for p in paths]
+        if package["sourceRPM"].removesuffix(".src.rpm").rsplit("-", 2)[0] == "shim":
+            selected.extend(source_rpm_notices(package, output))
         if not any(path.is_file() for path in selected):
             selected = providers.get(package["sourceRPM"], [])
         if not any(path.is_file() for path in selected) and package["name"] == "ca-certificates":
@@ -428,7 +439,8 @@ def copy_notices(package, manager, output, providers):
             verify_digest(path, LICENSE_TEXTS[path.stem])
             origin = {"sourceURL": LICENSE_TEXT_URL + path.name, "sha256": LICENSE_TEXTS[path.stem]}
         else:
-            origin = ({"sourceRPM": package["sourceRPM"], "sourceNotice": path.relative_to(output).as_posix()}
+            origin = ({"sourceRPM": package.get("correspondingSourceRPM", package["sourceRPM"]),
+                       "sourceNotice": path.relative_to(output).as_posix()}
                       if path.is_relative_to(output) else {"installedPath": str(path)})
         result.append({"file": target.relative_to(output).as_posix(), **origin})
     return result
@@ -622,6 +634,11 @@ def verify(build, image_id, publication=False):
             continue
         require(package["sourceIdentity"] in inventory["sources"] and package["notices"],
                 f"Package has no exact source or notices: {package['name']}")
+        if package.get("correspondingSourceRPM"):
+            files = inventory["sources"][package["sourceIdentity"]]["files"]
+            matches = [path for path in files if path.endswith("/" + package["correspondingSourceRPM"])]
+            require(len(matches) == 1 and manifest["sourceEntries"].get(matches[0], {}).get("sha256") == files[matches[0]],
+                    f"Missing actual compiled source behind signed binary: {package['name']}")
         for notice in package["notices"]:
             require(notice["file"] in inventory["files"], f"Unpinned notice for {package['name']}")
     require(all(inventory["editor"].get(k) == v for k, v in manifest["editor"].items()),
