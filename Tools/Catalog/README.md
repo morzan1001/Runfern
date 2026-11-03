@@ -33,6 +33,7 @@ MIT, GPLv2 and MPL 2.0 texts; the distribution's license label does not replace 
 Other missing RPM notices are recovered from original legal files in verified source packages;
 directory-only packages retain their RPM license declaration and exact source identity.
 Public-domain packages retain the exact signed-source declaration rather than invented license texts.
+Noncopyrightable configuration packages likewise retain their original declarations and files.
 Exported kernel headers retain their original copyright/SPDX notices, complete declared license
 texts and the Linux syscall exception. Standard supplements record their immutable SPDX source.
 Perl modules also retain embedded text-source copyright notices and complete declared license texts,
