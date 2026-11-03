@@ -240,6 +240,14 @@ class ImageEvidenceTests(unittest.TestCase):
         self.assertEqual(len(notices), 1)
         self.assertEqual(notices[0].read_bytes(), b"Original license text")
 
+    def test_repository_metadata_supplement_requires_matching_source_license(self):
+        package = {"name": "fedora-gpg-keys", "sourceRPM": "fedora-repos-44-2.src.rpm", "license": "MIT"}
+        with patch.object(image_evidence, "rpm_source", return_value=self.root / "exact.src.rpm"), \
+                patch.object(image_evidence, "command", return_value="fedora-repos.spec"), \
+                patch.object(image_evidence.subprocess, "check_output", return_value=b"License: Unknown\n"):
+            with self.assertRaisesRegex(ValueError, "source license differs"):
+                image_evidence.source_rpm_notices(package, self.root)
+
     def test_customizer_survives_removing_cloud_init(self):
         config = json.loads(build_image.user_data(build_image.BASES[self.image_id]).split("\n", 1)[1])
         launcher = config["runcmd"][0][2]

@@ -255,6 +255,17 @@ def source_rpm_notices(package, output):
                 with nested.open("wb") as stream:
                     subprocess.run(["bsdtar", "-xOf", str(source), member], stdout=stream, check=True)
                 collect_legal(nested, member + ":")
+    if not notices and identity.startswith("fedora-repos-"):
+        require(package["license"] == "MIT", "Unreviewed Fedora repository metadata license")
+        specification = subprocess.check_output(["bsdtar", "-xOf", str(source), "fedora-repos.spec"])
+        require(re.search(rb"(?m)^License:\s+MIT\s*$", specification),
+                "Fedora repository source license differs from installed metadata")
+        target = output / "source-notices" / key / "fedora-repos.spec"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(specification)
+        license_file = output / "sources/license-texts/MIT.txt"
+        fetch(LICENSE_TEXT_URL + "MIT.txt", license_file, LICENSE_TEXTS["MIT"])
+        notices.extend([target, license_file])
     return notices
 
 
