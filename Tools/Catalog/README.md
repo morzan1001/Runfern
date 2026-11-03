@@ -35,7 +35,8 @@ directory-only packages retain their RPM license declaration and exact source id
 Public-domain packages retain the exact signed-source declaration rather than invented license texts.
 Exported kernel headers retain their original copyright/SPDX notices, complete declared license
 texts and the Linux syscall exception. Standard supplements record their immutable SPDX source.
-Perl modules also retain embedded POD/README copyright notices and complete declared license texts.
+Perl modules also retain embedded text-source copyright notices and complete declared license texts,
+including encoding-table terms. Binary subpackage declarations must match the signed source spec.
 Rebuilding an already published base requires the explicit `rebuild` option; the catalog keeps
 only its newest build, so an older environment cannot download its base again.
 
