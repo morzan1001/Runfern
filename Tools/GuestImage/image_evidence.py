@@ -35,6 +35,7 @@ LICENSE_TEXTS = {
     "Linux-syscall-note": "5bcef4fedbfc08776630e65d5d0d074dd31208037eddb167ca46a9ec4f737764",
     "Artistic-1.0-Perl": "9e18ef4d50faba562e3efa37d8961d6e9956d1c103bfc4fc1caeb07e8effe885",
     "Artistic-2.0": "bae466ac8d7100c304fe76632ccc627203a3897d3f7166f3cce00fb9df8c2074",
+    "metamail": "a4b1dbdddeccbaad4687f2777ef43222eecf29ba4d9b196b1e46d11a2d57f008",
 }
 RUNFERN_SOURCES = ["LICENSE", "Version.xcconfig", "Tools/GuestImage/build_image.py",
                    "Tools/GuestImage/image_evidence.py", "Tools/GuestImage/extension/extension.js",

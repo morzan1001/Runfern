@@ -36,7 +36,8 @@ Public-domain packages retain the exact signed-source declaration rather than in
 Exported kernel headers retain their original copyright/SPDX notices, complete declared license
 texts and the Linux syscall exception. Standard supplements record their immutable SPDX source.
 Perl modules also retain embedded text-source copyright notices and complete declared license texts,
-including encoding-table terms. Binary subpackage declarations must match the signed source spec.
+including encoding-table and embedded metamail terms. Binary subpackage declarations must match
+the signed source spec.
 Source transfers retry temporary transport failures with bounded HTTPS-only requests; checksums
 and RPM signatures are verified only after complete transfers. Partial files never enter the cache.
 Rebuilding an already published base requires the explicit `rebuild` option; the catalog keeps
