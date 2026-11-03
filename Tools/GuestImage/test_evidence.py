@@ -130,7 +130,7 @@ class ImageEvidenceTests(unittest.TestCase):
         self.assertEqual(fields["Version"], "5.3.28+dfsg2-7")
 
     def test_slimming_preserves_essential_boot_chain_and_selected_kernel(self):
-        packages = [{"name": name, "version": "1"} for name in
+        packages = [{"name": name, "version": "1", "source": "linux", "sourceVersion": "1"} for name in
                     ("grub-common", "grub-efi-arm64-signed", "linux-image-6.1-arm64",
                      "linux-image-6.1-cloud-arm64", "cloud-init", "git")]
         with patch.object(image_evidence, "apt_packages", return_value=packages), \
@@ -147,6 +147,25 @@ class ImageEvidenceTests(unittest.TestCase):
         preseed = next(call for call in run.call_args_list if call.args[0] == ["debconf-set-selections"])
         self.assertEqual(preseed.kwargs["input"],
                          "linux-image-6.1-cloud-arm64 linux-image-6.1-cloud-arm64/prerm/removing-running-kernel boolean false\n")
+
+    def test_slimming_removes_only_obsolete_kernel_development_packages(self):
+        packages = [{"name": name, "version": version, "source": "linux", "sourceVersion": version}
+                    for name, version in (
+                        ("linux-image-7.0.0-42-generic", "42"),
+                        ("linux-modules-7.0.0-42-generic", "42"),
+                        ("linux-headers-7.0.0-42", "42"),
+                        ("linux-headers-7.0.0-42-generic", "42"),
+                        ("linux-headers-7.0.0-38", "38"),
+                        ("linux-headers-7.0.0-38-generic", "38"),
+                        ("linux-tools-7.0.0-38-generic", "38"),
+                        ("linux-libc-dev", "42"))]
+        with patch.object(image_evidence, "apt_packages", return_value=packages), \
+                patch.object(image_evidence.subprocess, "run") as run, \
+                patch.object(image_evidence, "command", return_value="7.0.0-38-generic"), \
+                patch.object(pathlib.Path, "is_dir", return_value=True):
+            image_evidence.slim("apt", "7.0.0-42-generic")
+        self.assertEqual(run.call_args.args[0][5:], [
+            "linux-headers-7.0.0-38", "linux-headers-7.0.0-38-generic", "linux-tools-7.0.0-38-generic"])
 
     def test_customizer_survives_removing_cloud_init(self):
         config = json.loads(build_image.user_data(build_image.BASES[self.image_id]).split("\n", 1)[1])

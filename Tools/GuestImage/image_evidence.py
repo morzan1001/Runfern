@@ -92,11 +92,17 @@ def slim(manager, kernel):
                  "snapd", "fwupd", "ubuntu-advantage-tools", "ubuntu-pro-client", "ubuntu-pro-client-l10n",
                  "openssh-server"}
     packages = apt_packages() if manager == "apt" else rpm_packages()
+    kernel_sources = {(package["source"], package["sourceVersion"]) for package in packages
+                      if manager == "apt"
+                      and package["name"].startswith(("linux-image-", "linux-modules-"))
+                      and package["name"].endswith(kernel)}
     remove = []
     for package in packages:
         name = package["name"].split(":")[0]
         old_kernel = (manager == "apt" and re.match(r"linux-(image|modules)(-extra)?-[0-9]", name)
                       and not name.endswith(kernel))
+        if manager == "apt" and re.match(r"linux-(headers|tools|cloud-tools)-[0-9]", name):
+            old_kernel = (package["source"], package["sourceVersion"]) not in kernel_sources
         if manager == "dnf" and name in {"kernel", "kernel-core", "kernel-modules", "kernel-modules-core"}:
             old_kernel = package["version"].split(":", 1)[-1] + "." + package["architecture"] != kernel
         if name in boot_only or name == "linux-image-cloud-arm64" or fnmatch.fnmatch(name, "*firmware*") or old_kernel:
