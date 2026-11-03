@@ -1,7 +1,7 @@
 # Runfern
 
 Linux and a VS Code-based editor on your iPad. Runfern runs an ARM64 Linux VM locally,
-opens code-server in the app, and keeps projects in local folders. Choose tools and editor
+opens OpenVSCode Server in the app, and keeps projects in local folders. Choose tools and editor
 extensions per project, or reuse a preset.
 
 <p>

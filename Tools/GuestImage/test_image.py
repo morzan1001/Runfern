@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Checks a built Linux base on the Mac before it is published.
+"""Checks a built Linux base on macOS or Linux before it is published.
 
 Boots Tools/GuestImage/build/<id>/bundle in a hardware-accelerated VM the way the app does
 (direct kernel boot, agent on a virtio serial port, packages over 9p), then:
@@ -20,10 +20,12 @@ import sys
 import tempfile
 import time
 import urllib.request
+import build_image
+import image_evidence
 
 HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
-CACHE = HERE / "build" / "packages"
+CACHE = build_image.build_root() / "packages"
 
 
 class Agent:
@@ -70,6 +72,7 @@ def fetch_verified(package):
         if hashlib.sha256(data).hexdigest() != package["sha256"]:
             sys.exit(f"checksum mismatch for {package['url']}")
         target.write_bytes(data)
+    image_evidence.verify_digest(target, package["sha256"])
     return name
 
 
@@ -78,11 +81,17 @@ def main():
         sys.exit(__doc__)
     image_id = sys.argv[1]
     wanted = sys.argv[2:] or ["python-3", "nodejs-24", "rust", "zig"]
-    bundle = HERE / "build" / image_id / "bundle"
+    build = build_image.build_root() / image_id
+    evidence = image_evidence.verify(build, image_id)
+    bundle = build / "bundle"
+    for name, expected in evidence["bundleFiles"].items():
+        image_evidence.verify_digest(bundle / name, expected)
     manifest = json.loads((bundle / "image.json").read_text())
     catalog = json.loads((ROOT / "Catalog/catalog.json").read_text())
     image = next(i for i in catalog["baseImages"] if i["id"] == image_id)
     toolchains = [t for t in catalog["toolchains"] if t["id"] in wanted and t["id"] in image["supportedToolchains"]]
+    if set(wanted) != {toolchain["id"] for toolchain in toolchains}:
+        sys.exit(f"Unknown or unsupported requested toolchains: {wanted}")
 
     work = pathlib.Path(tempfile.mkdtemp(prefix="runfern-test-"))
     packages = work / "packages"
@@ -97,9 +106,10 @@ def main():
     subprocess.run(["qemu-img", "create", "-q", "-f", "qcow2", "-F", "qcow2", "-b", bundle / "disk.qcow2", overlay], check=True)
     port = 28000 + secrets.randbelow(1000)
     agent_socket = work / "agent.sock"
+    accel = build_image.accelerator()
     qemu = subprocess.Popen([
         "qemu-system-aarch64", "-nodefaults", "-no-user-config", "-display", "none", "-machine", "virt",
-        "-accel", "hvf", "-cpu", "host", "-smp", "4", "-m", "3072",
+        *map(str, build_image.vm_cpu_arguments(accel)), "-m", "3072",
         "-kernel", bundle / "vmlinuz", "-initrd", bundle / "initrd.img", "-append", manifest["kernelCommandLine"],
         "-drive", f"if=none,id=d0,file={overlay},format=qcow2", "-device", "virtio-blk-pci,drive=d0",
         "-netdev", f"user,id=net0,hostfwd=tcp:127.0.0.1:{port}-:8080", "-device", "virtio-net-pci,netdev=net0,romfile=",
@@ -123,6 +133,8 @@ def main():
             if time.time() - start > 300:
                 raise RuntimeError("the agent did not answer")
         step(f"agent answered after {time.time() - start:.0f} s: {reply['payload']}")
+        if not reply["ok"]:
+            raise RuntimeError(f"agent rejected handshake: {reply}")
         for toolchain in toolchains:
             command = {"installToolchain": {
                 "id": toolchain["id"], "revision": toolchain["revision"],
@@ -137,23 +149,29 @@ def main():
             raise RuntimeError("the editor did not start")
         # The editor trades the token for a cookie and redirects; the cookie has to come along.
         opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor())
-        status = opener.open(f"http://127.0.0.1:{port}/?tkn={token}", timeout=60).status
+        with opener.open(f"http://127.0.0.1:{port}/?tkn={token}", timeout=60) as response:
+            status = response.status
+            editor_page = response.read().decode()
         step(f"editor HTTP status {status}")
-        if status != 200:
-            raise RuntimeError("the editor did not answer")
+        if status != 200 or "vscode-workbench-web-configuration" not in editor_page:
+            raise RuntimeError("the authenticated editor workbench did not answer")
         agent.call({"shutdown": {}}, 60)
         qemu.wait(timeout=120)
+        evidence["smokeTest"] = {"kernelVersion": manifest["kernelVersion"],
+                                 "toolchains": wanted, "editorHTTPStatus": status}
+        image_evidence.write_json(build / f"{image_id}.evidence.json", evidence)
         step(f"PASSED {image_id} ({manifest['kernelVersion']})")
     except Exception as error:
         failed = error
     finally:
         if qemu.poll() is None:
             qemu.kill()
+        qemu.wait()
         if failed:
             console = work / "console.log"
             print(console.read_text(errors="replace")[-3000:] if console.exists() else "(no console output)")
             sys.exit(f"FAILED {image_id}: {failed!r}; files kept in {work}")
-        shutil.rmtree(work, ignore_errors=True)
+        shutil.rmtree(work)
 
 
 if __name__ == "__main__":
