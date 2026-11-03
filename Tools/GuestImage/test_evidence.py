@@ -185,6 +185,33 @@ class ImageEvidenceTests(unittest.TestCase):
                 self.assertIn("kernel-core-" + old + ".aarch64", removal)
                 self.assertNotIn("kernel-core-" + selected + ".aarch64", removal)
 
+    def test_certificate_notices_include_exact_sources_and_pinned_license_texts(self):
+        package = {"name": "ca-certificates", "version": "1", "sourceRPM": "ca-certificates-1.src.rpm",
+                   "license": "MIT AND GPL-2.0-or-later"}
+        def download(url, target, checksum):
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text("Pinned standard license text")
+        with patch.object(image_evidence, "rpm_source", return_value=self.root / "source.src.rpm"), \
+                patch.object(image_evidence.subprocess, "check_output",
+                             return_value=b"Mozilla Public\nLicense, v. 2.0\nOriginal copyright notice"), \
+                patch.object(image_evidence, "fetch", side_effect=download) as fetch, \
+                patch.object(image_evidence, "command", return_value=""):
+            notices = image_evidence.copy_notices(package, "dnf", self.root, {})
+        self.assertEqual(len(notices), 7)
+        self.assertTrue(all(notice["sourceRPM"] == package["sourceRPM"] for notice in notices))
+        self.assertEqual({call.args[2] for call in fetch.call_args_list},
+                         set(image_evidence.LICENSE_TEXTS.values()))
+        package["license"] = "Unreviewed"
+        with self.assertRaisesRegex(ValueError, "Unreviewed"):
+            image_evidence.ca_certificate_notices(package, self.root)
+
+    def test_rpm_digest_success_without_signature_is_not_source_verification(self):
+        source = self.root / "fixture-1.src.rpm"
+        source.write_bytes(b"fixture")
+        with patch.object(image_evidence, "command", return_value="digests OK"):
+            with self.assertRaisesRegex(ValueError, "no verified distribution signature"):
+                image_evidence.rpm_source({"sourceRPM": source.name}, self.root)
+
     def test_customizer_survives_removing_cloud_init(self):
         config = json.loads(build_image.user_data(build_image.BASES[self.image_id]).split("\n", 1)[1])
         launcher = config["runcmd"][0][2]

@@ -26,6 +26,9 @@ editor are immutable, checksum-verified inputs. Installed packages, copyright do
 Debian source packages or signed Fedora source RPMs, editor/Node sources and Runfern build
 inputs are attached to the image release. Missing evidence or a failed boot/editor/toolchain
 smoke test stops publication. Unresolved native app/JIT license findings remain separate.
+Fedora's certificate package lacks standalone RPM license files. Its original notices are
+collected from the exact, signature-verified source RPM, alongside checksum-pinned standard
+MIT, GPLv2 and MPL 2.0 texts; the distribution's license label does not replace source notices.
 Rebuilding an already published base requires the explicit `rebuild` option; the catalog keeps
 only its newest build, so an older environment cannot download its base again.
 
