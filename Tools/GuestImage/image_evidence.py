@@ -13,7 +13,6 @@ import sys
 import tarfile
 import tempfile
 import urllib.parse
-import urllib.request
 import zipfile
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
@@ -75,6 +74,17 @@ def safe_path(name):
     return name
 
 
+def download(url, target):
+    require(url.startswith("https://"), f"Source download must use HTTPS: {url}")
+    target = pathlib.Path(target)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    subprocess.run(["curl", "--fail", "--location", "--show-error", "--silent",
+                    "--retry", "3", "--retry-all-errors", "--retry-max-time", "1200",
+                    "--connect-timeout", "30", "--max-time", "900",
+                    "--proto", "=https", "--proto-redir", "=https",
+                    "--output", str(target), url], check=True)
+
+
 def fetch(url, target, expected):
     require(url.startswith("https://"), f"Source download must use HTTPS: {url}")
     target = pathlib.Path(target)
@@ -82,8 +92,7 @@ def fetch(url, target, expected):
     if not target.exists():
         temporary = target.with_name(target.name + ".download")
         try:
-            with urllib.request.urlopen(url, timeout=120) as response, temporary.open("wb") as output:
-                shutil.copyfileobj(response, output)
+            download(url, temporary)
             verify_digest(temporary, expected)
             temporary.replace(target)
         finally:
@@ -216,8 +225,7 @@ def rpm_source(package, destination):
                             (*parts, "data", "signed", match[1].lower()[-8:], "src", identity))
             url = "https://kojipkgs.fedoraproject.org/packages/" + path
             print(f"Downloading archived distribution-signed source: {identity}", flush=True)
-            with urllib.request.urlopen(url, timeout=120) as response, temporary.open("wb") as stream:
-                shutil.copyfileobj(response, stream)
+            download(url, temporary)
             checked = temporary
         signature = command("env", "LC_ALL=C", "rpmkeys", "--checksig", "--verbose", str(checked))
         require(re.search(r"(?mi)^.*\bSignature\b.*:\s+OK\s*$", signature),
@@ -465,7 +473,9 @@ def collect(manager, output):
     fetch(editor["sourceURL"], editor_source, editor["sourceSHA256"])
     node_name = f"node-{node_version}.tar.xz"
     node_base = f"https://nodejs.org/dist/{node_version}/"
-    checksums = urllib.request.urlopen(node_base + "SHASUMS256.txt", timeout=120).read().decode()
+    checksum_file = output / "sources/node/SHASUMS256.txt"
+    download(node_base + checksum_file.name, checksum_file)
+    checksums = checksum_file.read_text()
     matches = [fields[0] for line in checksums.splitlines()
                if len(fields := line.split()) == 2 and fields[1] == node_name]
     require(len(matches) == 1, f"No unique checksum for embedded Node source: {node_version}")
