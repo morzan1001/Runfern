@@ -130,7 +130,7 @@ class ImageEvidenceTests(unittest.TestCase):
         self.assertEqual(fields["Version"], "5.3.28+dfsg2-7")
 
     def test_slimming_preserves_essential_boot_chain_and_selected_kernel(self):
-        packages = [{"name": name, "version": "1"} for name in
+        packages = [{"name": name, "version": "1", "source": "linux", "sourceVersion": "1"} for name in
                     ("grub-common", "grub-efi-arm64-signed", "linux-image-6.1-arm64",
                      "linux-image-6.1-cloud-arm64", "cloud-init", "git")]
         with patch.object(image_evidence, "apt_packages", return_value=packages), \
@@ -147,6 +147,118 @@ class ImageEvidenceTests(unittest.TestCase):
         preseed = next(call for call in run.call_args_list if call.args[0] == ["debconf-set-selections"])
         self.assertEqual(preseed.kwargs["input"],
                          "linux-image-6.1-cloud-arm64 linux-image-6.1-cloud-arm64/prerm/removing-running-kernel boolean false\n")
+
+    def test_slimming_removes_only_obsolete_kernel_development_packages(self):
+        packages = [{"name": name, "version": version, "source": "linux", "sourceVersion": version}
+                    for name, version in (
+                        ("linux-image-7.0.0-42-generic", "42"),
+                        ("linux-modules-7.0.0-42-generic", "42"),
+                        ("linux-headers-7.0.0-42", "42"),
+                        ("linux-headers-7.0.0-42-generic", "42"),
+                        ("linux-headers-7.0.0-38", "38"),
+                        ("linux-headers-7.0.0-38-generic", "38"),
+                        ("linux-tools-7.0.0-38-generic", "38"),
+                        ("linux-libc-dev", "42"))]
+        with patch.object(image_evidence, "apt_packages", return_value=packages), \
+                patch.object(image_evidence.subprocess, "run") as run, \
+                patch.object(image_evidence, "command", return_value="7.0.0-38-generic"), \
+                patch.object(pathlib.Path, "is_dir", return_value=True):
+            image_evidence.slim("apt", "7.0.0-42-generic")
+        self.assertEqual(run.call_args.args[0][5:], [
+            "linux-headers-7.0.0-38", "linux-headers-7.0.0-38-generic", "linux-tools-7.0.0-38-generic"])
+
+    def test_fedora_running_kernel_exception_is_limited_to_superseded_build_kernel(self):
+        old = "6.19.10-300.fc44"
+        selected = "6.19.13-300.fc44"
+        packages = [{"name": name, "version": "0:" + version, "architecture": "aarch64"}
+                    for name, version in (("kernel-core", old), ("kernel-modules-core", old),
+                                          ("kernel-core", selected), ("kernel-modules-core", selected))]
+        for running in (old, selected):
+            with self.subTest(running=running), \
+                    patch.object(image_evidence, "rpm_packages", return_value=packages), \
+                    patch.object(image_evidence.subprocess, "run") as run, \
+                    patch.object(image_evidence, "command", return_value=running + ".aarch64"), \
+                    patch.object(pathlib.Path, "is_dir", return_value=True):
+                image_evidence.slim("dnf", selected + ".aarch64")
+                removal = run.call_args.args[0]
+                self.assertEqual("--setopt=protect_running_kernel=False" in removal, running == old)
+                self.assertIn("kernel-core-" + old + ".aarch64", removal)
+                self.assertNotIn("kernel-core-" + selected + ".aarch64", removal)
+
+    def test_certificate_notices_include_exact_sources_and_pinned_license_texts(self):
+        package = {"name": "ca-certificates", "version": "1", "sourceRPM": "ca-certificates-1.src.rpm",
+                   "license": "MIT AND GPL-2.0-or-later"}
+        def download(url, target, checksum):
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text("Pinned standard license text")
+        with patch.object(image_evidence, "rpm_source", return_value=self.root / "source.src.rpm"), \
+                patch.object(image_evidence.subprocess, "check_output",
+                             return_value=b"Mozilla Public\nLicense, v. 2.0\nOriginal copyright notice"), \
+                patch.object(image_evidence, "fetch", side_effect=download) as fetch, \
+                patch.object(image_evidence, "command", return_value=""):
+            notices = image_evidence.copy_notices(package, "dnf", self.root, {})
+        self.assertEqual(len(notices), 7)
+        self.assertTrue(all(notice["sourceRPM"] == package["sourceRPM"] for notice in notices))
+        self.assertEqual({call.args[2] for call in fetch.call_args_list},
+                         set(image_evidence.LICENSE_TEXTS.values()))
+        package["license"] = "Unreviewed"
+        with self.assertRaisesRegex(ValueError, "Unreviewed"):
+            image_evidence.ca_certificate_notices(package, self.root)
+
+    def test_rpm_digest_success_without_signature_is_not_source_verification(self):
+        source = self.root / "fixture-1.src.rpm"
+        source.write_bytes(b"fixture")
+        with patch.object(image_evidence, "command", return_value="digests OK"):
+            with self.assertRaisesRegex(ValueError, "no verified distribution signature"):
+                image_evidence.rpm_source({"sourceRPM": source.name}, self.root)
+
+    def test_directory_only_rpm_metadata_does_not_excuse_unlicensed_files(self):
+        package = {"name": "cmake-filesystem", "version": "1", "sourceRPM": "cmake-1.src.rpm",
+                   "license": "BSD-3-Clause"}
+        with patch.object(image_evidence, "command",
+                          side_effect=["", "/usr/share/cmake\t40755"]):
+            notices = image_evidence.copy_notices(package, "dnf", self.root, {})
+        self.assertEqual(package["kind"], "directory-metadata")
+        self.assertEqual(len(notices), 1)
+        with patch.object(image_evidence, "command",
+                          side_effect=["", "/usr/share/cmake/actual-code\t100644"]), \
+                patch.object(image_evidence, "source_rpm_notices", return_value=[]):
+            with self.assertRaisesRegex(ValueError, "No installed copyright"):
+                image_evidence.copy_notices(package, "dnf", self.root, {})
+
+    def test_missing_binary_notices_are_collected_from_verified_exact_sources(self):
+        package = {"name": "container-selinux", "sourceRPM": "container-selinux-1.src.rpm"}
+        def extract(args, stdout, check):
+            self.assertTrue(check)
+            stdout.write(b"nested source archive fixture")
+        with patch.object(image_evidence, "rpm_source", return_value=self.root / "exact.src.rpm"), \
+                patch.object(image_evidence, "command",
+                             side_effect=["source.tar.gz", "source.tar.gz", "upstream/LICENSE"]), \
+                patch.object(image_evidence.subprocess, "run", side_effect=extract), \
+                patch.object(image_evidence.subprocess, "check_output", return_value=b"Original license text"):
+            notices = image_evidence.source_rpm_notices(package, self.root)
+        self.assertEqual(len(notices), 1)
+        self.assertEqual(notices[0].read_bytes(), b"Original license text")
+
+    def test_repository_metadata_supplement_requires_matching_source_license(self):
+        package = {"name": "fedora-gpg-keys", "sourceRPM": "fedora-repos-44-2.src.rpm", "license": "MIT"}
+        with patch.object(image_evidence, "rpm_source", return_value=self.root / "exact.src.rpm"), \
+                patch.object(image_evidence, "command", return_value="fedora-repos.spec"), \
+                patch.object(image_evidence.subprocess, "check_output", return_value=b"License: Unknown\n"):
+            with self.assertRaisesRegex(ValueError, "source license differs"):
+                image_evidence.source_rpm_notices(package, self.root)
+
+    def test_source_archive_uses_installed_signing_key_and_verifies_before_caching(self):
+        package = {"name": "crun", "sourceRPM": "crun-1.28-1.fc44.src.rpm"}
+        with patch.object(image_evidence, "command", side_effect=[
+                "RSA/SHA256, Key ID dbfcf71c6d9f90a6", "RSA Signature: OK", package["sourceRPM"]]), \
+                patch.object(image_evidence.urllib.request, "urlopen", return_value=io.BytesIO(b"source")) as fetch:
+            source = image_evidence.rpm_source(package, self.root)
+        self.assertEqual(source.read_bytes(), b"source")
+        self.assertEqual(fetch.call_args.args[0],
+                         "https://kojipkgs.fedoraproject.org/packages/crun/1.28/1.fc44/"
+                         "data/signed/6d9f90a6/src/crun-1.28-1.fc44.src.rpm")
+        self.assertFalse(source.with_name(source.name + ".download").exists())
 
     def test_customizer_survives_removing_cloud_init(self):
         config = json.loads(build_image.user_data(build_image.BASES[self.image_id]).split("\n", 1)[1])

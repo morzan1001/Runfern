@@ -7,14 +7,23 @@ import json
 import pathlib
 import re
 import shutil
+import stat
 import subprocess
 import sys
 import tarfile
+import tempfile
+import urllib.parse
 import urllib.request
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 MAX_ASSET = 2 << 30
 SOURCE_PART_SIZE = 1 << 30
+LICENSE_TEXT_URL = "https://raw.githubusercontent.com/spdx/license-list-data/31846481de7ea17d92f2f46fad76abe58b2e9bb0/text/"
+LICENSE_TEXTS = {
+    "MIT": "b05785f9f18e6716bab63424b11454513b9943a222595b70411009202fc592b5",
+    "GPL-2.0-or-later": "aaf135472f81c5b4a0dca9367e5bb5e9750032b5bebe5442b36e4c0a47430df3",
+    "MPL-2.0": "66a3107d5ad6a058aab753eaac2047ccb2ed0e39465dd0fe5844da3e300d5172",
+}
 RUNFERN_SOURCES = ["LICENSE", "Version.xcconfig", "Tools/GuestImage/build_image.py",
                    "Tools/GuestImage/image_evidence.py", "Tools/GuestImage/extension/extension.js",
                    "Tools/GuestImage/extension/package.json", "Tools/GuestImage/files/runfern-agent.py",
@@ -92,11 +101,17 @@ def slim(manager, kernel):
                  "snapd", "fwupd", "ubuntu-advantage-tools", "ubuntu-pro-client", "ubuntu-pro-client-l10n",
                  "openssh-server"}
     packages = apt_packages() if manager == "apt" else rpm_packages()
+    kernel_sources = {(package["source"], package["sourceVersion"]) for package in packages
+                      if manager == "apt"
+                      and package["name"].startswith(("linux-image-", "linux-modules-"))
+                      and package["name"].endswith(kernel)}
     remove = []
     for package in packages:
         name = package["name"].split(":")[0]
         old_kernel = (manager == "apt" and re.match(r"linux-(image|modules)(-extra)?-[0-9]", name)
                       and not name.endswith(kernel))
+        if manager == "apt" and re.match(r"linux-(headers|tools|cloud-tools)-[0-9]", name):
+            old_kernel = (package["source"], package["sourceVersion"]) not in kernel_sources
         if manager == "dnf" and name in {"kernel", "kernel-core", "kernel-modules", "kernel-modules-core"}:
             old_kernel = package["version"].split(":", 1)[-1] + "." + package["architecture"] != kernel
         if name in boot_only or name == "linux-image-cloud-arm64" or fnmatch.fnmatch(name, "*firmware*") or old_kernel:
@@ -115,9 +130,12 @@ def slim(manager, kernel):
                                input=f"{name} {name}/prerm/removing-running-kernel boolean false\n",
                                text=True, check=True)
     if remove:
-        subprocess.run((["env", "DEBIAN_FRONTEND=noninteractive", "apt-get", "purge", "-y"]
-                        if manager == "apt" else ["dnf", "remove", "-y"])
-                       + remove, check=True)
+        removal = (["env", "DEBIAN_FRONTEND=noninteractive", "apt-get", "purge", "-y"]
+                   if manager == "apt" else ["dnf", "remove", "-y"])
+        if manager == "dnf" and f"kernel-core-{command('uname', '-r')}" in remove:
+            # Permit only this disposable VM's superseded kernel; retain the final boot target.
+            removal.append("--setopt=protect_running_kernel=False")
+        subprocess.run(removal + remove, check=True)
     require(pathlib.Path("/lib/modules", kernel).is_dir(), "Image slimming removed the selected kernel")
 
 
@@ -167,6 +185,107 @@ def source_files(root):
             for path in sorted(root.rglob("*")) if path.is_file()}
 
 
+def rpm_source(package, destination):
+    identity = package["sourceRPM"]
+    require(identity.endswith(".src.rpm") and pathlib.Path(identity).name == identity,
+            f"Source RPM is incomplete: {identity}")
+    source = destination / identity
+    temporary = source.with_name(source.name + ".download")
+    try:
+        checked = source
+        if not source.exists():
+            signature = command("env", "LC_ALL=C", "rpm", "-q", "--qf", "%{RSAHEADER:pgpsig}", package["name"])
+            match = re.search(r"(?i)\bKey ID ([0-9a-f]{8,16})\b", signature)
+            require(match, f"Installed RPM has no distribution signing key: {package['name']}")
+            parts = identity.removesuffix(".src.rpm").rsplit("-", 2)
+            require(len(parts) == 3, f"Invalid source RPM version: {identity}")
+            path = "/".join(urllib.parse.quote(part, safe="") for part in
+                            (*parts, "data", "signed", match[1].lower()[-8:], "src", identity))
+            url = "https://kojipkgs.fedoraproject.org/packages/" + path
+            print(f"Downloading archived distribution-signed source: {identity}", flush=True)
+            with urllib.request.urlopen(url, timeout=120) as response, temporary.open("wb") as stream:
+                shutil.copyfileobj(response, stream)
+            checked = temporary
+        signature = command("env", "LC_ALL=C", "rpmkeys", "--checksig", "--verbose", str(checked))
+        require(re.search(r"(?mi)^.*\bSignature\b.*:\s+OK\s*$", signature),
+                f"Source RPM has no verified distribution signature: {identity}")
+        require(command("rpm", "-qp", "--qf", "%{NAME}-%{VERSION}-%{RELEASE}.src.rpm", str(checked)) == identity,
+                f"Source RPM version differs from installed binary: {identity}")
+        if checked == temporary:
+            temporary.replace(source)
+    finally:
+        temporary.unlink(missing_ok=True)
+    return source
+
+
+def ca_certificate_notices(package, output):
+    identity = package["sourceRPM"]
+    require(package["name"] == "ca-certificates" and identity.startswith("ca-certificates-")
+            and package["license"] == "MIT AND GPL-2.0-or-later",
+            "Unreviewed certificate package license or source identity")
+    destination = output / "sources" / hashlib.sha256(identity.encode()).hexdigest()[:20]
+    destination.mkdir(parents=True, exist_ok=True)
+    source = rpm_source(package, destination)
+    notices = []
+    for name in ("ca-certificates.spec", "certdata.txt", "certdata2pem.py", "nssckbi.h"):
+        data = subprocess.check_output(["bsdtar", "-xOf", str(source), name])
+        require(data.strip() and b"\0" not in data, f"Unreadable certificate source notice: {name}")
+        if name == "certdata.txt":
+            require(b"Mozilla Public" in data and b"License, v. 2.0" in data,
+                    "Certificate source license changed; review its notices")
+        target = output / "certificate-source-notices" / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(data)
+        notices.append(target)
+    for name, expected in LICENSE_TEXTS.items():
+        target = output / "sources/license-texts" / (name + ".txt")
+        fetch(LICENSE_TEXT_URL + name + ".txt", target, expected)
+        notices.append(target)
+    return notices
+
+
+def source_rpm_notices(package, output):
+    identity = package["sourceRPM"]
+    key = hashlib.sha256(identity.encode()).hexdigest()[:20]
+    destination = output / "sources" / key
+    destination.mkdir(parents=True, exist_ok=True)
+    source = rpm_source(package, destination)
+    notices = []
+
+    def collect_legal(archive, prefix):
+        for member in command("bsdtar", "-tf", str(archive)).splitlines():
+            if not member.endswith("/") and re.fullmatch(
+                    r"(?i)(copying|copyright|licen[cs]e|notice)([.-].*)?", pathlib.PurePosixPath(member).name):
+                data = subprocess.check_output(["bsdtar", "-xOf", str(archive), member])
+                require(data.strip() and b"\0" not in data, f"Unreadable source legal document: {member}")
+                name = hashlib.sha256((prefix + member).encode()).hexdigest()[:20]
+                target = output / "source-notices" / key / (name + ".txt")
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(data)
+                notices.append(target)
+
+    collect_legal(source, "")
+    with tempfile.TemporaryDirectory(dir=output) as temporary:
+        for index, member in enumerate(command("bsdtar", "-tf", str(source)).splitlines()):
+            if member.endswith((".tar", ".tar.gz", ".tgz", ".tar.xz", ".tar.bz2", ".tar.zst", ".zip", ".crate")):
+                nested = pathlib.Path(temporary) / str(index)
+                with nested.open("wb") as stream:
+                    subprocess.run(["bsdtar", "-xOf", str(source), member], stdout=stream, check=True)
+                collect_legal(nested, member + ":")
+    if not notices and identity.startswith("fedora-repos-"):
+        require(package["license"] == "MIT", "Unreviewed Fedora repository metadata license")
+        specification = subprocess.check_output(["bsdtar", "-xOf", str(source), "fedora-repos.spec"])
+        require(re.search(rb"(?m)^License:\s+MIT\s*$", specification),
+                "Fedora repository source license differs from installed metadata")
+        target = output / "source-notices" / key / "fedora-repos.spec"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(specification)
+        license_file = output / "sources/license-texts/MIT.txt"
+        fetch(LICENSE_TEXT_URL + "MIT.txt", license_file, LICENSE_TEXTS["MIT"])
+        notices.extend([target, license_file])
+    return notices
+
+
 def copy_notices(package, manager, output, providers):
     if manager == "apt":
         paths = command("dpkg-query", "-L", package["name"]).splitlines()
@@ -177,6 +296,23 @@ def copy_notices(package, manager, output, providers):
         selected = [pathlib.Path(p) for p in paths]
         if not any(path.is_file() for path in selected):
             selected = providers.get(package["sourceRPM"], [])
+        if not any(path.is_file() for path in selected) and package["name"] == "ca-certificates":
+            selected = ca_certificate_notices(package, output)
+        if not any(path.is_file() for path in selected):
+            entries = command("rpm", "-q", "--qf", "[%{FILENAMES}\t%{FILEMODES:octal}\n]",
+                              package["name"]).splitlines()
+            if all(stat.S_ISDIR(int(entry.split("\t")[1], 8)) for entry in entries):
+                package["kind"] = "directory-metadata"
+                target = output / "rpm-metadata" / (package["name"] + ".txt")
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text(f"{package['name']} {package['version']}\n"
+                                  f"RPM license declaration: {package['license']}\n"
+                                  "This package installs only directories or no files; no program or data files.\n"
+                                  f"Exact accompanying source RPM: {package['sourceRPM']}\n")
+                selected = [target]
+                print(f"Recorded directory-only RPM metadata: {package['name']}", flush=True)
+            else:
+                selected = source_rpm_notices(package, output)
     selected = sorted({p for p in selected if p.is_file()})
     require(selected, f"No installed copyright/license document for {package['name']}")
     key = hashlib.sha256((package["name"] + "=" + package["version"]).encode()).hexdigest()[:20]
@@ -187,7 +323,9 @@ def copy_notices(package, manager, output, providers):
         target = output / "notices" / key / f"{index:03d}.txt"
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(data)
-        result.append({"file": target.relative_to(output).as_posix(), "installedPath": str(path)})
+        origin = ({"sourceRPM": package["sourceRPM"], "sourceNotice": path.relative_to(output).as_posix()}
+                  if path.is_relative_to(output) else {"installedPath": str(path)})
+        result.append({"file": target.relative_to(output).as_posix(), **origin})
     return result
 
 
@@ -217,7 +355,7 @@ def collect(manager, output):
             continue
         key = hashlib.sha256(identity.encode()).hexdigest()[:20]
         destination = output / "sources" / key
-        destination.mkdir(parents=True)
+        destination.mkdir(parents=True, exist_ok=True)
         print(f"Collecting source {identity}", flush=True)
         if manager == "apt":
             subprocess.run(["apt-get", "source", "--download-only", "--only-source", identity],
@@ -233,17 +371,7 @@ def collect(manager, output):
                 require((destination / name).stat().st_size == int(size), f"Source size differs: {name}")
                 verify_digest(destination / name, expected)
         else:
-            require(identity.endswith(".src.rpm"), f"Source RPM is incomplete: {identity}")
-            spec = identity.removesuffix(".rpm")
-            subprocess.run(["dnf", "download", "--srpm", "--enablerepo=fedora-source",
-                            "--enablerepo=updates-source", f"--destdir={destination}", spec], check=True)
-            source = destination / identity
-            require(source.is_file(), f"The exact source RPM was not downloaded: {identity}")
-            signature = command("env", "LC_ALL=C", "rpmkeys", "--checksig", "--verbose", str(source))
-            require(re.search(r"(?mi)^.*\bSignature\b.*:\s+OK\s*$", signature),
-                    f"Source RPM has no verified distribution signature: {identity}")
-            require(command("rpm", "-qp", "--qf", "%{NAME}-%{VERSION}-%{RELEASE}.src.rpm", str(source)) == identity,
-                    f"Source RPM version differs from installed binary: {identity}")
+            rpm_source(package, destination)
         sources[identity] = {"files": {f"sources/{key}/{name}": value
                                        for name, value in source_files(destination).items()},
                              "verifiedBy": "signed APT source index and .dsc SHA-256" if manager == "apt"
