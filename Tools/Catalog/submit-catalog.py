@@ -90,10 +90,45 @@ def main():
             "The trusted required catalog check is not successful")
     require(all(check["status"] == "completed" and check["conclusion"] in ("success", "neutral", "skipped")
                 for check in checks), "Another PR check is pending or failed")
-    result = api(f"repos/{repository}/pulls/{pr['number']}/merge",
-                 {"sha": head, "merge_method": "squash", "commit_title": "Publish verified Linux image catalog",
-                  "commit_message": f"{workflow_url}\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"},
-                 method="PUT")
+    approved = set()
+    result = None
+    while time.monotonic() < deadline:
+        runs = api(f"repos/{repository}/actions/workflows/catalog.yml/runs?branch={urllib.parse.quote(branch)}&per_page=10")["workflow_runs"]
+        pending = False
+        for item in runs:
+            if (item["head_sha"] != head or item.get("event") != "pull_request"
+                    or not any(pull["number"] == pr["number"] for pull in item.get("pull_requests", []))):
+                continue
+            if item["conclusion"] == "action_required" and item["id"] not in approved:
+                require(item["head_branch"] == branch and item["actor"]["login"] == "github-actions[bot]",
+                        "Refusing to approve a workflow that is not the generated internal catalog PR")
+                print(f"Approving only the signed internal catalog PR workflow {item['id']}.", flush=True)
+                api(f"repos/{repository}/actions/runs/{item['id']}/approve", method="POST")
+                approved.add(item["id"])
+                pending = True
+            elif item["status"] != "completed" or item["conclusion"] == "action_required":
+                pending = True
+            else:
+                require(item["conclusion"] == "success", f"Catalog PR workflow failed: {item['html_url']}")
+        if pending:
+            time.sleep(5)
+            continue
+        require(api(f"repos/{repository}/git/ref/heads/main")["object"]["sha"] == base,
+                "Main advanced during PR validation; rerun publishing")
+        try:
+            result = api(f"repos/{repository}/pulls/{pr['number']}/merge",
+                         {"sha": head, "merge_method": "squash", "commit_title": "Publish verified Linux image catalog",
+                          "commit_message": f"{workflow_url}\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"},
+                         method="PUT")
+            break
+        except subprocess.CalledProcessError as error:
+            failure = json.loads(error.output)
+            message = failure.get("message", "")
+            if not (message.startswith("Required status check") and "expected" in message):
+                raise
+            print("Waiting for the generated PR check and status propagation; protection is not bypassed.", flush=True)
+            time.sleep(5)
+    require(result is not None, f"Protected catalog merge timed out; PR remains open: {pr['html_url']}")
     require(result["merged"], f"Protected merge rejected: {result['message']}")
     require(api(f"repos/{repository}/commits/{result['sha']}")["commit"]["verification"]["verified"],
             "The merged catalog commit is not signed")

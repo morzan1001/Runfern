@@ -150,6 +150,8 @@ def deb_source_fields(text):
     fields = {}
     current = None
     for line in text.splitlines():
+        if line == "-----BEGIN PGP SIGNATURE-----":
+            break
         if line.startswith(" ") and current:
             fields[current] += ("\n" if fields[current] else "") + line.strip()
         elif re.match(r"^[A-Za-z][A-Za-z0-9-]*:", line):
