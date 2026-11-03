@@ -221,9 +221,24 @@ class ImageEvidenceTests(unittest.TestCase):
         self.assertEqual(package["kind"], "directory-metadata")
         self.assertEqual(len(notices), 1)
         with patch.object(image_evidence, "command",
-                          side_effect=["", "/usr/share/cmake/actual-code\t100644"]):
+                          side_effect=["", "/usr/share/cmake/actual-code\t100644"]), \
+                patch.object(image_evidence, "source_rpm_notices", return_value=[]):
             with self.assertRaisesRegex(ValueError, "No installed copyright"):
                 image_evidence.copy_notices(package, "dnf", self.root, {})
+
+    def test_missing_binary_notices_are_collected_from_verified_exact_sources(self):
+        package = {"name": "container-selinux", "sourceRPM": "container-selinux-1.src.rpm"}
+        def extract(args, stdout, check):
+            self.assertTrue(check)
+            stdout.write(b"nested source archive fixture")
+        with patch.object(image_evidence, "rpm_source", return_value=self.root / "exact.src.rpm"), \
+                patch.object(image_evidence, "command",
+                             side_effect=["source.tar.gz", "source.tar.gz", "upstream/LICENSE"]), \
+                patch.object(image_evidence.subprocess, "run", side_effect=extract), \
+                patch.object(image_evidence.subprocess, "check_output", return_value=b"Original license text"):
+            notices = image_evidence.source_rpm_notices(package, self.root)
+        self.assertEqual(len(notices), 1)
+        self.assertEqual(notices[0].read_bytes(), b"Original license text")
 
     def test_customizer_survives_removing_cloud_init(self):
         config = json.loads(build_image.user_data(build_image.BASES[self.image_id]).split("\n", 1)[1])

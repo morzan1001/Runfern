@@ -11,6 +11,7 @@ import stat
 import subprocess
 import sys
 import tarfile
+import tempfile
 import urllib.request
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
@@ -226,6 +227,37 @@ def ca_certificate_notices(package, output):
     return notices
 
 
+def source_rpm_notices(package, output):
+    identity = package["sourceRPM"]
+    key = hashlib.sha256(identity.encode()).hexdigest()[:20]
+    destination = output / "sources" / key
+    destination.mkdir(parents=True, exist_ok=True)
+    source = rpm_source(package, destination)
+    notices = []
+
+    def collect_legal(archive, prefix):
+        for member in command("bsdtar", "-tf", str(archive)).splitlines():
+            if not member.endswith("/") and re.fullmatch(
+                    r"(?i)(copying|copyright|licen[cs]e|notice)([.-].*)?", pathlib.PurePosixPath(member).name):
+                data = subprocess.check_output(["bsdtar", "-xOf", str(archive), member])
+                require(data.strip() and b"\0" not in data, f"Unreadable source legal document: {member}")
+                name = hashlib.sha256((prefix + member).encode()).hexdigest()[:20]
+                target = output / "source-notices" / key / (name + ".txt")
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(data)
+                notices.append(target)
+
+    collect_legal(source, "")
+    with tempfile.TemporaryDirectory(dir=output) as temporary:
+        for index, member in enumerate(command("bsdtar", "-tf", str(source)).splitlines()):
+            if member.endswith((".tar", ".tar.gz", ".tgz", ".tar.xz", ".tar.bz2", ".tar.zst", ".zip", ".crate")):
+                nested = pathlib.Path(temporary) / str(index)
+                with nested.open("wb") as stream:
+                    subprocess.run(["bsdtar", "-xOf", str(source), member], stdout=stream, check=True)
+                collect_legal(nested, member + ":")
+    return notices
+
+
 def copy_notices(package, manager, output, providers):
     if manager == "apt":
         paths = command("dpkg-query", "-L", package["name"]).splitlines()
@@ -251,6 +283,8 @@ def copy_notices(package, manager, output, providers):
                                   f"Exact accompanying source RPM: {package['sourceRPM']}\n")
                 selected = [target]
                 print(f"Recorded directory-only RPM metadata: {package['name']}", flush=True)
+            else:
+                selected = source_rpm_notices(package, output)
     selected = sorted({p for p in selected if p.is_file()})
     require(selected, f"No installed copyright/license document for {package['name']}")
     key = hashlib.sha256((package["name"] + "=" + package["version"]).encode()).hexdigest()[:20]
