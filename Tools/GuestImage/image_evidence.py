@@ -35,6 +35,7 @@ LICENSE_TEXTS = {
     "LGPL-2.1-or-later": "5749785c8bdefafcb5d798270ed0a967036fe2ca63dcedade1627565dfef81d2",
     "Linux-syscall-note": "5bcef4fedbfc08776630e65d5d0d074dd31208037eddb167ca46a9ec4f737764",
     "Artistic-1.0-Perl": "9e18ef4d50faba562e3efa37d8961d6e9956d1c103bfc4fc1caeb07e8effe885",
+    "Artistic-2.0": "bae466ac8d7100c304fe76632ccc627203a3897d3f7166f3cce00fb9df8c2074",
 }
 RUNFERN_SOURCES = ["LICENSE", "Version.xcconfig", "Tools/GuestImage/build_image.py",
                    "Tools/GuestImage/image_evidence.py", "Tools/GuestImage/extension/extension.js",
@@ -231,7 +232,9 @@ def rpm_source(package, destination):
 
 
 def license_texts(names, output):
-    require(names and set(names) <= set(LICENSE_TEXTS), "Unreviewed standard license or exception")
+    require(names, "Missing standard license declaration")
+    unknown = set(names) - set(LICENSE_TEXTS)
+    require(not unknown, f"Unreviewed standard license or exception: {', '.join(sorted(unknown))}")
     result = []
     for name in sorted(names):
         target = output / "sources/license-texts" / (name + ".txt")
@@ -291,8 +294,8 @@ def source_rpm_notices(package, output):
     if headers or perl:
         spec_name = identity.removesuffix(".src.rpm").rsplit("-", 2)[0] + ".spec"
         specification = subprocess.check_output(["bsdtar", "-xOf", str(source), spec_name])
-        declared = re.search(rb"(?m)^License:\s+(.+)$", specification)
-        require(declared and b" ".join(declared[1].split()) == b" ".join(package["license"].encode().split()),
+        declared = re.findall(rb"(?m)^License:\s+(.+)$", specification)
+        require(any(b" ".join(value.split()) == b" ".join(package["license"].encode().split()) for value in declared),
                 "Package source license differs from installed metadata")
         identifiers = set(re.findall(r"[A-Za-z0-9.+-]+", package["license"])) - {"AND", "OR", "WITH"}
         notices.extend(license_texts(identifiers, output))
@@ -327,18 +330,16 @@ def source_rpm_notices(package, output):
                     copied = 0
                     with target.open("wb") as stream:
                         for name, original in original_source_files(nested):
-                            eligible = (name.endswith(".h") if headers else
-                                        name.endswith((".pm", ".pl", ".pod")) or
-                                        pathlib.PurePosixPath(name).name.upper().startswith("README"))
+                            eligible = not headers or name.endswith(".h")
                             if eligible:
                                 data = original.read()
-                                if perl and not re.search(rb"(?i)\b(copyright|licen[cs]e)\b", data):
+                                if perl and (b"\0" in data or not re.search(rb"(?i)\b(copyright|licen[cs]e)\b", data)):
                                     continue
                                 require(data.strip() and b"\0" not in data,
                                         f"Unreadable original source notice: {name}")
                                 stream.write(f"\nOriginal source member: {member}:{name}\n".encode())
                                 stream.write(data)
-                                header_count += 1
+                                header_count += int(headers)
                                 copied += 1
                     if copied:
                         notices.append(target)
