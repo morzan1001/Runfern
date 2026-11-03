@@ -359,8 +359,10 @@ def source_rpm_notices(package, output):
     require(not headers or header_count > 0, "Kernel source archive contains no original header notices")
     require(not perl or len(notices) > original_start, "Perl source contains no original copyright/license notices")
     public_domain = package.get("license") == "LicenseRef-Fedora-Public-Domain"
-    if not notices and (identity.startswith("fedora-repos-") or public_domain):
-        require(public_domain or package["license"] == "MIT", "Unreviewed Fedora repository metadata license")
+    noncopyrightable = package.get("license") == "LicenseRef-Not-Copyrightable"
+    if not notices and (identity.startswith("fedora-repos-") or public_domain or noncopyrightable):
+        require(public_domain or noncopyrightable or package["license"] == "MIT",
+                "Unreviewed Fedora repository metadata license")
         name = identity.removesuffix(".src.rpm").rsplit("-", 2)[0] + ".spec"
         specification = subprocess.check_output(["bsdtar", "-xOf", str(source), name])
         require(re.search(rb"(?m)^License:\s+" + re.escape(package["license"].encode()) + rb"\s*$", specification),
@@ -369,8 +371,18 @@ def source_rpm_notices(package, output):
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(specification)
         notices.append(target)
-        if not public_domain:
+        if not public_domain and not noncopyrightable:
             notices.extend(license_texts(("MIT",), output))
+        if noncopyrightable:
+            for member in re.findall(rb"(?m)^Source[0-9]*:\s+(\S+)\s*$", specification):
+                member = member.decode()
+                safe_path(member)
+                data = subprocess.check_output(["bsdtar", "-xOf", str(source), member])
+                require(data.strip() and b"\0" not in data, f"Unreadable original configuration: {member}")
+                target = output / "source-notices" / key / member
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(data)
+                notices.append(target)
     return notices
 
 
