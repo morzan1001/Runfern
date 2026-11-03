@@ -320,6 +320,31 @@ class ImageEvidenceTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "source license differs"):
                 image_evidence.source_rpm_notices(package, self.root)
 
+    def test_signed_shim_resolves_exact_distribution_signed_compiled_source(self):
+        package = {"name": "shim-aa64", "sourceRPM": "shim-16.1-7.src.rpm"}
+        macros = b"%global shimveraa64 16.1-1\n%global unsignedaa64 shim-unsigned-aarch64\n"
+        def extract(args, stdout, check):
+            stdout.write(b"nested source fixture")
+        with patch.object(image_evidence, "rpm_source",
+                          side_effect=[self.root / "signed.src.rpm", self.root / "compiled.src.rpm"]) as source, \
+                patch.object(image_evidence.subprocess, "check_output", side_effect=[macros, b"Original BSD terms"]), \
+                patch.object(image_evidence.subprocess, "run", side_effect=extract), \
+                patch.object(image_evidence, "command", side_effect=[
+                    "shim.tar.bz2", "shim.tar.bz2", "shim/COPYING"]):
+            notices = image_evidence.source_rpm_notices(package, self.root)
+        self.assertEqual(package["correspondingSourceRPM"], "shim-unsigned-aarch64-16.1-1.src.rpm")
+        self.assertEqual(source.call_args.args[0]["sourceRPM"], package["correspondingSourceRPM"])
+        self.assertEqual(source.call_args.args[0]["name"], "shim-aa64")
+        self.assertEqual(notices[0].read_bytes(), b"Original BSD terms")
+
+    def test_signed_shim_missing_actual_compiled_source_is_rejected(self):
+        manifest_path = self.build / f"{self.image_id}.evidence.json"
+        manifest = json.loads(manifest_path.read_text())
+        manifest["inventory"]["packages"][0]["correspondingSourceRPM"] = "shim-unsigned-aarch64-16.1-1.src.rpm"
+        image_evidence.write_json(manifest_path, manifest)
+        with self.assertRaisesRegex(ValueError, "actual compiled source"):
+            image_evidence.verify(self.build, self.image_id)
+
     def test_kernel_header_notices_preserve_original_copyright_and_source_names(self):
         package = {"name": "kernel-headers", "sourceRPM": "kernel-headers-7.2.4-200.fc44.src.rpm",
                    "license": "((GPL-2.0-only WITH Linux-syscall-note) OR BSD-2-Clause) AND BSD-3-Clause "
