@@ -1,7 +1,7 @@
 {
   "format": 1,
-  "catalogVersion": 5,
-  "publishedAt": "2026-11-03T15:17:43Z",
+  "catalogVersion": 6,
+  "publishedAt": "2026-11-03T18:44:59Z",
   "baseImages": [
     {
       "id": "debian-12-arm64",
@@ -117,7 +117,7 @@
       "release": "44",
       "architecture": "arm64",
       "catalogVersion": 1,
-      "downloadSizeBytes": 1200000000,
+      "downloadSizeBytes": 1040752640,
       "supportedToolchains": [
         "python-3",
         "nodejs-24",
@@ -132,7 +132,11 @@
         "deno",
         "zig",
         "swift-fedora-44"
-      ]
+      ],
+      "source": {
+        "url": "https://github.com/morzan1001/Runfern/releases/download/fedora-44-arm64-v1/fedora-44-arm64.runfernimage",
+        "sha256": "f50b983b3aa31942cb8f29ea795aec5fd00fa45e0353ce968998b1e3eb3cadfc"
+      }
     }
   ],
   "toolchains": [
