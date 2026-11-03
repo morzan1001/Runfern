@@ -1,7 +1,7 @@
 {
   "format": 1,
-  "catalogVersion": 4,
-  "publishedAt": "2026-11-03T12:27:26Z",
+  "catalogVersion": 5,
+  "publishedAt": "2026-11-03T15:17:43Z",
   "baseImages": [
     {
       "id": "debian-12-arm64",
@@ -90,7 +90,7 @@
       "release": "26.04",
       "architecture": "arm64",
       "catalogVersion": 1,
-      "downloadSizeBytes": 1200000000,
+      "downloadSizeBytes": 1149368320,
       "supportedToolchains": [
         "python-3",
         "nodejs-24",
@@ -105,7 +105,11 @@
         "deno",
         "zig",
         "swift-ubuntu-26.04"
-      ]
+      ],
+      "source": {
+        "url": "https://github.com/morzan1001/Runfern/releases/download/ubuntu-26.04-arm64-v1/ubuntu-26.04-arm64.runfernimage",
+        "sha256": "b8b839bb8bd6844f8a2ec46a8e04e4b060e89c095dc902b739950215f15c25d1"
+      }
     },
     {
       "id": "fedora-44-arm64",
