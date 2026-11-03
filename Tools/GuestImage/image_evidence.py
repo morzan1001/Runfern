@@ -14,6 +14,7 @@ import tarfile
 import tempfile
 import urllib.parse
 import urllib.request
+import zipfile
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 MAX_ASSET = 2 << 30
@@ -33,6 +34,7 @@ LICENSE_TEXTS = {
     "LGPL-2.1-only": "5749785c8bdefafcb5d798270ed0a967036fe2ca63dcedade1627565dfef81d2",
     "LGPL-2.1-or-later": "5749785c8bdefafcb5d798270ed0a967036fe2ca63dcedade1627565dfef81d2",
     "Linux-syscall-note": "5bcef4fedbfc08776630e65d5d0d074dd31208037eddb167ca46a9ec4f737764",
+    "Artistic-1.0-Perl": "9e18ef4d50faba562e3efa37d8961d6e9956d1c103bfc4fc1caeb07e8effe885",
 }
 RUNFERN_SOURCES = ["LICENSE", "Version.xcconfig", "Tools/GuestImage/build_image.py",
                    "Tools/GuestImage/image_evidence.py", "Tools/GuestImage/extension/extension.js",
@@ -261,6 +263,21 @@ def ca_certificate_notices(package, output):
     return notices
 
 
+def original_source_files(path):
+    if zipfile.is_zipfile(path):
+        with zipfile.ZipFile(path) as archive:
+            for member in archive.infolist():
+                if not member.is_dir():
+                    with archive.open(member) as stream:
+                        yield member.filename, stream
+    else:
+        with tarfile.open(path, mode="r|*") as archive:
+            for member in archive:
+                if member.isfile():
+                    with archive.extractfile(member) as stream:
+                        yield member.name, stream
+
+
 def source_rpm_notices(package, output):
     identity = package["sourceRPM"]
     key = hashlib.sha256(identity.encode()).hexdigest()[:20]
@@ -269,18 +286,21 @@ def source_rpm_notices(package, output):
     source = rpm_source(package, destination)
     notices = []
     headers = identity.startswith("kernel-headers-")
+    perl = identity.startswith("perl-")
     header_count = 0
-    if headers:
-        specification = subprocess.check_output(["bsdtar", "-xOf", str(source), "kernel-headers.spec"])
+    if headers or perl:
+        spec_name = identity.removesuffix(".src.rpm").rsplit("-", 2)[0] + ".spec"
+        specification = subprocess.check_output(["bsdtar", "-xOf", str(source), spec_name])
         declared = re.search(rb"(?m)^License:\s+(.+)$", specification)
         require(declared and b" ".join(declared[1].split()) == b" ".join(package["license"].encode().split()),
-                "Kernel header source license differs from installed metadata")
+                "Package source license differs from installed metadata")
         identifiers = set(re.findall(r"[A-Za-z0-9.+-]+", package["license"])) - {"AND", "OR", "WITH"}
         notices.extend(license_texts(identifiers, output))
-        target = output / "source-notices" / key / "kernel-headers.spec"
+        target = output / "source-notices" / key / spec_name
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(specification)
         notices.append(target)
+    original_start = len(notices)
 
     def collect_legal(archive, prefix):
         for member in command("bsdtar", "-tf", str(archive)).splitlines():
@@ -302,20 +322,30 @@ def source_rpm_notices(package, output):
                 with nested.open("wb") as stream:
                     subprocess.run(["bsdtar", "-xOf", str(source), member], stdout=stream, check=True)
                 collect_legal(nested, member + ":")
-                if headers:
-                    target = output / "source-notices" / key / f"original-headers-{index}.txt"
-                    with target.open("wb") as stream, tarfile.open(nested, mode="r|*") as archive:
-                        for header in archive:
-                            if header.isfile() and header.name.endswith(".h"):
-                                with archive.extractfile(header) as original:
-                                    data = original.read()
+                if headers or perl:
+                    target = output / "source-notices" / key / f"original-{'headers' if headers else 'perl'}-{index}.txt"
+                    copied = 0
+                    with target.open("wb") as stream:
+                        for name, original in original_source_files(nested):
+                            eligible = (name.endswith(".h") if headers else
+                                        name.endswith((".pm", ".pl", ".pod")) or
+                                        pathlib.PurePosixPath(name).name.upper().startswith("README"))
+                            if eligible:
+                                data = original.read()
+                                if perl and not re.search(rb"(?i)\b(copyright|licen[cs]e)\b", data):
+                                    continue
                                 require(data.strip() and b"\0" not in data,
-                                        f"Unreadable original kernel header: {header.name}")
-                                stream.write(f"\nOriginal source member: {member}:{header.name}\n".encode())
+                                        f"Unreadable original source notice: {name}")
+                                stream.write(f"\nOriginal source member: {member}:{name}\n".encode())
                                 stream.write(data)
                                 header_count += 1
-                    notices.append(target)
+                                copied += 1
+                    if copied:
+                        notices.append(target)
+                    else:
+                        target.unlink()
     require(not headers or header_count > 0, "Kernel source archive contains no original header notices")
+    require(not perl or len(notices) > original_start, "Perl source contains no original copyright/license notices")
     public_domain = package.get("license") == "LicenseRef-Fedora-Public-Domain"
     if not notices and (identity.startswith("fedora-repos-") or public_domain):
         require(public_domain or package["license"] == "MIT", "Unreviewed Fedora repository metadata license")
