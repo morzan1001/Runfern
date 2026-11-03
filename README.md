@@ -13,9 +13,10 @@ Project setup and a sample project, captured in the iPad simulator.
 
 ## Getting started
 
-Requires iPadOS 27 or later. This repository is currently a source preview: no public binary
-release or downloadable Linux base is available yet. Third-party source and license evidence
-must be completed before distribution. The interpreter variant does not need JIT.
+Requires iPadOS 27 or later. Debian 12 is available through the signed catalog, with
+[verified image, source and license downloads](https://github.com/morzan1001/Runfern/releases/tag/debian-12-arm64-v1).
+The app remains a source preview: public app builds await completion of the native dependency
+license evidence. The interpreter variant does not need JIT.
 
 Linux bases and tools need an initial download. Installed environments run locally.
 Built-in JIT needs Developer Mode, pairing and Network Extension signing; ordinary sideload
