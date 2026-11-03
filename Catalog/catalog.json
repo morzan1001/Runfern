@@ -1,7 +1,7 @@
 {
   "format": 1,
-  "catalogVersion": 3,
-  "publishedAt": "2026-11-03T10:17:43Z",
+  "catalogVersion": 4,
+  "publishedAt": "2026-11-03T12:27:26Z",
   "baseImages": [
     {
       "id": "debian-12-arm64",
@@ -36,7 +36,7 @@
       "release": "13",
       "architecture": "arm64",
       "catalogVersion": 1,
-      "downloadSizeBytes": 1200000000,
+      "downloadSizeBytes": 694784000,
       "supportedToolchains": [
         "python-3",
         "nodejs-24",
@@ -51,7 +51,11 @@
         "deno",
         "zig",
         "swift-debian-13"
-      ]
+      ],
+      "source": {
+        "url": "https://github.com/morzan1001/Runfern/releases/download/debian-13-arm64-v1/debian-13-arm64.runfernimage",
+        "sha256": "f051a0d8fa651d8c66dde68e7ca77a736a88a804f3f36d42af8dc0189af0f19b"
+      }
     },
     {
       "id": "ubuntu-24.04-arm64",
@@ -59,7 +63,7 @@
       "release": "24.04",
       "architecture": "arm64",
       "catalogVersion": 1,
-      "downloadSizeBytes": 1200000000,
+      "downloadSizeBytes": 897771520,
       "supportedToolchains": [
         "python-3",
         "nodejs-24",
@@ -74,7 +78,11 @@
         "deno",
         "zig",
         "swift-ubuntu-24.04"
-      ]
+      ],
+      "source": {
+        "url": "https://github.com/morzan1001/Runfern/releases/download/ubuntu-24.04-arm64-v1/ubuntu-24.04-arm64.runfernimage",
+        "sha256": "81dba21a862dfee890f4dcedd28fffb92ddd7438eaf4b12a74ee52f868141a10"
+      }
     },
     {
       "id": "ubuntu-26.04-arm64",
