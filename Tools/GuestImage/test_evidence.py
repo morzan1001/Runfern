@@ -304,6 +304,22 @@ class ImageEvidenceTests(unittest.TestCase):
         self.assertEqual(len(notices), 1)
         self.assertEqual(notices[0].read_bytes(), statement)
 
+    def test_noncopyrightable_configuration_retains_exact_declaration_and_original_files(self):
+        package = {"name": "rootfiles", "sourceRPM": "rootfiles-9.0-6.fc44.src.rpm",
+                   "license": "LicenseRef-Not-Copyrightable"}
+        spec = b"License: LicenseRef-Not-Copyrightable\nSource0: dot-bashrc\n"
+        config = b"# Original root profile\n"
+        with patch.object(image_evidence, "rpm_source", return_value=self.root / "exact.src.rpm"), \
+                patch.object(image_evidence, "command", return_value="rootfiles.spec\ndot-bashrc"), \
+                patch.object(image_evidence.subprocess, "check_output", side_effect=[spec, config]):
+            notices = image_evidence.source_rpm_notices(package, self.root)
+        self.assertEqual([path.read_bytes() for path in notices], [spec, config])
+        with patch.object(image_evidence, "rpm_source", return_value=self.root / "exact.src.rpm"), \
+                patch.object(image_evidence, "command", return_value="rootfiles.spec"), \
+                patch.object(image_evidence.subprocess, "check_output", return_value=b"License: MIT\n"):
+            with self.assertRaisesRegex(ValueError, "source license differs"):
+                image_evidence.source_rpm_notices(package, self.root)
+
     def test_kernel_header_notices_preserve_original_copyright_and_source_names(self):
         package = {"name": "kernel-headers", "sourceRPM": "kernel-headers-7.2.4-200.fc44.src.rpm",
                    "license": "((GPL-2.0-only WITH Linux-syscall-note) OR BSD-2-Clause) AND BSD-3-Clause "
