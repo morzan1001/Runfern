@@ -255,15 +255,43 @@ class ImageEvidenceTests(unittest.TestCase):
 
     def test_source_archive_uses_installed_signing_key_and_verifies_before_caching(self):
         package = {"name": "crun", "sourceRPM": "crun-1.28-1.fc44.src.rpm"}
+        def download(url, target):
+            target.write_bytes(b"source")
         with patch.object(image_evidence, "command", side_effect=[
                 "RSA/SHA256, Key ID dbfcf71c6d9f90a6", "RSA Signature: OK", package["sourceRPM"]]), \
-                patch.object(image_evidence.urllib.request, "urlopen", return_value=io.BytesIO(b"source")) as fetch:
+                patch.object(image_evidence, "download", side_effect=download) as fetch:
             source = image_evidence.rpm_source(package, self.root)
         self.assertEqual(source.read_bytes(), b"source")
         self.assertEqual(fetch.call_args.args[0],
                          "https://kojipkgs.fedoraproject.org/packages/crun/1.28/1.fc44/"
                          "data/signed/6d9f90a6/src/crun-1.28-1.fc44.src.rpm")
         self.assertFalse(source.with_name(source.name + ".download").exists())
+
+    def test_source_transport_retries_are_bounded_and_https_only(self):
+        with patch.object(image_evidence.subprocess, "run") as run:
+            image_evidence.download("https://example.invalid/source", self.root / "source.download")
+        args = run.call_args.args[0]
+        self.assertEqual(args[args.index("--retry") + 1], "3")
+        self.assertEqual(args[args.index("--retry-max-time") + 1], "1200")
+        self.assertEqual(args[args.index("--max-time") + 1], "900")
+        self.assertIn("--retry-all-errors", args)
+        self.assertEqual(args[args.index("--proto") + 1], "=https")
+        self.assertEqual(args[args.index("--proto-redir") + 1], "=https")
+        self.assertTrue(run.call_args.kwargs["check"])
+        with self.assertRaisesRegex(ValueError, "HTTPS"):
+            image_evidence.download("http://example.invalid/source", self.root / "source.download")
+
+    def test_failed_source_transfer_never_becomes_a_verified_cache_entry(self):
+        expected = hashlib.sha256(b"verified").hexdigest()
+        target = self.root / "source"
+        def failed(url, temporary):
+            temporary.write_bytes(b"partial")
+            raise ConnectionResetError("transfer interrupted")
+        with patch.object(image_evidence, "download", side_effect=failed):
+            with self.assertRaises(ConnectionResetError):
+                image_evidence.fetch("https://example.invalid/source", target, expected)
+        self.assertFalse(target.exists())
+        self.assertFalse(target.with_name("source.download").exists())
 
     def test_public_domain_notice_preserves_original_source_declaration(self):
         package = {"name": "filesystem", "sourceRPM": "filesystem-3.18-52.fc44.src.rpm",
