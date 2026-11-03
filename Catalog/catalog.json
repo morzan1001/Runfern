@@ -1,7 +1,7 @@
 {
   "format": 1,
-  "catalogVersion": 2,
-  "publishedAt": "2026-11-02T22:47:24Z",
+  "catalogVersion": 3,
+  "publishedAt": "2026-11-03T10:17:43Z",
   "baseImages": [
     {
       "id": "debian-12-arm64",
@@ -9,7 +9,7 @@
       "release": "12",
       "architecture": "arm64",
       "catalogVersion": 1,
-      "downloadSizeBytes": 1200000000,
+      "downloadSizeBytes": 667381760,
       "supportedToolchains": [
         "python-3",
         "nodejs-24",
@@ -24,7 +24,11 @@
         "deno",
         "zig",
         "swift-debian-12"
-      ]
+      ],
+      "source": {
+        "url": "https://github.com/morzan1001/Runfern/releases/download/debian-12-arm64-v1/debian-12-arm64.runfernimage",
+        "sha256": "78eb55a604bd38e604236fcde0cd26c13398cc08b858744d4838d1f25701f6fd"
+      }
     },
     {
       "id": "debian-13-arm64",
