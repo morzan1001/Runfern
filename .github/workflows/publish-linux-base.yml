@@ -40,7 +40,7 @@ jobs:
       ids: ${{ steps.ids.outputs.ids }}
       list: ${{ steps.ids.outputs.list }}
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Check the requested bases
@@ -110,7 +110,7 @@ jobs:
     env:
       IMAGE: ${{ matrix.id }}
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Check hardware acceleration
@@ -135,7 +135,7 @@ jobs:
           python3 Tools/GuestImage/test_image.py "$IMAGE"
           python3 Tools/GuestImage/image_evidence.py verify "$IMAGE" --build-root Tools/GuestImage/build --publication
       - name: Keep the image for publishing
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: image-${{ matrix.id }}
           path: |
@@ -152,7 +152,7 @@ jobs:
           overwrite: true
       - name: Keep the console log
         if: failure()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: console-${{ matrix.id }}
           path: Tools/GuestImage/build/${{ matrix.id }}/work/console.log
@@ -181,7 +181,7 @@ jobs:
       REBUILD: ${{ inputs.rebuild }}
       BRANCH: ${{ github.ref_name }}
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # The branch as it is now, not the commit the run started on: image versions continue
           # from the newest catalog.
@@ -197,7 +197,7 @@ jobs:
             exit 1
           fi
           Tools/Catalog/sign-catalog.sh --check-key
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           pattern: image-*
           merge-multiple: true
@@ -230,7 +230,7 @@ jobs:
       - name: Verify the signed catalog
         run: Tools/Catalog/verify-catalog.sh
       - name: Save the catalog for review
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: signed-catalog
           path: |
