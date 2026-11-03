@@ -34,6 +34,7 @@ class CatalogPRTests(unittest.TestCase):
                            "GITHUB_RUN_ID": "42", "GITHUB_RUN_ATTEMPT": "1",
                            "GITHUB_STEP_SUMMARY": str(root / "summary")}
             calls = []
+            approval = {"required": getattr(self, "approval_mode", False)}
 
             def api(path, data=None, method=None):
                 calls.append((path, data, method))
@@ -44,8 +45,17 @@ class CatalogPRTests(unittest.TestCase):
                 if path.endswith("/pulls"):
                     return {"number": 7, "html_url": "https://github.com/morzan1001/Runfern/pull/7"}
                 if "/runs?" in path:
+                    if "&event=workflow_dispatch" not in path and approval["required"]:
+                        return {"workflow_runs": [{
+                            "head_sha": "signed-head", "head_branch": "publishing/catalog-42-1",
+                            "event": "pull_request", "pull_requests": [{"number": 7}],
+                            "actor": {"login": "github-actions[bot]"}, "status": "completed",
+                            "conclusion": "action_required", "id": 2}]}
                     return {"workflow_runs": [{"head_sha": "signed-head", "status": "completed",
                                               "conclusion": "success", "id": 1}]}
+                if path.endswith("/approve"):
+                    approval["required"] = False
+                    return {}
                 if "check-runs" in path:
                     return {"check_runs": [{"name": "Verify the catalog", "app": {"id": 15368},
                                            "status": "completed", "conclusion": "success"}]}
@@ -58,6 +68,7 @@ class CatalogPRTests(unittest.TestCase):
                                  side_effect=["base\n", "Catalog/catalog.json\nCatalog/catalog.json.sig\n"]), \
                     patch.object(publisher, "gh", return_value={
                         "data": {"createCommitOnBranch": {"commit": {"oid": "signed-head"}}}}), \
+                    patch.object(publisher.time, "sleep"), \
                     patch.object(publisher, "api", side_effect=api):
                 publisher.main()
             dispatch = next(call for call in calls if call[0].endswith("/dispatches"))
@@ -66,6 +77,13 @@ class CatalogPRTests(unittest.TestCase):
             self.assertEqual(merge[2], "PUT")
             self.assertEqual(merge[1]["sha"], "signed-head")
             self.assertNotIn("admin", merge[1])
+            if getattr(self, "approval_mode", False):
+                self.assertEqual([call[0] for call in calls if call[0].endswith("/approve")],
+                                 ["repos/morzan1001/Runfern/actions/runs/2/approve"])
+
+    def test_workflow_execution_approval_is_scoped_to_the_generated_signed_pr(self):
+        self.approval_mode = True
+        self.test_successful_publication_dispatches_ci_and_uses_sha_guarded_merge()
 
 
 if __name__ == "__main__":
