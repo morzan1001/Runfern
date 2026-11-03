@@ -54,3 +54,8 @@ inventory are available at `/usr/share/runfern/licenses`.
 
 If main advances while an automated catalog PR is checked, publishing fails rather than
 bypassing protection. Re-run the failed publisher job to reuse its immutable image assets.
+
+After failed builds, `reuse_run` may reference an earlier main **Publish Linux Base** run.
+Only successful, unexpired artifacts from its signed ancestor commit are reused, with full
+image/source/legal verification and matching original smoke evidence. Failed images are built
+again; fork workflows, pending builds and expired artifacts are rejected.
