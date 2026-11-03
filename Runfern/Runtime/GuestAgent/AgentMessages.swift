@@ -24,9 +24,9 @@ nonisolated enum AgentCommand: Codable, Equatable, Sendable {
     case applyEditorSettings(settings: String)
     /// Mounts a folder in Files that the app serves over 9P on a loopback `port` to `/workspace`.
     case mountFolder(port: Int, token: String)
-    /// Linux, agent, and code-server report readiness.
+    /// Linux, agent, and OpenVSCode Server report readiness.
     case healthCheck
-    /// Starts code-server bound to the guest-local port; the host forwards it.
+    /// Starts OpenVSCode Server bound to the guest-local port; the host forwards it.
     case startIDE(port: Int)
     /// Makes a development server in the guest reachable for the preview (IDE09). Never published to the network.
     case forwardPort(guestPort: Int)

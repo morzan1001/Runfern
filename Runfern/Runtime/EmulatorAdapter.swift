@@ -44,7 +44,7 @@ protocol EmulatorAdapter: Sendable {
     func installExtensions(_ ids: [String], configuration: MachineConfiguration) async throws
     /// Applies VS Code user settings inside the guest.
     func applyEditorSettings(_ settings: String, configuration: MachineConfiguration) async throws
-    /// Health check: Linux, the agent, and code-server report readiness.
+    /// Health check: Linux, the agent, and OpenVSCode Server report readiness.
     func verify(configuration: MachineConfiguration) async throws
     /// Starts the environment and returns the endpoint only after the full readiness check.
     func start(configuration: MachineConfiguration) async throws -> IDEEndpoint

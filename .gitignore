@@ -9,13 +9,26 @@ Vendor/JIT/
 pairingFile*.plist
 host_pairing_file.plist
 *.mobiledevicepairing
+*.p8
+*.p12
+*.mobileprovision
+.env
+.env.*
+!.env.example
 
 # Local clutter
 .DS_Store
 __pycache__/
+*.pyc
+.venv/
+node_modules/
+.pytest_cache/
 
 # Output of Tools/Build/build.sh
 /build/
+*.ipa
+*.xcarchive/
+*.xcresult/
 
 # Per-user Xcode state
 xcuserdata/

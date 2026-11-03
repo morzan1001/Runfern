@@ -3,9 +3,8 @@
 # the catalog, its tools, or the app's key is checked before it reaches main. Apps also install only
 # a catalog whose catalogVersion is higher than theirs, so a changed catalog must raise it.
 #
-# Commits the "Publish Linux Base" workflow pushes don't start other workflows (GitHub's rule for
-# GITHUB_TOKEN); that workflow runs verify-catalog.sh itself before it pushes, and raises
-# catalogVersion with every catalog it changes.
+# GITHUB_TOKEN-created catalog PRs do not trigger workflows; the protected publisher explicitly
+# dispatches this workflow on its signed commit and supplies the main base for version comparison.
 
 name: Catalog
 
@@ -13,6 +12,11 @@ on:
   push:
   pull_request:
   workflow_dispatch:
+    inputs:
+      previous:
+        description: Main commit used as the generated catalog PR base
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -31,7 +35,9 @@ jobs:
       - name: Check the catalog and its signature
         run: Tools/Catalog/verify-catalog.sh
       - name: Test catalog publishing invariants
-        run: python3 -m unittest discover -s Tools/Catalog -p 'test_*.py'
+        run: |
+          python3 -m unittest discover -s Tools/Catalog -p 'test_*.py'
+          python3 -m unittest discover -s Tools/GuestImage -p 'test_*.py'
       - name: Verify license notice integrity
         run: |
           python3 Tools/Licenses/verify.py --notices-only
@@ -43,8 +49,19 @@ jobs:
       - name: Check that a changed catalog has a higher version
         env:
           # The pull request's base, or the branch before this push (zeros for a new branch).
-          PREVIOUS: ${{ github.event.pull_request.base.sha || github.event.before }}
+          PREVIOUS: ${{ github.event.pull_request.base.sha || github.event.before || inputs.previous }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          EVENT_NAME: ${{ github.event_name }}
         run: |
+          if [ "$GITHUB_REF" != "refs/heads/$DEFAULT_BRANCH" ]; then
+            git fetch --no-tags origin "$DEFAULT_BRANCH"
+            current_main="$(git rev-parse FETCH_HEAD)"
+            if [ "$EVENT_NAME" = workflow_dispatch ] && [ -n "$PREVIOUS" ] && [ "$PREVIOUS" != "$current_main" ]; then
+              echo "::error::Main advanced since this catalog PR was prepared; rerun the publisher."
+              exit 1
+            fi
+            PREVIOUS="$current_main"
+          fi
           if [ -z "$PREVIOUS" ] || ! git cat-file -e "$PREVIOUS:Catalog/catalog.json" 2>/dev/null; then
             echo "No earlier catalog to compare with."
             exit 0

@@ -14,15 +14,18 @@ Tools/Catalog/verify-catalog.sh
 
 **Sign Catalog** increments and signs the current catalog without building images.
 **Publish Linux Base** builds the requested bases, publishes their immutable release assets,
-then produces the signed catalog. Both workflows save `signed-catalog` as an artifact: download
-it and submit both JSON and signature in a pull request to `main`. Neither bypasses branch
-protection or writes directly to `main`. Merge only if the catalog version is still newer than
-`main`; rerun signing after concurrent changes.
+then produces the signed catalog and a GitHub-signed pull request. It explicitly starts Catalog
+CI for that PR and merges only after successful checks through normal branch protection.
+Publisher write permissions are limited to the protected `catalog` job; workflow defaults remain
+read-only. Both workflows retain `signed-catalog` as an artifact. **Sign Catalog** still requires
+submitting its artifact through a PR manually.
 
 Linux-image releases are named `<id>-v<image version>`. Published images are not replaced.
-Image publishing is disabled until `LINUX_IMAGE_LICENSE_CLEARED=true` is set in the protected
-`catalog` environment after the image's package, license and source inventories are complete.
-Signing a catalog does not grant permission to distribute its images.
+The publisher verifies each actual image, not a global clearance flag. Cloud images and the
+editor are immutable, checksum-verified inputs. Installed packages, copyright documents, exact
+Debian source packages or signed Fedora source RPMs, editor/Node sources and Runfern build
+inputs are attached to the image release. Missing evidence or a failed boot/editor/toolchain
+smoke test stops publication. Unresolved native app/JIT license findings remain separate.
 Rebuilding an already published base requires the explicit `rebuild` option; the catalog keeps
 only its newest build, so an older environment cannot download its base again.
 
@@ -30,6 +33,7 @@ Publishing manually:
 
 ```sh
 python3 Tools/GuestImage/build_image.py debian-12-arm64
+python3 Tools/GuestImage/test_image.py debian-12-arm64
 Tools/Catalog/publish-image.sh debian-12-arm64
 python3 Tools/Catalog/catalog_release.py finish
 Tools/Catalog/sign-catalog.sh
@@ -37,3 +41,11 @@ Tools/Catalog/sign-catalog.sh
 
 Commit JSON and signature together through a pull request. Guest images need their own license
 and source compliance before distribution. GitHub limits each release asset to less than 2 GiB.
+
+`RUNFERN_IMAGE_BUILD_ROOT` selects an isolated output/cache directory for all image tools.
+Image archives retain the four-file USTAR format the app reads. Source companions are separate
+archives, split below GitHub's asset limit. Within Linux, legal documents and the exact package
+inventory are available at `/usr/share/runfern/licenses`.
+
+If main advances while an automated catalog PR is checked, publishing fails rather than
+bypassing protection. Re-run the failed publisher job to reuse its immutable image assets.

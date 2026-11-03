@@ -46,25 +46,35 @@ import time
 import urllib.request
 import uuid
 import zipfile
+import image_evidence
 
 HERE = pathlib.Path(__file__).resolve().parent
 FILES = HERE / "files"
 
-# Official cloud images. A `url` ending in "/" is a directory whose newest matching file is used.
+# Immutable official builds; checksums are from their publishers' checksum files.
 BASES = {
     "debian-12-arm64": {"flavor": "apt", "kernel": "linux-image-arm64",
-                        "url": "https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-genericcloud-arm64.qcow2"},
+                        "url": "https://cloud.debian.org/images/cloud/bookworm/20261026-2643/debian-12-genericcloud-arm64-20261026-2643.qcow2",
+                        "sha512": "f42866fe22b4baf9f0ed4f81d620064f2a4b86b18b92bfe3aaaa40babf6819d39cbf0caaaad13f4ae3e7c9f82cbd78b0c8cabadd8bc737ce13578e61fa86970c"},
     "debian-13-arm64": {"flavor": "apt", "kernel": "linux-image-arm64",
-                        "url": "https://cloud.debian.org/images/cloud/trixie/latest/debian-13-genericcloud-arm64.qcow2"},
+                        "url": "https://cloud.debian.org/images/cloud/trixie/20261026-2643/debian-13-genericcloud-arm64-20261026-2643.qcow2",
+                        "sha512": "71aa5d5dbcb3d9ecfe96bc3f6dd41b6805a0a41c852204a32747d230b64b95912297fb453b11a6031fd54d84a0a0a430e137d07e6986dc9ebc9d41483be003c4"},
     "ubuntu-24.04-arm64": {"flavor": "apt", "kernel": "linux-image-generic",
-                           "url": "https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-arm64.img"},
+                           "url": "https://cloud-images.ubuntu.com/noble/20261017/noble-server-cloudimg-arm64.img",
+                           "sha256": "50e24e1fb79e89116e939d90aa7738f7af48c442fa1bc2510131e0b39c50348e"},
     "ubuntu-26.04-arm64": {"flavor": "apt", "kernel": "linux-image-generic",
-                           "url": "https://cloud-images.ubuntu.com/resolute/current/resolute-server-cloudimg-arm64.img"},
+                           "url": "https://cloud-images.ubuntu.com/resolute/20261016/resolute-server-cloudimg-arm64.img",
+                           "sha256": "8eb876c2ccc4b6ff89e4a65d511815923b285e04503ba465809bf587f763da24"},
     "fedora-44-arm64": {"flavor": "dnf", "kernel": "kernel-core kernel-modules",
-                        "url": "https://download.fedoraproject.org/pub/fedora/linux/releases/44/Cloud/aarch64/images/",
-                        "pattern": r"Fedora-Cloud-Base-Generic-44-[\d.]+\.aarch64\.qcow2"},
-    "opensuse-tumbleweed-arm64": {"flavor": "zypper", "kernel": "kernel-default",
-                                  "url": "https://download.opensuse.org/ports/aarch64/tumbleweed/appliances/openSUSE-Tumbleweed-Minimal-VM.aarch64-Cloud.qcow2"},
+                        "url": "https://download.fedoraproject.org/pub/fedora/linux/releases/44/Cloud/aarch64/images/Fedora-Cloud-Base-Generic-44-1.7.aarch64.qcow2",
+                        "sha256": "55c60a3b80d3616a08705afd0459e75fe9f03c54aba7a46e4002a41a72fa0d5b"},
+}
+EDITOR = {
+    "version": "openvscode-server-v1.109.5",
+    "url": "https://github.com/gitpod-io/openvscode-server/releases/download/openvscode-server-v1.109.5/openvscode-server-v1.109.5-linux-arm64.tar.gz",
+    "sha256": "36d9c14036489b63de84ebace837fcacf7e60e669a0dc715802c5443684ea4dc",
+    "sourceURL": "https://codeload.github.com/gitpod-io/openvscode-server/tar.gz/4ffe2270acdf711bbefecc3e8c79f4b3631640e5",
+    "sourceSHA256": "8e8969232ca7904f1f48682c621d91cb5217779744693e4e4021b6ed1bd0a8de",
 }
 
 # What differs between package managers: packages (tools, and the libraries Swift, .NET, Flutter,
@@ -75,7 +85,7 @@ FLAVORS = {
         "packages": COMMON_TOOLS + ["build-essential", "openssh-client", "xz-utils", "procps", "pkg-config", "tzdata",
                                     "libicu-dev", "libcurl4-openssl-dev", "libxml2-dev", "libncurses-dev",
                                     "libsqlite3-dev", "zlib1g-dev", "libpython3-dev", "libedit2"],
-        "install_packages": "DEBIAN_FRONTEND=noninteractive apt-get install -y {packages}",
+        "install_packages": "DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends {packages}",
         "install_kernel": "DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends {kernel}",
         "quiet": "systemctl disable --now unattended-upgrades.service apt-daily.timer apt-daily-upgrade.timer || true",
         "clean": "apt-get clean; rm -rf /var/lib/apt/lists/*",
@@ -83,20 +93,11 @@ FLAVORS = {
     "dnf": {
         "packages": COMMON_TOOLS + ["gcc", "gcc-c++", "make", "openssh-clients", "xz", "procps-ng", "pkgconf", "tzdata",
                                     "libicu", "libcurl-devel", "libxml2-devel", "ncurses-devel", "sqlite-devel",
-                                    "zlib-devel", "python3-devel", "libedit", "dracut"],
-        "install_packages": "dnf -y install {packages}",
-        "install_kernel": "dnf -y install {kernel}",
+                                    "zlib-devel", "python3-devel", "libedit", "dracut", "dnf5-plugins"],
+        "install_packages": "dnf -y install --setopt=install_weak_deps=False {packages}",
+        "install_kernel": "dnf -y install --setopt=install_weak_deps=False {kernel}",
         "quiet": "systemctl disable --now dnf-makecache.timer || true",
         "clean": "dnf clean all",
-    },
-    "zypper": {
-        "packages": COMMON_TOOLS + ["gcc", "gcc-c++", "make", "openssh-clients", "xz", "procps", "pkg-config", "timezone",
-                                    "libicu-devel", "libcurl-devel", "libxml2-devel", "ncurses-devel", "sqlite3-devel",
-                                    "zlib-devel", "python3-devel", "libedit0", "dracut"],
-        "install_packages": "zypper --non-interactive install {packages}",
-        "install_kernel": "zypper --non-interactive install --no-recommends {kernel}",
-        "quiet": "systemctl disable --now transactional-update.timer || true",
-        "clean": "zypper clean --all",
     },
 }
 DISK_SIZE = "16G"
@@ -291,21 +292,6 @@ def console_tail(log, lines=60):
         return "(no console output)"
 
 
-def latest_openvscode_server():
-    headers = {"Accept": "application/vnd.github+json"}
-    # CI runners share the anonymous rate limit of their address; a token has its own.
-    token = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
-    if token:
-        headers["Authorization"] = f"Bearer {token}"
-    request = urllib.request.Request("https://api.github.com/repos/gitpod-io/openvscode-server/releases/latest",
-                                     headers=headers)
-    release = json.load(urllib.request.urlopen(request))
-    for asset in release["assets"]:
-        if asset["name"].endswith("linux-arm64.tar.gz"):
-            return release["tag_name"], asset["browser_download_url"]
-    sys.exit("No arm64 build of openvscode-server found")
-
-
 def runfern_extension_vsix():
     """Packages Tools/GuestImage/extension as a VSIX that openvscode-server can install offline."""
     package = json.loads((HERE / "extension" / "package.json").read_text())
@@ -325,6 +311,7 @@ def runfern_extension_vsix():
   <Dependencies/>
   <Assets>
     <Asset Type="Microsoft.VisualStudio.Code.Manifest" Path="extension/package.json" Addressable="true"/>
+    <Asset Type="Microsoft.VisualStudio.Services.Content.License" Path="extension/LICENSE.txt" Addressable="true"/>
   </Assets>
 </PackageManifest>
 """
@@ -332,6 +319,7 @@ def runfern_extension_vsix():
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
   <Default Extension=".json" ContentType="application/json"/>
   <Default Extension=".js" ContentType="application/javascript"/>
+  <Default Extension=".txt" ContentType="text/plain"/>
   <Default Extension=".vsixmanifest" ContentType="text/xml"/>
 </Types>
 """
@@ -339,8 +327,10 @@ def runfern_extension_vsix():
     with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as archive:
         archive.writestr("extension.vsixmanifest", manifest)
         archive.writestr("[Content_Types].xml", content_types)
-        for source in sorted((HERE / "extension").iterdir()):
+        for name in ("extension.js", "package.json"):
+            source = HERE / "extension" / name
             archive.write(source, f"extension/{source.name}")
+        archive.write(HERE.parents[1] / "LICENSE", "extension/LICENSE.txt")
     print("Runfern extension", identity, package["version"])
     return buffer.getvalue()
 
@@ -353,22 +343,30 @@ def write_file(path, source, permissions="0644"):
 def runfern_files():
     """The files every image gets: agent, its service, editor defaults, and the Runfern extension."""
     return [write_file("/usr/lib/runfern/runfern-agent.py", FILES / "runfern-agent.py", "0755"),
+             write_file("/usr/lib/runfern/image-evidence.py", HERE / "image_evidence.py", "0755"),
+             write_file("/usr/lib/runfern/LICENSE.txt", HERE.parents[1] / "LICENSE"),
              write_file("/etc/systemd/system/runfern-agent.service", FILES / "runfern-agent.service"),
              write_file("/usr/lib/runfern/vscode-machine-settings.json", FILES / "vscode-machine-settings.json"),
              {"path": "/usr/lib/runfern/runfern.vsix", "permissions": "0644", "encoding": "b64",
               "content": base64.b64encode(runfern_extension_vsix()).decode()}]
 
 
-def user_data(base, ide_url):
+def user_data(base):
     flavor = FLAVORS[base["flavor"]]
     files = runfern_files()
     if base["flavor"] == "apt":
         files.append({"path": "/etc/initramfs-tools/modules", "append": True, "content": "\n".join(BOOT_MODULES) + "\n"})
+        files.append({"path": "/etc/initramfs-tools/conf.d/runfern", "content": "MODULES=dep\nCOMPRESS=xz\n"})
+    files.append({"path": "/usr/lib/runfern/editor.json", "content": json.dumps(EDITOR)})
 
     # The VM boots kernel and initramfs directly, from the newest kernel installed. Debian and
     # Ubuntu build the initramfs with initramfs-tools, the others with dracut.
     if base["flavor"] == "apt":
-        initramfs = """update-initramfs -c -k "$VERSION" || update-initramfs -u -k "$VERSION"
+        initramfs = """if [ -f "/boot/initrd.img-$VERSION" ]; then
+    update-initramfs -u -k "$VERSION"
+else
+    update-initramfs -c -k "$VERSION"
+fi
 cp "/boot/initrd.img-$VERSION" /tmp/out/initrd.img"""
     else:
         initramfs = f"""dracut --force --no-hostonly --add-drivers "{' '.join(BOOT_MODULES)}" --kver "$VERSION" /tmp/out/initrd.img"""
@@ -381,7 +379,10 @@ set -eux
 {flavor['install_kernel'].format(kernel=base['kernel'])}
 # Editor
 mkdir -p /opt/openvscode-server
-curl -fsSL '{ide_url}' | tar -xz -C /opt/openvscode-server --strip-components=1
+curl -fsSL --retry 3 '{EDITOR["url"]}' -o /tmp/editor.tar.gz
+echo '{EDITOR["sha256"]}  /tmp/editor.tar.gz' | sha256sum -c -
+tar -xzf /tmp/editor.tar.gz -C /opt/openvscode-server --strip-components=1
+rm /tmp/editor.tar.gz
 # The project folder, served by the app over 9p (see NinePServer.swift)
 mkdir -p /workspace
 # Verified toolchain archives and extensions from the app, read-only (see PackageLibrary.swift)
@@ -393,11 +394,12 @@ install -o runfern -g runfern -m 0644 /usr/lib/runfern/vscode-machine-settings.j
 # Runfern's own editor extension: back to the app, preview (see Tools/GuestImage/extension).
 runuser -u runfern -- /opt/openvscode-server/bin/openvscode-server --install-extension /usr/lib/runfern/runfern.vsix
 systemctl enable runfern-agent.service
-# Firmware, bootloader, cloud-init, and automatic updates are not needed anymore.
+# Cloud provisioning and automatic updates are not needed anymore.
 touch /etc/cloud/cloud-init.disabled
 {flavor['quiet']}
 mkdir -p /tmp/out
 VERSION=$(ls /lib/modules | grep -v -- '-cloud-' | sort -V | tail -1)
+python3 /usr/lib/runfern/image-evidence.py slim --manager {base["flavor"]} --kernel "$VERSION"
 for KERNEL in "/boot/vmlinuz-$VERSION" "/boot/Image-$VERSION" "/lib/modules/$VERSION/vmlinuz"; do
     [ -f "$KERNEL" ] && break
 done
@@ -409,9 +411,10 @@ SUBVOLUME=$(findmnt -no FSROOT / | sed 's|^/||')
 [ -n "$SUBVOLUME" ] && [ "$(findmnt -no FSTYPE /)" = btrfs ] && ROOTFLAGS="rootflags=subvol=$SUBVOLUME"
 echo "root=UUID=$(findmnt -no UUID /) $ROOTFLAGS ro console=ttyAMA0 quiet loglevel=3 selinux=0" > /tmp/out/cmdline.txt
 echo "$VERSION" > /tmp/out/kernel-version.txt
+python3 /usr/lib/runfern/image-evidence.py collect --manager {base["flavor"]} --output /tmp/out/evidence
 {flavor['clean']}
 rm -rf /var/log/*.log
-cloud-init clean --logs || true
+if command -v cloud-init >/dev/null; then cloud-init clean --logs; fi
 # The boot files last: the host takes them as the sign that every step succeeded.
 tar -cf /dev/vdc -C /tmp/out .
 sync
@@ -426,11 +429,15 @@ poweroff
         "users": [{"name": "runfern", "uid": 501, "shell": "/bin/bash", "lock_passwd": True,
                    "sudo": "ALL=(ALL) NOPASSWD:ALL"}],
         "package_update": True,
+        "package_upgrade": True,
         "packages": flavor["packages"],
         "write_files": files,
         # The host waits for the VM to stop, so a failed customization powers off right away
         # instead of after the timeout (hours with tcg); the missing boot files report it.
-        "runcmd": [["/bin/bash", "-c", "/bin/bash /usr/lib/runfern/customize.sh || poweroff"]],
+        "runcmd": [["/bin/bash", "-c",
+                   "systemd-run --unit=runfern-customize --no-block "
+                   "--property=StandardOutput=journal+console --property=StandardError=journal+console "
+                   "/bin/bash -c '/bin/bash /usr/lib/runfern/customize.sh || poweroff' || poweroff"]],
     }
     # JSON is valid YAML, which keeps this script free of extra dependencies.
     return "#cloud-config\n" + json.dumps(config, indent=1)
@@ -468,15 +475,8 @@ def bootable_kernel(path):
     sys.exit(f"{path} is not a kernel QEMU can boot directly")
 
 
-def cloud_image_url(base):
-    """The image's address; for a directory the newest file matching the base's pattern."""
-    if not base["url"].endswith("/"):
-        return base["url"]
-    listing = urllib.request.urlopen(base["url"]).read().decode()
-    names = sorted(set(re.findall(base["pattern"], listing)))
-    if not names:
-        sys.exit(f"No image matching {base['pattern']} in {base['url']}")
-    return base["url"] + names[-1]
+def build_root():
+    return pathlib.Path(os.environ.get("RUNFERN_IMAGE_BUILD_ROOT", HERE / "build")).resolve()
 
 
 def main():
@@ -485,6 +485,12 @@ def main():
     image_id = sys.argv[1]
     base = BASES[image_id]
     started = int(time.time())
+    expected_sources = {name: image_evidence.digest(HERE.parents[1] / name)
+                        for name in image_evidence.RUNFERN_SOURCES}
+    source_revision = {
+        "commit": image_evidence.command("git", "rev-parse", "HEAD", cwd=HERE.parents[1]),
+        "dirty": bool(image_evidence.command("git", "status", "--porcelain", "--",
+                                            *image_evidence.RUNFERN_SOURCES, cwd=HERE.parents[1]))}
     require_programs()
     accel = accelerator()
     timeout = build_timeout(accel)
@@ -492,21 +498,24 @@ def main():
     iso_tool = seed_iso_tool()
     print(f"Accelerator: {accel}" + (" (emulated, this takes hours)" if accel == "tcg" else ""), flush=True)
 
-    build = HERE / "build" / image_id
+    build = build_root() / image_id
     work = build / "work"
     shutil.rmtree(work, ignore_errors=True)
     work.mkdir(parents=True)
     archive = build / f"{image_id}.runfernimage"
     # Results of an earlier build must not survive a failed one and get published instead.
-    for stale in (archive, build / f"{image_id}.sha256", build / f"{image_id}.json"):
+    for stale in (archive, build / f"{image_id}.sha256", build / f"{image_id}.json",
+                  build / f"{image_id}.evidence.json", build / f"{image_id}.licenses.tar",
+                  *build.glob(f"{image_id}.sources-*.tar")):
         stale.unlink(missing_ok=True)
 
-    url = cloud_image_url(base)
-    cloud_image = HERE / "build" / pathlib.Path(url).name
+    url = base["url"]
+    cloud_image = build_root() / pathlib.Path(url).name
     if not cloud_image.exists():
-        run("curl", "-fL", "-o", cloud_image, url)
-
-    ide_version, ide_url = latest_openvscode_server()
+        run("curl", "-fL", "--retry", "3", "-o", cloud_image, url)
+    algorithm = "sha512" if "sha512" in base else "sha256"
+    image_evidence.verify_digest(cloud_image, base[algorithm], algorithm)
+    ide_version = EDITOR["version"]
     print("openvscode-server", ide_version)
 
     disk = work / "disk.qcow2"
@@ -516,10 +525,10 @@ def main():
     seed = work / "seed"
     seed.mkdir()
     (seed / "meta-data").write_text(f"instance-id: runfern-{image_id}\nlocal-hostname: runfern\n")
-    (seed / "user-data").write_text(user_data(base, ide_url))
+    (seed / "user-data").write_text(user_data(base))
     run(*seed_iso_command(iso_tool, seed, work / "seed.iso"))
     out = work / "out.raw"
-    run("qemu-img", "create", "-f", "raw", out, "512M")
+    run("qemu-img", "create", "-f", "raw", out, "8G")
 
     console = work / "console.log"
     variables = work / "efi-vars.fd"
@@ -573,6 +582,10 @@ def main():
     (build / f"{image_id}.sha256").write_text(digest + "\n")
     summary = json.dumps({"id": image_id, "sizeBytes": size, "sha256": digest}, indent=2)
     (build / f"{image_id}.json").write_text(summary + "\n")
+    for name, expected in expected_sources.items():
+        image_evidence.verify_digest(HERE.parents[1] / name, expected)
+    image_evidence.package(build, image_id, extracted / "evidence", base, EDITOR, source_revision)
+    image_evidence.verify(build, image_id)
     print(summary)
 
 
