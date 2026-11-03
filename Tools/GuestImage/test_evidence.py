@@ -167,6 +167,24 @@ class ImageEvidenceTests(unittest.TestCase):
         self.assertEqual(run.call_args.args[0][5:], [
             "linux-headers-7.0.0-38", "linux-headers-7.0.0-38-generic", "linux-tools-7.0.0-38-generic"])
 
+    def test_fedora_running_kernel_exception_is_limited_to_superseded_build_kernel(self):
+        old = "6.19.10-300.fc44"
+        selected = "6.19.13-300.fc44"
+        packages = [{"name": name, "version": "0:" + version, "architecture": "aarch64"}
+                    for name, version in (("kernel-core", old), ("kernel-modules-core", old),
+                                          ("kernel-core", selected), ("kernel-modules-core", selected))]
+        for running in (old, selected):
+            with self.subTest(running=running), \
+                    patch.object(image_evidence, "rpm_packages", return_value=packages), \
+                    patch.object(image_evidence.subprocess, "run") as run, \
+                    patch.object(image_evidence, "command", return_value=running + ".aarch64"), \
+                    patch.object(pathlib.Path, "is_dir", return_value=True):
+                image_evidence.slim("dnf", selected + ".aarch64")
+                removal = run.call_args.args[0]
+                self.assertEqual("--setopt=protect_running_kernel=False" in removal, running == old)
+                self.assertIn("kernel-core-" + old + ".aarch64", removal)
+                self.assertNotIn("kernel-core-" + selected + ".aarch64", removal)
+
     def test_customizer_survives_removing_cloud_init(self):
         config = json.loads(build_image.user_data(build_image.BASES[self.image_id]).split("\n", 1)[1])
         launcher = config["runcmd"][0][2]

@@ -121,9 +121,12 @@ def slim(manager, kernel):
                                input=f"{name} {name}/prerm/removing-running-kernel boolean false\n",
                                text=True, check=True)
     if remove:
-        subprocess.run((["env", "DEBIAN_FRONTEND=noninteractive", "apt-get", "purge", "-y"]
-                        if manager == "apt" else ["dnf", "remove", "-y"])
-                       + remove, check=True)
+        removal = (["env", "DEBIAN_FRONTEND=noninteractive", "apt-get", "purge", "-y"]
+                   if manager == "apt" else ["dnf", "remove", "-y"])
+        if manager == "dnf" and f"kernel-core-{command('uname', '-r')}" in remove:
+            # Permit only this disposable VM's superseded kernel; retain the final boot target.
+            removal.append("--setopt=protect_running_kernel=False")
+        subprocess.run(removal + remove, check=True)
     require(pathlib.Path("/lib/modules", kernel).is_dir(), "Image slimming removed the selected kernel")
 
 
