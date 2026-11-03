@@ -326,7 +326,9 @@ class ImageEvidenceTests(unittest.TestCase):
                     "headers.tar.xz", "headers.tar.xz", "headers/include/uapi.h\nheaders/asm/other.h"]):
             notices = image_evidence.source_rpm_notices(package, self.root)
         self.assertEqual(licenses.call_args.args[0],
-                         set(image_evidence.LICENSE_TEXTS) - {"MPL-2.0", "Artistic-1.0-Perl", "Artistic-2.0"})
+                         {"BSD-2-Clause", "BSD-3-Clause", "CDDL-1.0", "Linux-OpenIB",
+                          "GPL-1.0-or-later", "GPL-2.0-only", "GPL-2.0-or-later", "LGPL-2.0-or-later",
+                          "LGPL-2.1-only", "LGPL-2.1-or-later", "MIT", "Linux-syscall-note"})
         text = notices[-1].read_text()
         self.assertIn("headers.tar.xz:headers/include/uapi.h", text)
         self.assertIn("headers.tar.xz:headers/asm/other.h", text)
