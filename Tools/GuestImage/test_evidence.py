@@ -123,6 +123,12 @@ class ImageEvidenceTests(unittest.TestCase):
         self.assertEqual(fields["Source"], "fixture")
         self.assertEqual(fields["Checksums-Sha256"].splitlines(), ["abc 3 source.tar", "def 4 patch.tar"])
 
+    def test_signature_armor_cannot_override_package_version(self):
+        fields = image_evidence.deb_source_fields(
+            "Source: db5.3\nVersion: 5.3.28+dfsg2-7\n"
+            "-----BEGIN PGP SIGNATURE-----\nVersion: GnuPG v1\n\nsignature\n-----END PGP SIGNATURE-----\n")
+        self.assertEqual(fields["Version"], "5.3.28+dfsg2-7")
+
     def test_slimming_preserves_essential_boot_chain_and_selected_kernel(self):
         packages = [{"name": name, "version": "1"} for name in
                     ("grub-common", "grub-efi-arm64-signed", "linux-image-6.1-arm64",
