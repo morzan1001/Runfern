@@ -13,8 +13,8 @@ Project setup and a sample project, captured in the iPad simulator.
 
 ## Getting started
 
-Requires iPadOS 27 or later. Debian 12 is available through the signed catalog, with
-[verified image, source and license downloads](https://github.com/morzan1001/Runfern/releases/tag/debian-12-arm64-v1).
+Requires iPadOS 27 or later. Available Linux bases use the signed catalog, with
+[verified image, source and license downloads](https://github.com/morzan1001/Runfern/releases).
 The app remains a source preview: public app builds await completion of the native dependency
 license evidence. The interpreter variant does not need JIT.
 

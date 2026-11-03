@@ -40,6 +40,8 @@ class CatalogPRTests(unittest.TestCase):
                 calls.append((path, data, method))
                 if "/git/ref/heads/main" in path:
                     return {"object": {"sha": "base"}}
+                if "/git/matching-refs/" in path:
+                    return [{"ref": "refs/heads/publishing/catalog-42-1", "object": {"sha": "signed-head"}}]
                 if "/commits/" in path and "check-runs" not in path:
                     return {"commit": {"verification": {"verified": True}}}
                 if path.endswith("/pulls"):
@@ -77,6 +79,8 @@ class CatalogPRTests(unittest.TestCase):
             self.assertEqual(merge[2], "PUT")
             self.assertEqual(merge[1]["sha"], "signed-head")
             self.assertNotIn("admin", merge[1])
+            self.assertEqual([call[0] for call in calls if call[2] == "DELETE"],
+                             ["repos/morzan1001/Runfern/git/refs/heads/publishing/catalog-42-1"])
             if getattr(self, "approval_mode", False):
                 self.assertEqual([call[0] for call in calls if call[0].endswith("/approve")],
                                  ["repos/morzan1001/Runfern/actions/runs/2/approve"])
@@ -84,6 +88,22 @@ class CatalogPRTests(unittest.TestCase):
     def test_workflow_execution_approval_is_scoped_to_the_generated_signed_pr(self):
         self.approval_mode = True
         self.test_successful_publication_dispatches_ci_and_uses_sha_guarded_merge()
+
+    def test_branch_cleanup_never_deletes_main_or_new_unmerged_changes(self):
+        with patch.object(publisher, "api") as api:
+            with self.assertRaisesRegex(RuntimeError, "not an internal"):
+                publisher.delete_merged_branch("morzan1001/Runfern", "main", "head")
+            api.assert_not_called()
+        with patch.object(publisher, "api", return_value=[
+                {"ref": "refs/heads/publishing/catalog-42-1", "object": {"sha": "new-changes"}}]) as api:
+            with self.assertRaisesRegex(RuntimeError, "advanced"):
+                publisher.delete_merged_branch("morzan1001/Runfern", "publishing/catalog-42-1", "merged-head")
+            self.assertEqual(api.call_count, 1)
+
+    def test_already_deleted_publisher_branch_needs_no_delete(self):
+        with patch.object(publisher, "api", return_value=[]) as api:
+            publisher.delete_merged_branch("morzan1001/Runfern", "publishing/catalog-42-1", "merged-head")
+            self.assertEqual(api.call_count, 1)
 
 
 if __name__ == "__main__":

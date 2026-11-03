@@ -260,6 +260,17 @@ class ImageEvidenceTests(unittest.TestCase):
                          "data/signed/6d9f90a6/src/crun-1.28-1.fc44.src.rpm")
         self.assertFalse(source.with_name(source.name + ".download").exists())
 
+    def test_public_domain_notice_preserves_original_source_declaration(self):
+        package = {"name": "filesystem", "sourceRPM": "filesystem-3.18-52.fc44.src.rpm",
+                   "license": "LicenseRef-Fedora-Public-Domain"}
+        statement = b"License: LicenseRef-Fedora-Public-Domain\n"
+        with patch.object(image_evidence, "rpm_source", return_value=self.root / "exact.src.rpm"), \
+                patch.object(image_evidence, "command", return_value="filesystem.spec"), \
+                patch.object(image_evidence.subprocess, "check_output", return_value=statement):
+            notices = image_evidence.source_rpm_notices(package, self.root)
+        self.assertEqual(len(notices), 1)
+        self.assertEqual(notices[0].read_bytes(), statement)
+
     def test_customizer_survives_removing_cloud_init(self):
         config = json.loads(build_image.user_data(build_image.BASES[self.image_id]).split("\n", 1)[1])
         launcher = config["runcmd"][0][2]

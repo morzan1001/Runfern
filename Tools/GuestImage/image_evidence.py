@@ -272,17 +272,21 @@ def source_rpm_notices(package, output):
                 with nested.open("wb") as stream:
                     subprocess.run(["bsdtar", "-xOf", str(source), member], stdout=stream, check=True)
                 collect_legal(nested, member + ":")
-    if not notices and identity.startswith("fedora-repos-"):
-        require(package["license"] == "MIT", "Unreviewed Fedora repository metadata license")
-        specification = subprocess.check_output(["bsdtar", "-xOf", str(source), "fedora-repos.spec"])
-        require(re.search(rb"(?m)^License:\s+MIT\s*$", specification),
-                "Fedora repository source license differs from installed metadata")
-        target = output / "source-notices" / key / "fedora-repos.spec"
+    public_domain = package.get("license") == "LicenseRef-Fedora-Public-Domain"
+    if not notices and (identity.startswith("fedora-repos-") or public_domain):
+        require(public_domain or package["license"] == "MIT", "Unreviewed Fedora repository metadata license")
+        name = identity.removesuffix(".src.rpm").rsplit("-", 2)[0] + ".spec"
+        specification = subprocess.check_output(["bsdtar", "-xOf", str(source), name])
+        require(re.search(rb"(?m)^License:\s+" + re.escape(package["license"].encode()) + rb"\s*$", specification),
+                "Distribution source license differs from installed metadata")
+        target = output / "source-notices" / key / name
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(specification)
-        license_file = output / "sources/license-texts/MIT.txt"
-        fetch(LICENSE_TEXT_URL + "MIT.txt", license_file, LICENSE_TEXTS["MIT"])
-        notices.extend([target, license_file])
+        notices.append(target)
+        if not public_domain:
+            license_file = output / "sources/license-texts/MIT.txt"
+            fetch(LICENSE_TEXT_URL + "MIT.txt", license_file, LICENSE_TEXTS["MIT"])
+            notices.append(license_file)
     return notices
 
 
