@@ -25,6 +25,10 @@ on:
         required: false
         type: boolean
         default: false
+      reuse_run:
+        description: Optional previous main publisher run; reuse successful artifacts and rebuild failed images only
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -103,17 +107,42 @@ jobs:
     # Arm64 like the guest: with KVM if the runner offers it, else emulated (TCG), which takes hours.
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 350
+    permissions:
+      contents: read
+      actions: read
     strategy:
       fail-fast: false
       matrix:
         id: ${{ fromJSON(needs.plan.outputs.ids) }}
     env:
       IMAGE: ${{ matrix.id }}
+      REUSE_RUN: ${{ inputs.reuse_run }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          fetch-depth: 0
+      - name: Select verified source artifacts
+        if: inputs.reuse_run != ''
+        id: reuse
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 Tools/Catalog/reuse_image.py --run "$REUSE_RUN" --image "$IMAGE"
+      - name: Download the successful unchanged image
+        if: steps.reuse.outputs.reuse == 'true'
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.reuse_run }}
+          name: image-${{ matrix.id }}
+          path: Tools/GuestImage/build/${{ matrix.id }}
+      - name: Verify reused image, sources and real smoke proof
+        if: steps.reuse.outputs.reuse == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 Tools/Catalog/reuse_image.py --run "$REUSE_RUN" --image "$IMAGE" --verify
       - name: Check hardware acceleration
+        if: steps.reuse.outputs.reuse != 'true'
         run: |
           if [ -e /dev/kvm ]; then
             sudo chmod 666 /dev/kvm
@@ -125,12 +154,15 @@ jobs:
           free -h
           df -h .
       - name: Install QEMU
+        if: steps.reuse.outputs.reuse != 'true'
         run: |
           sudo apt-get update
           sudo apt-get install -y qemu-system-arm qemu-efi-aarch64 qemu-utils xorriso zstd
       - name: Build with exact package sources and legal documents
+        if: steps.reuse.outputs.reuse != 'true'
         run: python3 Tools/GuestImage/build_image.py "$IMAGE"
       - name: Boot and test the actual image
+        if: steps.reuse.outputs.reuse != 'true'
         run: |
           python3 Tools/GuestImage/test_image.py "$IMAGE"
           python3 Tools/GuestImage/image_evidence.py verify "$IMAGE" --build-root Tools/GuestImage/build --publication

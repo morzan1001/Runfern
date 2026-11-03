@@ -23,9 +23,14 @@ submitting its artifact through a PR manually.
 Linux-image releases are named `<id>-v<image version>`. Published images are not replaced.
 The publisher verifies each actual image, not a global clearance flag. Cloud images and the
 editor are immutable, checksum-verified inputs. Installed packages, copyright documents, exact
-Debian source packages or signed Fedora source RPMs, editor/Node sources and Runfern build
+Debian source packages or signed Fedora source RPMs from the Koji archive, editor/Node sources and Runfern build
 inputs are attached to the image release. Missing evidence or a failed boot/editor/toolchain
 smoke test stops publication. Unresolved native app/JIT license findings remain separate.
+Fedora's certificate package lacks standalone RPM license files. Its original notices are
+collected from the exact, signature-verified source RPM, alongside checksum-pinned standard
+MIT, GPLv2 and MPL 2.0 texts; the distribution's license label does not replace source notices.
+Other missing RPM notices are recovered from original legal files in verified source packages;
+directory-only packages retain their RPM license declaration and exact source identity.
 Rebuilding an already published base requires the explicit `rebuild` option; the catalog keeps
 only its newest build, so an older environment cannot download its base again.
 
@@ -49,3 +54,8 @@ inventory are available at `/usr/share/runfern/licenses`.
 
 If main advances while an automated catalog PR is checked, publishing fails rather than
 bypassing protection. Re-run the failed publisher job to reuse its immutable image assets.
+
+After failed builds, `reuse_run` may reference an earlier main **Publish Linux Base** run.
+Only successful, unexpired artifacts from its signed ancestor commit are reused, with full
+image/source/legal verification and matching original smoke evidence. Failed images are built
+again; fork workflows, pending builds and expired artifacts are rejected.
