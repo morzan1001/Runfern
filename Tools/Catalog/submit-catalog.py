@@ -4,6 +4,7 @@ import base64
 import json
 import os
 import pathlib
+import re
 import subprocess
 import time
 import urllib.parse
@@ -29,6 +30,18 @@ def api(path, data=None, method=None):
 def require(condition, message):
     if not condition:
         raise RuntimeError(message)
+
+
+def delete_merged_branch(repository, branch, head):
+    require(repository == "morzan1001/Runfern"
+            and re.fullmatch(r"publishing/catalog-[0-9]+-[0-9]+", branch),
+            "Refusing to delete a branch that is not an internal catalog publisher branch")
+    references = api(f"repos/{repository}/git/matching-refs/heads/{branch}")
+    matches = [reference for reference in references if reference["ref"] == "refs/heads/" + branch]
+    require(len(matches) <= 1 and all(reference["object"]["sha"] == head for reference in matches),
+            "Publisher branch advanced after merging; refusing to delete its new changes")
+    if matches:
+        api(f"repos/{repository}/git/refs/heads/{branch}", method="DELETE")
 
 
 def main():
@@ -132,6 +145,7 @@ def main():
     require(result["merged"], f"Protected merge rejected: {result['message']}")
     require(api(f"repos/{repository}/commits/{result['sha']}")["commit"]["verification"]["verified"],
             "The merged catalog commit is not signed")
+    delete_merged_branch(repository, branch, head)
     print(f"Merged {pr['html_url']} through normal branch protection.", flush=True)
     with pathlib.Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a") as summary:
         summary.write(f"\nCatalog merged through protected PR: {pr['html_url']}\n")

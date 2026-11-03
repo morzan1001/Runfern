@@ -16,6 +16,7 @@ Tools/Catalog/verify-catalog.sh
 **Publish Linux Base** builds the requested bases, publishes their immutable release assets,
 then produces the signed catalog and a GitHub-signed pull request. It explicitly starts Catalog
 CI for that PR and merges only after successful checks through normal branch protection.
+Merged publisher branches are removed only if their head still matches the checked commit.
 Publisher write permissions are limited to the protected `catalog` job; workflow defaults remain
 read-only. Both workflows retain `signed-catalog` as an artifact. **Sign Catalog** still requires
 submitting its artifact through a PR manually.
