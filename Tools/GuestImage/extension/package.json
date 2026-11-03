@@ -4,7 +4,12 @@
   "description": "Connects VS Code with the Runfern app on iPad.",
   "version": "0.1.0",
   "publisher": "runfern",
-  "license": "UNLICENSED",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/morzan1001/Runfern.git",
+    "directory": "Tools/GuestImage/extension"
+  },
   "engines": {
     "vscode": "^1.80.0"
   },

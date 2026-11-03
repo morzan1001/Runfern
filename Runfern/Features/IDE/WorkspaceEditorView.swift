@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Simple editor on the local working copy. It does not replace code-server; it makes the storage
+/// Simple editor on the local working copy. It does not replace OpenVSCode Server; it makes the storage
 /// contract verifiable: edit → saved locally → synced with the folder (DAT03, ADR09).
 struct WorkspaceEditorView: View {
     struct FileNode: Identifiable, Hashable {

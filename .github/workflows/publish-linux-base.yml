@@ -1,6 +1,6 @@
 # Builds Linux bases and publishes them, so apps can download a base the first time a project needs
 # it: each build becomes a release asset (<id>-v<image version>), the catalog lists it, and the
-# signed catalog is saved as an artifact for a reviewed pull request to main.
+# signed catalog is merged through a GitHub-signed PR after protected checks.
 #
 # Run it from Actions > "Publish Linux Base" > Run workflow on main, with base ids from
 # Catalog/catalog.json. Needs the secret CATALOG_SIGNING_KEY of the environment "catalog", which
@@ -43,15 +43,6 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
-      - name: Require complete image redistribution evidence
-        env:
-          LICENSE_CLEARED: ${{ vars.LINUX_IMAGE_LICENSE_CLEARED }}
-        run: |
-          if [ "$LICENSE_CLEARED" != true ]; then
-            echo "::error::Linux image publication is blocked until guest package, license and source inventories are verified."
-            exit 1
-          fi
-          python3 Tools/Licenses/verify.py --notices-only --require-clearance
       - name: Check the requested bases
         id: ids
         env:
@@ -137,10 +128,12 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y qemu-system-arm qemu-efi-aarch64 qemu-utils xorriso zstd
-      - name: Build
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build with exact package sources and legal documents
         run: python3 Tools/GuestImage/build_image.py "$IMAGE"
+      - name: Boot and test the actual image
+        run: |
+          python3 Tools/GuestImage/test_image.py "$IMAGE"
+          python3 Tools/GuestImage/image_evidence.py verify "$IMAGE" --build-root Tools/GuestImage/build --publication
       - name: Keep the image for publishing
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
@@ -149,6 +142,9 @@ jobs:
             Tools/GuestImage/build/${{ matrix.id }}/${{ matrix.id }}.runfernimage
             Tools/GuestImage/build/${{ matrix.id }}/${{ matrix.id }}.sha256
             Tools/GuestImage/build/${{ matrix.id }}/${{ matrix.id }}.json
+            Tools/GuestImage/build/${{ matrix.id }}/${{ matrix.id }}.evidence.json
+            Tools/GuestImage/build/${{ matrix.id }}/${{ matrix.id }}.licenses.tar
+            Tools/GuestImage/build/${{ matrix.id }}/${{ matrix.id }}.sources-*.tar
           if-no-files-found: error
           retention-days: 3
           # The disk inside is compressed qcow2 already.
@@ -173,10 +169,10 @@ jobs:
     environment: catalog
     permissions:
       contents: write
+      pull-requests: write
+      actions: write
     # One publish at a time in the whole repository: release tags and the catalog are shared, and
-    # each publish continues from the catalog the previous one pushed. queue: max lets every
-    # waiting publish wait; by default GitHub cancels all but the newest, and their builds would
-    # go unpublished. (actionlint 1.7.12 doesn't know the key yet; GitHub does.)
+    # each publish continues from the latest catalog without bypassing main.
     concurrency:
       group: publish-linux-base
       cancel-in-progress: false
@@ -242,12 +238,16 @@ jobs:
             Catalog/catalog.json.sig
           if-no-files-found: error
           retention-days: 30
+      - name: Merge through a signed, checked catalog PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 Tools/Catalog/submit-catalog.py
       - name: Summary
         run: |
           {
             echo "### Catalog version $(jq .catalogVersion Catalog/catalog.json) on $BRANCH"
             echo
-            echo "Download signed-catalog and submit both files in a pull request to main. Main is never bypassed."
+            echo "The signed catalog is merged through a GitHub-signed PR after the required checks. Main is never bypassed."
             echo
             echo "| Base | Image version | Size | Download |"
             echo "| --- | --- | --- | --- |"
