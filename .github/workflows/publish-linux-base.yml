@@ -1,6 +1,6 @@
 # Builds Linux bases and publishes them, so apps can download a base the first time a project needs
-# it: each build becomes a release asset (<id>-v<image version>), the catalog lists it, and the
-# signed catalog is merged through a GitHub-signed PR after protected checks.
+# it: the builds of a run become assets of one release for the next catalog version (catalog-v<N>),
+# the catalog lists them, and the signed catalog is merged through a GitHub-signed PR after protected checks.
 #
 # Run it from Actions > "Publish Linux Base" > Run workflow on main, with base ids from
 # Catalog/catalog.json. Needs the secret CATALOG_SIGNING_KEY of the environment "catalog", which
@@ -247,6 +247,19 @@ jobs:
             mv "$RUNNER_TEMP/images/$id".* "Tools/GuestImage/build/$id/"
             Tools/Catalog/publish-image.sh "${rebuild[@]}" "$id"
           done
+      - name: Publish the catalog release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Published only now, with every image of the run in it: published releases are immutable.
+          if git diff --quiet -- Catalog/catalog.json; then
+            echo "The catalog lists these builds already."
+            exit 0
+          fi
+          tag="$(python3 Tools/Catalog/catalog_release.py release-tag)"
+          if [ "$(gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json isDraft --jq .isDraft)" = true ]; then
+            gh release edit "$tag" --repo "$GITHUB_REPOSITORY" --draft=false --latest=false
+          fi
       - name: Sign the catalog
         env:
           CATALOG_SIGNING_KEY: ${{ secrets.CATALOG_SIGNING_KEY }}

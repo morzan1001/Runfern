@@ -62,6 +62,11 @@ jobs:
             fi
             PREVIOUS="$current_main"
           fi
+          # No app has a catalog before the first app release (tag v*), so until then it may change in place.
+          if [ -z "$(git ls-remote --tags origin 'refs/tags/v*')" ]; then
+            echo "No app release yet: the catalog may change without a higher version."
+            exit 0
+          fi
           if [ -z "$PREVIOUS" ] || ! git cat-file -e "$PREVIOUS:Catalog/catalog.json" 2>/dev/null; then
             echo "No earlier catalog to compare with."
             exit 0

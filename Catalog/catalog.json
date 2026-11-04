@@ -26,7 +26,7 @@
         "swift-debian-12"
       ],
       "source": {
-        "url": "https://github.com/morzan1001/Runfern/releases/download/debian-12-arm64-v1/debian-12-arm64.runfernimage",
+        "url": "https://github.com/morzan1001/Runfern/releases/download/catalog-v1/debian-12-arm64.runfernimage",
         "sha256": "78eb55a604bd38e604236fcde0cd26c13398cc08b858744d4838d1f25701f6fd"
       }
     },
@@ -53,7 +53,7 @@
         "swift-debian-13"
       ],
       "source": {
-        "url": "https://github.com/morzan1001/Runfern/releases/download/debian-13-arm64-v1/debian-13-arm64.runfernimage",
+        "url": "https://github.com/morzan1001/Runfern/releases/download/catalog-v1/debian-13-arm64.runfernimage",
         "sha256": "f051a0d8fa651d8c66dde68e7ca77a736a88a804f3f36d42af8dc0189af0f19b"
       }
     },
@@ -80,7 +80,7 @@
         "swift-ubuntu-24.04"
       ],
       "source": {
-        "url": "https://github.com/morzan1001/Runfern/releases/download/ubuntu-24.04-arm64-v1/ubuntu-24.04-arm64.runfernimage",
+        "url": "https://github.com/morzan1001/Runfern/releases/download/catalog-v1/ubuntu-24.04-arm64.runfernimage",
         "sha256": "81dba21a862dfee890f4dcedd28fffb92ddd7438eaf4b12a74ee52f868141a10"
       }
     },
@@ -107,7 +107,7 @@
         "swift-ubuntu-26.04"
       ],
       "source": {
-        "url": "https://github.com/morzan1001/Runfern/releases/download/ubuntu-26.04-arm64-v1/ubuntu-26.04-arm64.runfernimage",
+        "url": "https://github.com/morzan1001/Runfern/releases/download/catalog-v1/ubuntu-26.04-arm64.runfernimage",
         "sha256": "b8b839bb8bd6844f8a2ec46a8e04e4b060e89c095dc902b739950215f15c25d1"
       }
     },
@@ -134,7 +134,7 @@
         "swift-fedora-44"
       ],
       "source": {
-        "url": "https://github.com/morzan1001/Runfern/releases/download/fedora-44-arm64-v1/fedora-44-arm64.runfernimage",
+        "url": "https://github.com/morzan1001/Runfern/releases/download/catalog-v1/fedora-44-arm64.runfernimage",
         "sha256": "f50b983b3aa31942cb8f29ea795aec5fd00fa45e0353ce968998b1e3eb3cadfc"
       }
     }
