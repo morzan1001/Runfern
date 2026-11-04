@@ -5,7 +5,8 @@ Ed25519 signatures matching `publisherKey` in `Runfern/Catalog/CatalogStore.swif
 higher `catalogVersion`. Downloads are HTTPS and SHA-256 pinned.
 
 The initial catalog is version 1 and includes Debian 12/13, Ubuntu 24.04/26.04, and Fedora 44
-ARM64 images. Later catalog changes need a higher `catalogVersion` so installed apps accept them.
+ARM64 images, all in the release `catalog-v1`. It may change in place until the first app release
+(tag `v*`); after that, every change needs a higher `catalogVersion` so installed apps accept it.
 
 `CATALOG_SIGNING_KEY` belongs only in the `catalog` GitHub environment, restricted to the `main`
 branch. Never commit the private key. Check it locally with:
@@ -24,7 +25,7 @@ Publisher write permissions are limited to the protected `catalog` job; workflow
 read-only. Both workflows retain `signed-catalog` as an artifact. **Sign Catalog** still requires
 submitting its artifact through a PR manually.
 
-Linux-image releases are named `<id>-v<image version>`. Published images are not replaced.
+All images of a catalog version are assets of one release, `catalog-v<N>`. Published images are not replaced.
 The publisher verifies each actual image, not a global clearance flag. Cloud images and the
 editor are immutable, checksum-verified inputs. Installed packages, copyright documents, exact
 Debian source packages or signed Fedora source RPMs from the Koji archive, editor/Node sources and Runfern build

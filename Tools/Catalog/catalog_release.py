@@ -4,15 +4,18 @@
 publish-image.sh, sign-catalog.sh, verify-catalog.sh, and the "Publish Linux Base" workflow use it,
 so the catalog is always written the same way as update_catalog.py writes it and diffs stay small.
 
-Every build of a base is a release of its own, named after the image's catalogVersion
-(<id>-v<version>). Published builds are never replaced: environments remember the version they
-were created with, so a new build of a published base gets the next version. The catalog lists
-only the newest build of each base, though, so environments created on an earlier one can't
-download it again; that's why building a published base again takes --rebuild.
+Images are published with the catalog version that first lists them: all builds for catalog
+version N are assets of one release, catalog-vN, and each image's catalogVersion is N. Published
+builds are never replaced: environments remember the version they were created with, so a new
+build of a published base comes with the next catalog version. The catalog lists only the newest
+build of each base, though, so environments created on an earlier one can't download it again;
+that's why building a published base again takes --rebuild.
 
 Usage: catalog_release.py [--catalog <file>] next-version [--rebuild] <id>
-           prints the catalogVersion a new build of <id> gets: the current one while the base
-           is unpublished, else (only with --rebuild) one higher
+           prints the catalogVersion a new build of <id> gets: the next catalog version
+           (for a published base only with --rebuild)
+       catalog_release.py [--catalog <file>] release-tag
+           prints the release that holds the builds for the next catalog version (catalog-v<N>)
        catalog_release.py [--catalog <file>] published-version <id> <sha256>
            prints the base's catalogVersion if the catalog lists the build with this checksum
            already, else nothing
@@ -71,8 +74,12 @@ def base_image(catalog, image_id):
     raise CatalogError(f"the catalog has no base {image_id}; it lists {known}.")
 
 
+def release_tag(version):
+    return f"catalog-v{version}"
+
+
 def release_url(image_id, version):
-    return f"{RELEASES}{image_id}-v{version}/{image_id}.runfernimage"
+    return f"{RELEASES}{release_tag(version)}/{image_id}.runfernimage"
 
 
 def is_count(value, minimum=1):
@@ -86,15 +93,13 @@ def is_https(url):
 
 def next_version(catalog, image_id, rebuild=False):
     image = base_image(catalog, image_id)
-    if not image.get("source"):
-        return image["catalogVersion"]
-    if not rebuild:
+    if image.get("source") and not rebuild:
         raise CatalogError(
             f"{image_id} is published as version {image['catalogVersion']} already. The catalog lists one build "
             f"per base, so a new build takes its place there, and environments created on version "
             f"{image['catalogVersion']} can't download their base anymore. Build it again only on purpose: "
             f"--rebuild (in the workflow: rebuild).")
-    return image["catalogVersion"] + 1
+    return max(catalog["catalogVersion"], image["catalogVersion"]) + 1
 
 
 def published_version(catalog, image_id, sha256):
@@ -110,7 +115,7 @@ def set_source(catalog, image_id, version, url, sha256, size):
     image = base_image(catalog, image_id)
     if not is_count(version):
         raise CatalogError(f"the version of {image_id} must be a positive number, not {version!r}.")
-    lowest = next_version(catalog, image_id, rebuild=True)
+    lowest = image["catalogVersion"] + 1 if image.get("source") else 1
     if version < lowest:
         raise CatalogError(f"{image_id} is published as version {image['catalogVersion']} already; "
                            f"published builds are never replaced, so a new build needs version "
@@ -245,6 +250,7 @@ def main(arguments=None):
     command.add_argument("url")
     command.add_argument("sha256")
     command.add_argument("size", type=int)
+    commands.add_parser("release-tag", help="prints the release for builds of the next catalog version")
     commands.add_parser("finish", help="raises catalogVersion and sets publishedAt to now")
     commands.add_parser("check", help="checks the catalog's shape")
     command = commands.add_parser("newer-than", help="checks that a changed catalog has a higher catalogVersion")
@@ -270,6 +276,8 @@ def main(arguments=None):
                 raise CatalogError(problem)
             print("The catalog is unchanged." if data == previous else
                   f"Catalog version {catalog['catalogVersion']} follows {json.loads(previous).get('catalogVersion')!r}.")
+        elif options.command == "release-tag":
+            print(release_tag(catalog["catalogVersion"] + 1))
         elif options.command == "finish":
             finish(catalog)
             save(options.catalog, catalog)

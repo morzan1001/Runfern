@@ -20,7 +20,7 @@ The real editor running in Runfern with Debian and Python, captured in the iPad 
 ## Getting started
 
 Requires iPadOS 27 or later. Available Linux bases use the signed catalog, with
-[verified image, source and license downloads](https://github.com/morzan1001/Runfern/releases).
+[verified image, source and license downloads](https://github.com/morzan1001/Runfern/releases/tag/catalog-v1).
 The app remains a source preview: public app builds await completion of the native dependency
 license evidence. The interpreter variant does not need JIT.
 

@@ -1,5 +1,7 @@
 #!/bin/bash
-# Publish an immutable, smoke-tested Linux image with its exact legal and source companions.
+# Upload a smoke-tested Linux image with its exact legal and source companions to the draft release
+# of the next catalog version (catalog-v<N>). Publish that release once every image of the run is in
+# it (the "Publish Linux images" workflow does), then sign and submit the catalog.
 set -euo pipefail
 
 REPOSITORY="morzan1001/Runfern"
@@ -41,7 +43,7 @@ if [ -n "$PUBLISHED" ]; then
     exit 0
 fi
 VERSION="$(catalog_release next-version ${REBUILD[@]+"${REBUILD[@]}"} "$IMAGE")"
-TAG="$IMAGE-v$VERSION"
+TAG="$(catalog_release release-tag)"
 URL="https://github.com/$REPOSITORY/releases/download/$TAG/$IMAGE.runfernimage"
 
 release_state() {
@@ -54,10 +56,8 @@ import json, pathlib, sys
 build, image, checksum, mode = pathlib.Path(sys.argv[1]), sys.argv[2], sys.argv[3], sys.argv[4]
 state = json.loads((build / "release-state.json").read_text())
 expected = json.loads((build / "publication-assets.json").read_text())
-evidence_hash = expected[f"{image}.evidence.json"]["sha256"]
-if checksum not in state["body"] or evidence_hash not in state["body"]:
-    raise SystemExit("Existing release belongs to another image/evidence set; it must not be replaced.")
-actual = {asset["name"]: asset for asset in state["assets"]}
+# The release holds every image of its catalog version; this image's assets start with its id.
+actual = {asset["name"]: asset for asset in state["assets"] if asset["name"].startswith(image + ".")}
 for name, asset in actual.items():
     if name not in expected:
         raise SystemExit(f"Unexpected release asset: {name}")
@@ -74,13 +74,10 @@ PYTHON
 
 EXISTING="$(gh api "repos/$REPOSITORY/releases?per_page=100" --paginate --jq ".[] | select(.tag_name == \"$TAG\") | .tag_name")"
 if [ -z "$EXISTING" ]; then
-    EVIDENCE_HASH="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))[sys.argv[2]]["sha256"])' "$BUILD/publication-assets.json" "$IMAGE.evidence.json")"
     TARGET="${GITHUB_SHA:-$(git -C "$ROOT" rev-parse HEAD)}"
-    gh release create "$TAG" --repo "$REPOSITORY" --draft --target "$TARGET" --title "$TAG" --latest=false \
-        --notes "ARM64 Linux base with OpenVSCode Server. Licenses and exact source inputs are attached.
-
-Image SHA-256: $SHA256
-Evidence SHA-256: $EVIDENCE_HASH"
+    gh release create "$TAG" --repo "$REPOSITORY" --draft --target "$TARGET" --latest=false \
+        --title "Linux images – catalog v${TAG#catalog-v}" \
+        --notes "ARM64 Linux images with OpenVSCode Server for Runfern catalog version ${TAG#catalog-v}. Each image comes with its checksum, build evidence, license texts and exact source inputs."
 fi
 release_state
 
@@ -92,12 +89,7 @@ if [ -n "$MISSING" ]; then
 fi
 release_state
 verify_remote
-if python3 -c 'import json,sys; sys.exit(0 if json.load(open(sys.argv[1]))["isDraft"] else 1)' "$BUILD/release-state.json"; then
-    gh release edit "$TAG" --repo "$REPOSITORY" --draft=false --latest=false
-fi
-release_state
-verify_remote
 SIZE="$(wc -c < "$ARCHIVE" | tr -d ' ')"
 catalog_release set-source "$IMAGE" "$VERSION" "$URL" "$SHA256" "$SIZE"
 echo "$IMAGE: image version $VERSION, $SIZE bytes, $URL"
-echo "Finish and sign the catalog, then submit it through a checked PR."
+echo "Publish $TAG once it holds every image of the run, then finish, sign and submit the catalog."

@@ -23,6 +23,12 @@ class CatalogReleaseTests(unittest.TestCase):
         with self.assertRaises(release.CatalogError):
             release.set_source(self.catalog, image_id, version, release.release_url(image_id, version), "b" * 64, 123)
 
+    def test_images_live_in_the_release_of_their_catalog_version(self):
+        self.assertEqual(release.release_url("debian-12-arm64", 3),
+                         release.RELEASES + "catalog-v3/debian-12-arm64.runfernimage")
+        self.catalog["catalogVersion"] = 4
+        self.assertEqual(release.next_version(self.catalog, self.image["id"]), 5)
+
     def test_bad_image_metadata_is_rejected(self):
         image_id = self.image["id"]
         version = self.image["catalogVersion"]
