@@ -9,7 +9,12 @@ extensions per project, or reuse a preset.
   <img src="Design/Screenshots/project.png" width="49%" alt="A sample project's Linux environment and installed tools">
 </p>
 
-Project setup and a sample project, captured in the iPad simulator.
+Project setup and a sample project, captured in the iPad simulator. The editor view below is an
+illustrative mockup.
+
+<p align="center">
+  <img src="Design/Screenshots/editor-ipad.svg" width="90%" alt="Illustrative iPad mockup showing Runfern with its VS Code-based editor">
+</p>
 
 ## Getting started
 

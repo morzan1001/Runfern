@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="960" viewBox="0 0 1440 960" role="img" aria-labelledby="title description">
+  <title id="title">Runfern editor on iPad</title>
+  <desc id="description">Illustrative iPad mockup showing the VS Code-based editor inside Runfern.</desc>
+  <defs>
+    <linearGradient id="frame" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#343943"/>
+      <stop offset="1" stop-color="#111318"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="22" stdDeviation="24" flood-color="#111827" flood-opacity=".28"/>
+    </filter>
+    <clipPath id="screen">
+      <rect x="98" y="70" width="1244" height="820" rx="34"/>
+    </clipPath>
+  </defs>
+  <rect width="1440" height="960" fill="#f3f5f9"/>
+  <rect x="70" y="42" width="1300" height="876" rx="58" fill="url(#frame)" filter="url(#shadow)"/>
+  <rect x="82" y="54" width="1276" height="852" rx="48" fill="#08090c"/>
+  <g clip-path="url(#screen)">
+    <rect x="98" y="70" width="1244" height="820" fill="#1e1e1e"/>
+    <rect x="98" y="70" width="1244" height="32" fill="#181818"/>
+    <circle cx="119" cy="86" r="5" fill="#f36a63"/>
+    <circle cx="137" cy="86" r="5" fill="#f6c451"/>
+    <circle cx="155" cy="86" r="5" fill="#4fc06b"/>
+    <text x="720" y="91" fill="#c6c6c6" font-family="system-ui, sans-serif" font-size="13" text-anchor="middle">Runfern · Weather Station · OpenVSCode Server</text>
+    <rect x="98" y="102" width="1244" height="38" fill="#252526"/>
+    <rect x="98" y="102" width="48" height="38" fill="#333333"/>
+    <path d="M116 113h13v13h-13z M119 116h7v7h-7z" fill="none" stroke="#d7d7d7" stroke-width="1.5"/>
+    <text x="164" y="126" fill="#c5c5c5" font-family="system-ui, sans-serif" font-size="13">Weather Station</text>
+    <rect x="357" y="102" width="194" height="38" fill="#1e1e1e"/>
+    <path d="M374 114l7 14 7-14" fill="none" stroke="#e8ab57" stroke-width="2"/>
+    <text x="397" y="126" fill="#e2e2e2" font-family="system-ui, sans-serif" font-size="13">main.py</text>
+    <path d="M533 116l8 8m0-8-8 8" stroke="#999" stroke-width="1.4"/>
+    <rect x="98" y="140" width="48" height="704" fill="#333333"/>
+    <path d="M115 163l8-6 8 6v14h-16z M115 199h16v16h-16z M115 238h16v14h-16z M115 277h16v16h-16z" fill="none" stroke="#c5c5c5" stroke-width="1.7"/>
+    <rect x="146" y="140" width="210" height="704" fill="#252526"/>
+    <text x="166" y="170" fill="#bbbbbb" font-family="system-ui, sans-serif" font-size="12" font-weight="600" letter-spacing=".7">EXPLORER</text>
+    <text x="166" y="202" fill="#dddddd" font-family="system-ui, sans-serif" font-size="13" font-weight="600">WEATHER STATION</text>
+    <path d="M164 220l5 4-5 4" fill="none" stroke="#c5c5c5" stroke-width="1.5"/>
+    <text x="180" y="229" fill="#cccccc" font-family="system-ui, sans-serif" font-size="13">src</text>
+    <path d="M180 242l5 4-5 4" fill="none" stroke="#c5c5c5" stroke-width="1.5"/>
+    <text x="196" y="251" fill="#cccccc" font-family="system-ui, sans-serif" font-size="13">sensors.py</text>
+    <path d="M180 265l5 4-5 4" fill="none" stroke="#c5c5c5" stroke-width="1.5"/>
+    <text x="196" y="274" fill="#e4c07a" font-family="system-ui, sans-serif" font-size="13">main.py</text>
+    <path d="M164 290l5 4-5 4" fill="none" stroke="#c5c5c5" stroke-width="1.5"/>
+    <text x="180" y="299" fill="#cccccc" font-family="system-ui, sans-serif" font-size="13">README.md</text>
+    <text x="372" y="170" fill="#858585" font-family="system-ui, sans-serif" font-size="12">src</text>
+    <path d="M389 165l4 4-4 4" fill="none" stroke="#858585" stroke-width="1"/>
+    <text x="402" y="170" fill="#cccccc" font-family="system-ui, sans-serif" font-size="12">main.py</text>
+    <rect x="356" y="186" width="986" height="1" fill="#333333"/>
+    <rect x="365" y="200" width="34" height="622" fill="#1e1e1e"/>
+    <g font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="15">
+      <text x="373" y="232" fill="#858585" text-anchor="end">1</text>
+      <text x="411" y="232" fill="#c586c0">from</text><text x="451" y="232" fill="#d4d4d4"> sensors </text><text x="524" y="232" fill="#c586c0">import</text><text x="580" y="232" fill="#d4d4d4"> read_all</text>
+      <text x="373" y="265" fill="#858585" text-anchor="end">2</text>
+      <text x="373" y="298" fill="#858585" text-anchor="end">3</text>
+      <text x="411" y="298" fill="#569cd6">def</text><text x="444" y="298" fill="#dcdcaa"> main</text><text x="490" y="298" fill="#d4d4d4">():</text>
+      <text x="373" y="331" fill="#858585" text-anchor="end">4</text>
+      <text x="436" y="331" fill="#9cdcfe"> readings</text><text x="510" y="331" fill="#d4d4d4"> = </text><text x="538" y="331" fill="#dcdcaa">read_all</text><text x="603" y="331" fill="#d4d4d4">()</text>
+      <text x="373" y="364" fill="#858585" text-anchor="end">5</text>
+      <text x="436" y="364" fill="#c586c0">for</text><text x="467" y="364" fill="#9cdcfe"> name</text><text x="510" y="364" fill="#c586c0">, value</text><text x="566" y="364" fill="#c586c0"> in</text><text x="588" y="364" fill="#9cdcfe"> readings</text><text x="662" y="364" fill="#d4d4d4">:</text>
+      <text x="373" y="397" fill="#858585" text-anchor="end">6</text>
+      <text x="461" y="397" fill="#dcdcaa"> print</text><text x="512" y="397" fill="#d4d4d4">(</text><text x="520" y="397" fill="#ce9178">f"{name}: {value:.1f}"</text><text x="708" y="397" fill="#d4d4d4">)</text>
+      <text x="373" y="430" fill="#858585" text-anchor="end">7</text>
+      <text x="373" y="463" fill="#858585" text-anchor="end">8</text>
+      <text x="411" y="463" fill="#569cd6">if</text><text x="430" y="463" fill="#d4d4d4"> __name__ == </text><text x="543" y="463" fill="#ce9178">"__main__"</text><text x="636" y="463" fill="#d4d4d4">:</text>
+      <text x="373" y="496" fill="#858585" text-anchor="end">9</text>
+      <text x="436" y="496" fill="#dcdcaa"> main</text><text x="482" y="496" fill="#d4d4d4">()</text>
+    </g>
+    <rect x="356" y="584" width="986" height="1" fill="#414141"/>
+    <rect x="356" y="585" width="986" height="259" fill="#1e1e1e"/>
+    <text x="378" y="612" fill="#bbbbbb" font-family="system-ui, sans-serif" font-size="12" font-weight="600" letter-spacing=".6">TERMINAL</text>
+    <text x="453" y="612" fill="#858585" font-family="system-ui, sans-serif" font-size="12">PORTS</text>
+    <text x="378" y="650" fill="#4ec9b0" font-family="ui-monospace, monospace" font-size="14">runfern</text>
+    <text x="440" y="650" fill="#d4d4d4" font-family="ui-monospace, monospace" font-size="14"> ~/weather-station $ python src/main.py</text>
+    <text x="378" y="679" fill="#d4d4d4" font-family="ui-monospace, monospace" font-size="14">temperature: 21.4</text>
+    <text x="378" y="705" fill="#d4d4d4" font-family="ui-monospace, monospace" font-size="14">humidity: 48.2</text>
+    <text x="378" y="731" fill="#4ec9b0" font-family="ui-monospace, monospace" font-size="14">runfern</text>
+    <text x="440" y="731" fill="#d4d4d4" font-family="ui-monospace, monospace" font-size="14"> ~/weather-station $ <tspan fill="#d4d4d4">▍</tspan></text>
+    <rect x="98" y="844" width="1244" height="46" fill="#007acc"/>
+    <text x="116" y="873" fill="#ffffff" font-family="system-ui, sans-serif" font-size="12">Runfern</text>
+    <text x="206" y="873" fill="#ffffff" font-family="system-ui, sans-serif" font-size="12">Linux · Debian 12</text>
+    <text x="1257" y="873" fill="#ffffff" font-family="system-ui, sans-serif" font-size="12" text-anchor="end">Python 3.15</text>
+  </g>
+  <circle cx="720" cy="896" r="3" fill="#62656c"/>
+</svg>
