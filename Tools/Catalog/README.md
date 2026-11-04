@@ -4,6 +4,9 @@ The app bundles `Catalog/catalog.json` and checks the copy on `main` for updates
 Ed25519 signatures matching `publisherKey` in `Runfern/Catalog/CatalogStore.swift`, and only a
 higher `catalogVersion`. Downloads are HTTPS and SHA-256 pinned.
 
+The initial catalog is version 1 and includes Debian 12/13, Ubuntu 24.04/26.04, and Fedora 44
+ARM64 images. Later catalog changes need a higher `catalogVersion` so installed apps accept them.
+
 `CATALOG_SIGNING_KEY` belongs only in the `catalog` GitHub environment, restricted to the `main`
 branch. Never commit the private key. Check it locally with:
 
