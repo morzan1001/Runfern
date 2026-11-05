@@ -1,5 +1,5 @@
-Rust crate: proc-macro2 — 1.0.106
-Source: https://static.crates.io/crates/proc-macro2/proc-macro2-1.0.106.crate
+Rust crate: polyval — 0.6.2
+Source: https://static.crates.io/crates/polyval/polyval-0.6.2.crate
 
 ===== LICENSE-APACHE =====
                               Apache License
@@ -179,8 +179,35 @@ TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
 
 END OF TERMS AND CONDITIONS
 
+APPENDIX: How to apply the Apache License to your work.
+
+   To apply the Apache License to your work, attach the following
+   boilerplate notice, with the fields enclosed by brackets "[]"
+   replaced with your own identifying information. (Don't include
+   the brackets!)  The text should be enclosed in the appropriate
+   comment syntax for the file format. We also recommend that a
+   file or class name and description of purpose be included on the
+   same "printed page" as the copyright notice for easier
+   identification within third-party archives.
+
+Copyright [yyyy] [name of copyright owner]
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
 
 ===== LICENSE-MIT =====
+Copyright (c) 2019-2023 RustCrypto Developers
+
 Permission is hereby granted, free of charge, to any
 person obtaining a copy of this software and associated
 documentation files (the "Software"), to deal in the
@@ -204,3 +231,43 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
 IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
+
+
+===== src/backend/soft32.rs =====
+//! Constant-time software implementation of POLYVAL for 32-bit architectures
+//! Adapted from BearSSL's `ghash_ctmul32.c`:
+//!
+//! <https://bearssl.org/gitweb/?p=BearSSL;a=blob;f=src/hash/ghash_ctmul32.c;hb=4b6046412>
+//!
+//! Copyright (c) 2016 Thomas Pornin <pornin@bolet.org>
+//!
+//! This implementation uses 32-bit multiplications, and only the low
+//! 32 bits for each multiplication result. This is meant primarily for
+//! the ARM Cortex M0 and M0+, whose multiplication opcode does not yield
+//! the upper 32 bits; but it might also be useful on architectures where
+//! access to the upper 32 bits requires use of specific registers that
+//! create contention (e.g. on i386, "mul" necessarily outputs the result
+//! in edx:eax, while "imul" can use any registers but is limited to the
+//! low 32 bits).
+//!
+//! The implementation trick that is used here is bit-reversing (bit 0
+//! is swapped with bit 31, bit 1 with bit 30, and so on). In GF(2)[X],
+//! for all values x and y, we have:
+//!
+//! ```text
+//! rev32(x) * rev32(y) = rev64(x * y)
+//! ```
+//!
+//! In other words, if we bit-reverse (over 32 bits) the operands, then we
+//! bit-reverse (over 64 bits) the result.
+
+
+
+===== src/backend/soft64.rs =====
+//! Constant-time software implementation of POLYVAL for 64-bit architectures.
+//! Adapted from BearSSL's `ghash_ctmul64.c`:
+//!
+//! <https://bearssl.org/gitweb/?p=BearSSL;a=blob;f=src/hash/ghash_ctmul64.c;hb=4b6046412>
+//!
+//! Copyright (c) 2016 Thomas Pornin <pornin@bolet.org>
+

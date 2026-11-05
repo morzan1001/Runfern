@@ -1,5 +1,5 @@
-Rust crate: serde_json — 1.0.149
-Source: https://static.crates.io/crates/serde_json/serde_json-1.0.149.crate
+Rust crate: sec1 — 0.7.3
+Source: https://static.crates.io/crates/sec1/sec1-0.7.3.crate
 
 ===== LICENSE-APACHE =====
                               Apache License
@@ -179,8 +179,35 @@ TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
 
 END OF TERMS AND CONDITIONS
 
+APPENDIX: How to apply the Apache License to your work.
+
+   To apply the Apache License to your work, attach the following
+   boilerplate notice, with the fields enclosed by brackets "[]"
+   replaced with your own identifying information. (Don't include
+   the brackets!)  The text should be enclosed in the appropriate
+   comment syntax for the file format. We also recommend that a
+   file or class name and description of purpose be included on the
+   same "printed page" as the copyright notice for easier
+   identification within third-party archives.
+
+Copyright [yyyy] [name of copyright owner]
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
 
 ===== LICENSE-MIT =====
+Copyright (c) 2021-2022 The RustCrypto Project Developers
+
 Permission is hereby granted, free of charge, to any
 person obtaining a copy of this software and associated
 documentation files (the "Software"), to deal in the
@@ -204,19 +231,3 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
 IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
-
-
-===== src/lexical/mod.rs =====
-// The code in this module is derived from the `lexical` crate by @Alexhuszagh
-// which the author condensed into this minimal subset for use in serde_json.
-// For the serde_json use case we care more about reliably round tripping all
-// possible floating point values than about parsing any arbitrarily long string
-// of digits with perfect accuracy, as the latter would take a high cost in
-// compile time and performance.
-//
-// Dual licensed as MIT and Apache 2.0 just like the rest of serde_json, but
-// copyright Alexander Huszagh.
-
-//! Fast, minimal float-parsing algorithm.
-
-// MODULES

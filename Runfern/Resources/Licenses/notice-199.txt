@@ -1,5 +1,5 @@
-Rust crate: poly1305 — 0.8.0
-Source: https://static.crates.io/crates/poly1305/poly1305-0.8.0.crate
+Rust crate: pkcs5 — 0.7.1
+Source: https://static.crates.io/crates/pkcs5/pkcs5-0.7.1.crate
 
 ===== LICENSE-APACHE =====
                               Apache License
@@ -206,7 +206,7 @@ limitations under the License.
 
 
 ===== LICENSE-MIT =====
-Copyright (c) 2015-2019 RustCrypto Developers
+Copyright (c) 2021-2023 The RustCrypto Project Developers
 
 Permission is hereby granted, free of charge, to any
 person obtaining a copy of this software and associated
@@ -231,20 +231,3 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
 IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
-
-
-===== src/backend/soft.rs =====
-//! Software implementation of the Poly1305 state machine.
-
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-//
-// This code originates from the rust-crypto project:
-// <https://github.com/DaGenix/rust-crypto>
-//
-// ...and was originally a port of Andrew Moons poly1305-donna
-// https://github.com/floodyberry/poly1305-donna
-

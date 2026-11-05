@@ -1,5 +1,5 @@
-Rust crate: windows_aarch64_gnullvm — 0.53.1
-Source: https://static.crates.io/crates/windows_aarch64_gnullvm/windows_aarch64_gnullvm-0.53.1.crate
+Rust crate: windows-strings — 0.5.1
+Source: https://static.crates.io/crates/windows-strings/windows-strings-0.5.1.crate
 
 ===== license-apache-2.0 =====
                                  Apache License

@@ -1,5 +1,5 @@
-Rust crate: windows-sys — 0.52.0
-Source: https://static.crates.io/crates/windows-sys/windows-sys-0.52.0.crate
+Rust crate: windows-implement — 0.60.2
+Source: https://static.crates.io/crates/windows-implement/windows-implement-0.60.2.crate
 
 ===== license-apache-2.0 =====
                                  Apache License

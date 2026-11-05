@@ -1,5 +1,5 @@
-Rust crate: async-stream-impl — 0.3.6
-Source: https://static.crates.io/crates/async-stream-impl/async-stream-impl-0.3.6.crate
+Rust crate: async-stream — 0.3.6
+Source: https://static.crates.io/crates/async-stream/async-stream-0.3.6.crate
 
 ===== LICENSE =====
 Copyright (c) 2019 Carl Lerche

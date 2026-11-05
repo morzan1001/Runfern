@@ -1,5 +1,5 @@
-Rust crate: windows-sys — 0.61.2
-Source: https://static.crates.io/crates/windows-sys/windows-sys-0.61.2.crate
+Rust crate: windows-link — 0.2.1
+Source: https://static.crates.io/crates/windows-link/windows-link-0.2.1.crate
 
 ===== license-apache-2.0 =====
                                  Apache License

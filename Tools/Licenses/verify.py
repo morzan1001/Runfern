@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Fail-closed license artifact verification; --release also requires resolved evidence."""
+"""Fail-closed license artifact verification; --release also requires every finding to be resolved
+or explicitly signed off for the variant in Tools/Licenses/clearance.json."""
 import argparse
 import hashlib
 import json
@@ -12,6 +13,7 @@ from version import SOURCE_ARCHIVE, VERSION
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "build/licenses"
 RES = ROOT / "Runfern/Resources/Licenses"
+CLEARANCE = Path(__file__).resolve().parent / "clearance.json"
 
 
 def sha(data):
@@ -21,6 +23,27 @@ def sha(data):
 def require(condition, message):
     if not condition:
         raise ValueError(message)
+
+
+def unresolved(blockers, flavor, clearance=CLEARANCE):
+    """Findings not signed off for this variant. Sign-offs match exact finding texts, so any new or
+    changed finding blocks again."""
+    accepted = set()
+    if clearance.is_file():
+        data = json.loads(clearance.read_text())
+        require(data.get("format") == 1, "Unexpected clearance file")
+        for group in data.get("flavors", {}).get(flavor, []):
+            require(group.get("reason") and isinstance(group.get("blockers"), list),
+                    "Every sign-off needs a reason and its exact findings")
+            accepted.update(group["blockers"])
+    return [blocker for blocker in blockers if blocker not in accepted]
+
+
+def require_cleared(index, blockers, flavor):
+    remaining = unresolved(blockers, flavor)
+    require(not remaining, f"RELEASE BLOCKED ({flavor}):\n- " + "\n- ".join(remaining))
+    if index["status"] != "VERIFIED" or blockers:
+        print(f"{len(blockers)} findings signed off for {flavor} in Tools/Licenses/clearance.json.")
 
 
 def main():
@@ -42,8 +65,7 @@ def main():
     require(index["format"] == 1 and index["release"] == VERSION, "Unexpected license manifest")
     require(index["notices"], "Empty notice manifest")
     if args.require_clearance:
-        require(index["status"] == "VERIFIED" and not index["blockers"],
-                "RELEASE BLOCKED:\n- " + "\n- ".join(index["blockers"]))
+        require_cleared(index, index["blockers"], args.flavor)
     seen = set()
     for notice in index["notices"]:
         filename = notice["file"]
@@ -74,8 +96,7 @@ def main():
         require(not args.app, "--notices-only cannot replace actual --app validation")
         print(f"PASS: {len(seen)} committed notice resources (Linux-safe).")
         if args.release:
-            require(index["status"] == "VERIFIED" and not index["blockers"],
-                    "RELEASE BLOCKED:\n- " + "\n- ".join(index["blockers"]))
+            require_cleared(index, index["blockers"], args.flavor)
             raise ValueError("Release approval also requires source artifacts and actual runtime/app verification")
         print("Notice integrity only. NOT release approval.")
         return
@@ -160,8 +181,7 @@ def main():
     if args.release:
         blockers = json.loads((output / "blockers.json").read_text())
         require(blockers == index["blockers"], "Resource/artifact blocker lists differ")
-        require(index["status"] == "VERIFIED" and not blockers,
-                "RELEASE BLOCKED:\n- " + "\n- ".join(blockers))
+        require_cleared(index, blockers, args.flavor)
         print("PASS: release evidence and actual app resources verified.")
     else:
         print("Artifact integrity only. NOT release approval; run --release --app PATH.")

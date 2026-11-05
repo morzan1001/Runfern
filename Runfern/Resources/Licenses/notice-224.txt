@@ -1,5 +1,5 @@
-Rust crate: rsa — 0.9.10
-Source: https://static.crates.io/crates/rsa/rsa-0.9.10.crate
+Rust crate: regex-automata — 0.4.14
+Source: https://static.crates.io/crates/regex-automata/regex-automata-0.4.14.crate
 
 ===== LICENSE-APACHE =====
                               Apache License
@@ -204,7 +204,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
+
 ===== LICENSE-MIT =====
+Copyright (c) 2014 The Rust Project Developers
+
 Permission is hereby granted, free of charge, to any
 person obtaining a copy of this software and associated
 documentation files (the "Software"), to deal in the

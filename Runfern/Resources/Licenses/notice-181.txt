@@ -1,5 +1,5 @@
-Rust crate: p256 — 0.13.2
-Source: https://static.crates.io/crates/p256/p256-0.13.2.crate
+Rust crate: opaque-debug — 0.3.1
+Source: https://static.crates.io/crates/opaque-debug/opaque-debug-0.3.1.crate
 
 ===== LICENSE-APACHE =====
                               Apache License
@@ -206,7 +206,7 @@ limitations under the License.
 
 
 ===== LICENSE-MIT =====
-Copyright (c) 2020-2023 RustCrypto Developers
+Copyright (c) 2018-2024 The RustCrypto Project Developers
 
 Permission is hereby granted, free of charge, to any
 person obtaining a copy of this software and associated

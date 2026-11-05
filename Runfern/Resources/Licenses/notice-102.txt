@@ -1,7 +1,8 @@
-Rust crate: foreign-types — 0.3.2
-Source: https://static.crates.io/crates/foreign-types/foreign-types-0.3.2.crate
+Rust crate: flagset — 0.4.7
+Source: https://static.crates.io/crates/flagset/flagset-0.4.7.crate
 
-===== LICENSE-APACHE =====
+===== LICENSE =====
+
                                  Apache License
                            Version 2.0, January 2004
                         http://www.apache.org/licenses/
@@ -182,7 +183,7 @@ Source: https://static.crates.io/crates/foreign-types/foreign-types-0.3.2.crate
    APPENDIX: How to apply the Apache License to your work.
 
       To apply the Apache License to your work, attach the following
-      boilerplate notice, with the fields enclosed by brackets "{}"
+      boilerplate notice, with the fields enclosed by brackets "[]"
       replaced with your own identifying information. (Don't include
       the brackets!)  The text should be enclosed in the appropriate
       comment syntax for the file format. We also recommend that a
@@ -190,7 +191,7 @@ Source: https://static.crates.io/crates/foreign-types/foreign-types-0.3.2.crate
       same "printed page" as the copyright notice for easier
       identification within third-party archives.
 
-   Copyright {yyyy} {name of copyright owner}
+   Copyright [yyyy] [name of copyright owner]
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -205,24 +206,197 @@ Source: https://static.crates.io/crates/foreign-types/foreign-types-0.3.2.crate
    limitations under the License.
 
 
+===== src/lib.rs =====
+//
+// Copyright 2019 Red Hat, Inc.
+//
+// Author: Nathaniel McCallum <npmccallum@redhat.com>
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
 
-===== LICENSE-MIT =====
-Copyright (c) 2017 The foreign-types Developers
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+//! # Welcome to FlagSet!
+//!
+//! FlagSet is a new, ergonomic approach to handling flags that combines the
+//! best of existing crates like `bitflags` and `enumflags` without their
+//! downsides.
+//!
+//! ## Existing Implementations
+//!
+//! The `bitflags` crate has long been part of the Rust ecosystem.
+//! Unfortunately, it doesn't feel like natural Rust. The `bitflags` crate
+//! uses a weird struct format to define flags. Flags themselves are just
+//! integers constants, so there is little type-safety involved. But it doesn't
+//! have any dependencies. It also allows you to define implied flags (otherwise
+//! known as overlapping flags).
+//!
+//! The `enumflags` crate tried to improve on `bitflags` by using enumerations
+//! to define flags. This was a big improvement to the natural feel of the code.
+//! Unfortunately, there are some design flaws. To generate the flags,
+//! procedural macros were used. This implied two separate crates plus
+//! additional dependencies. Further, `enumflags` specifies the size of the
+//! flags using a `repr($size)` attribute. Unfortunately, this attribute
+//! cannot resolve type aliases, such as `c_int`. This makes `enumflags` a
+//! poor fit for FFI, which is the most important place for a flags library.
+//! The `enumflags` crate also disallows overlapping flags and is not
+//! maintained.
+//!
+//! FlagSet improves on both of these by adopting the `enumflags` natural feel
+//! and the `bitflags` mode of flag generation; as well as additional API usage
+//! niceties. FlagSet has no dependencies and is extensively documented and
+//! tested. It also tries very hard to prevent you from making mistakes by
+//! avoiding external usage of the integer types. FlagSet is also a zero-cost
+//! abstraction: all functions are inlineable and should reduce to the core
+//! integer operations. FlagSet also does not depend on stdlib, so it can be
+//! used in `no_std` libraries and applications.
+//!
+//! ## Defining Flags
+//!
+//! Flags are defined using the `flags!` macro:
+//!
+//! ```
+//! use flagset::{FlagSet, flags};
+//! use std::os::raw::c_int;
+//!
+//! flags! {
+//!     enum FlagsA: u8 {
+//!         Foo,
+//!         Bar,
+//!         Baz,
+//!     }
+//!
+//!     enum FlagsB: c_int {
+//!         Foo,
+//!         Bar,
+//!         Baz,
+//!     }
+//! }
+//! ```
+//!
+//! Notice that a flag definition looks just like a regular enumeration, with
+//! the addition of the field-size type. The field-size type is required and
+//! can be either a type or a type alias. Both examples are given above.
+//!
+//! Also note that the field-size type specifies the size of the corresponding
+//! `FlagSet` type, not size of the enumeration itself. To specify the size of
+//! the enumeration, use the `repr($size)` attribute as specified below.
+//!
+//! ## Flag Values
+//!
+//! Flags often need values assigned to them. This can be done implicitly,
+//! where the value depends on the order of the flags:
+//!
+//! ```
+//! use flagset::{FlagSet, flags};
+//!
+//! flags! {
+//!     enum Flags: u16 {
+//!         Foo, // Implicit Value: 0b0001
+//!         Bar, // Implicit Value: 0b0010
+//!         Baz, // Implicit Value: 0b0100
+//!     }
+//! }
+//! ```
+//!
+//! Alternatively, flag values can be defined explicitly, by specifying any
+//! `const` expression:
+//!
+//! ```
+//! use flagset::{FlagSet, flags};
+//!
+//! flags! {
+//!     enum Flags: u16 {
+//!         Foo = 0x01,   // Explicit Value: 0b0001
+//!         Bar = 2,      // Explicit Value: 0b0010
+//!         Baz = 0b0100, // Explicit Value: 0b0100
+//!     }
+//! }
+//! ```
+//!
+//! Flags can also overlap or "imply" other flags:
+//!
+//! ```
+//! use flagset::{FlagSet, flags};
+//!
+//! flags! {
+//!     enum Flags: u16 {
+//!         Foo = 0b0001,
+//!         Bar = 0b0010,
+//!         Baz = 0b0110, // Implies Bar
+//!         All = (Flags::Foo | Flags::Bar | Flags::Baz).bits(),
+//!     }
+//! }
+//! ```
+//!
+//! ## Specifying Attributes
+//!
+//! Attributes can be used on the enumeration itself or any of the values:
+//!
+//! ```
+//! use flagset::{FlagSet, flags};
+//!
+//! flags! {
+//!     #[derive(PartialOrd, Ord)]
+//!     enum Flags: u8 {
+//!         Foo,
+//!         #[deprecated]
+//!         Bar,
+//!         Baz,
+//!     }
+//! }
+//! ```
+//!
+//! ## Collections of Flags
+//!
+//! A collection of flags is a `FlagSet<T>`. If you are storing the flags in
+//! memory, the raw `FlagSet<T>` type should be used. However, if you want to
+//! receive flags as an input to a function, you should use
+//! `impl Into<FlagSet<T>>`. This allows for very ergonomic APIs:
+//!
+//! ```
+//! use flagset::{FlagSet, flags};
+//!
+//! flags! {
+//!     enum Flags: u8 {
+//!         Foo,
+//!         Bar,
+//!         Baz,
+//!     }
+//! }
+//!
+//! struct Container(FlagSet<Flags>);
+//!
+//! impl Container {
+//!     fn new(flags: impl Into<FlagSet<Flags>>) -> Container {
+//!         Container(flags.into())
+//!     }
+//! }
+//!
+//! assert_eq!(Container::new(Flags::Foo | Flags::Bar).0.bits(), 0b011);
+//! assert_eq!(Container::new(Flags::Foo).0.bits(), 0b001);
+//! assert_eq!(Container::new(None).0.bits(), 0b000);
+//! ```
+//!
+//! ## Operations
+//!
+//! Operations can be performed on a `FlagSet<F>` or on individual flags:
+//!
+//! | Operator | Assignment Operator | Meaning                |
+//! |----------|---------------------|------------------------|
+//! | \|       | \|=                 | Union                  |
+//! | &        | &=                  | Intersection           |
+//! | ^        | ^=                  | Toggle specified flags |
+//! | -        | -=                  | Difference             |
+//! | %        | %=                  | Symmetric difference   |
+//! | !        |                     | Toggle all flags       |
+//!

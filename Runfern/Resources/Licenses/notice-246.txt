@@ -1,5 +1,5 @@
-Rust crate: signal-hook-registry — 1.4.8
-Source: https://static.crates.io/crates/signal-hook-registry/signal-hook-registry-1.4.8.crate
+Rust crate: sha1 — 0.10.6
+Source: https://static.crates.io/crates/sha1/sha1-0.10.6.crate
 
 ===== LICENSE-APACHE =====
                               Apache License
@@ -196,7 +196,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-	http://www.apache.org/licenses/LICENSE-2.0
+   http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -206,7 +206,9 @@ limitations under the License.
 
 
 ===== LICENSE-MIT =====
-Copyright (c) 2017 tokio-jsonrpc developers
+Copyright (c) 2006-2009 Graydon Hoare
+Copyright (c) 2009-2013 Mozilla Foundation
+Copyright (c) 2016 Artyom Pavlov
 
 Permission is hereby granted, free of charge, to any
 person obtaining a copy of this software and associated

@@ -1,5 +1,5 @@
-Rust crate: curve25519-dalek-derive — 0.1.1
-Source: https://static.crates.io/crates/curve25519-dalek-derive/curve25519-dalek-derive-0.1.1.crate
+Rust crate: crossbeam-utils — 0.8.21
+Source: https://static.crates.io/crates/crossbeam-utils/crossbeam-utils-0.8.21.crate
 
 ===== LICENSE-APACHE =====
                               Apache License
@@ -206,6 +206,10 @@ limitations under the License.
 
 
 ===== LICENSE-MIT =====
+The MIT License (MIT)
+
+Copyright (c) 2019 The Crossbeam Project Developers
+
 Permission is hereby granted, free of charge, to any
 person obtaining a copy of this software and associated
 documentation files (the "Software"), to deal in the

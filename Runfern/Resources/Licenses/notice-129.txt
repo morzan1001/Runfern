@@ -1,5 +1,5 @@
-Rust crate: id-arena — 2.3.0
-Source: https://static.crates.io/crates/id-arena/id-arena-2.3.0.crate
+Rust crate: heck — 0.5.0
+Source: https://static.crates.io/crates/heck/heck-0.5.0.crate
 
 ===== LICENSE-APACHE =====
                               Apache License
@@ -206,7 +206,7 @@ limitations under the License.
 
 
 ===== LICENSE-MIT =====
-Copyright (c) 2014 Alex Crichton
+Copyright (c) 2015 The Rust Project Developers
 
 Permission is hereby granted, free of charge, to any
 person obtaining a copy of this software and associated

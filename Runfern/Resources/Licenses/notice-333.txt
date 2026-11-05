@@ -1,5 +1,5 @@
-Rust crate: windows_i686_gnu — 0.52.6
-Source: https://static.crates.io/crates/windows_i686_gnu/windows_i686_gnu-0.52.6.crate
+Rust crate: windows-sys — 0.60.2
+Source: https://static.crates.io/crates/windows-sys/windows-sys-0.60.2.crate
 
 ===== license-apache-2.0 =====
                                  Apache License

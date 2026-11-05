@@ -1,5 +1,5 @@
-Rust crate: windows-threading — 0.1.0
-Source: https://static.crates.io/crates/windows-threading/windows-threading-0.1.0.crate
+Rust crate: windows-result — 0.4.1
+Source: https://static.crates.io/crates/windows-result/windows-result-0.4.1.crate
 
 ===== license-apache-2.0 =====
                                  Apache License

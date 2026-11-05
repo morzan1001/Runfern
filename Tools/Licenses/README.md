@@ -49,6 +49,13 @@ its accompanying source inputs on Linux:
 used before CI release builds. It permits further verification only after findings are
 resolved, but never replaces the full runtime/source and actual-app release checks.
 
+Findings that the maintainer accepts for one variant are listed in `clearance.json` under
+`flavors.no-jit` or `flavors.jit`, each group with its reason. Entries must match the
+finding texts in `license-index.json` exactly, so any new or changed finding blocks the
+release again. `--require-clearance` and `--release` apply the sign-offs for `--flavor`
+(default `no-jit`). The App Store build currently has all findings signed off; the JIT
+build has none and stays blocked.
+
 ```sh
 python3 Tools/Licenses/verify.py --runtime-root build/native-runtime --artifacts build/licenses
 python3 Tools/Licenses/verify.py --runtime-root build/native-runtime --artifacts build/licenses --release

@@ -27,12 +27,13 @@ case "$VARIANT" in
 esac
 
 fail () { echo "error: $1" >&2; exit 1; }
+license_flavor=$([ "$VARIANT" = jit ] && echo jit || echo no-jit)
 
 python3 "$REPO/Tools/Licenses/verify.py" --notices-only
 case "${RUNFERN_INTERNAL_BUILD:-0}" in
     1) echo "warning: private validation build only; this does not grant release approval." >&2 ;;
     0)
-        python3 "$REPO/Tools/Licenses/verify.py" --notices-only --require-clearance
+        python3 "$REPO/Tools/Licenses/verify.py" --notices-only --require-clearance --flavor "$license_flavor"
         ;;
     *) fail "RUNFERN_INTERNAL_BUILD must be 0 or 1." ;;
 esac
@@ -110,7 +111,6 @@ if [ "$VARIANT" = jit ]; then
 fi
 echo "Contents match the $VARIANT variant."
 
-license_flavor=$([ "$VARIANT" = jit ] && echo jit || echo no-jit)
 license_arguments=()
 if [ "${RUNFERN_INTERNAL_BUILD:-0}" != 1 ]; then license_arguments=(--release); fi
 python3 "$REPO/Tools/Licenses/verify.py" --app "$APP" --flavor "$license_flavor" \

@@ -1,5 +1,5 @@
-Rust crate: inout — 0.1.4
-Source: https://static.crates.io/crates/inout/inout-0.1.4.crate
+Rust crate: iana-time-zone-haiku — 0.1.2
+Source: https://static.crates.io/crates/iana-time-zone-haiku/iana-time-zone-haiku-0.1.2.crate
 
 ===== LICENSE-APACHE =====
                               Apache License
@@ -190,13 +190,13 @@ APPENDIX: How to apply the Apache License to your work.
    same "printed page" as the copyright notice for easier
    identification within third-party archives.
 
-Copyright [yyyy] [name of copyright owner]
+Copyright 2020 Andrew Straw
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-   http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -206,8 +206,7 @@ limitations under the License.
 
 
 ===== LICENSE-MIT =====
-Copyright (c) 2022 The RustCrypto Project Developers
-Copyright (c) 2022 Artyom Pavlov
+Copyright (c) 2020 Andrew D. Straw
 
 Permission is hereby granted, free of charge, to any
 person obtaining a copy of this software and associated

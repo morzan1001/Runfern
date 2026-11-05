@@ -1,227 +1,122 @@
-Rust crate: nskeyedarchiver_converter — 0.1.3
-Source: https://static.crates.io/crates/nskeyedarchiver_converter/nskeyedarchiver_converter-0.1.3.crate
+Rust crate: netlink-packet-route — 0.25.1
+Source: https://static.crates.io/crates/netlink-packet-route/netlink-packet-route-0.25.1.crate
 
-===== LICENSE-APACHE =====
-                              Apache License
-                        Version 2.0, January 2004
-                     http://www.apache.org/licenses/
+===== .github/workflows/license.yml =====
+name: license
 
-TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches:
+      - main
 
-1. Definitions.
+jobs:
+  check-license:
+    name: Check License
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
 
-   "License" shall mean the terms and conditions for use, reproduction,
-   and distribution as defined by Sections 1 through 9 of this document.
-
-   "Licensor" shall mean the copyright owner or entity authorized by
-   the copyright owner that is granting the License.
-
-   "Legal Entity" shall mean the union of the acting entity and all
-   other entities that control, are controlled by, or are under common
-   control with that entity. For the purposes of this definition,
-   "control" means (i) the power, direct or indirect, to cause the
-   direction or management of such entity, whether by contract or
-   otherwise, or (ii) ownership of fifty percent (50%) or more of the
-   outstanding shares, or (iii) beneficial ownership of such entity.
-
-   "You" (or "Your") shall mean an individual or Legal Entity
-   exercising permissions granted by this License.
-
-   "Source" form shall mean the preferred form for making modifications,
-   including but not limited to software source code, documentation
-   source, and configuration files.
-
-   "Object" form shall mean any form resulting from mechanical
-   transformation or translation of a Source form, including but
-   not limited to compiled object code, generated documentation,
-   and conversions to other media types.
-
-   "Work" shall mean the work of authorship, whether in Source or
-   Object form, made available under the License, as indicated by a
-   copyright notice that is included in or attached to the work
-   (an example is provided in the Appendix below).
-
-   "Derivative Works" shall mean any work, whether in Source or Object
-   form, that is based on (or derived from) the Work and for which the
-   editorial revisions, annotations, elaborations, or other modifications
-   represent, as a whole, an original work of authorship. For the purposes
-   of this License, Derivative Works shall not include works that remain
-   separable from, or merely link (or bind by name) to the interfaces of,
-   the Work and Derivative Works thereof.
-
-   "Contribution" shall mean any work of authorship, including
-   the original version of the Work and any modifications or additions
-   to that Work or Derivative Works thereof, that is intentionally
-   submitted to Licensor for inclusion in the Work by the copyright owner
-   or by an individual or Legal Entity authorized to submit on behalf of
-   the copyright owner. For the purposes of this definition, "submitted"
-   means any form of electronic, verbal, or written communication sent
-   to the Licensor or its representatives, including but not limited to
-   communication on electronic mailing lists, source code control systems,
-   and issue tracking systems that are managed by, or on behalf of, the
-   Licensor for the purpose of discussing and improving the Work, but
-   excluding communication that is conspicuously marked or otherwise
-   designated in writing by the copyright owner as "Not a Contribution."
-
-   "Contributor" shall mean Licensor and any individual or Legal Entity
-   on behalf of whom a Contribution has been received by Licensor and
-   subsequently incorporated within the Work.
-
-2. Grant of Copyright License. Subject to the terms and conditions of
-   this License, each Contributor hereby grants to You a perpetual,
-   worldwide, non-exclusive, no-charge, royalty-free, irrevocable
-   copyright license to reproduce, prepare Derivative Works of,
-   publicly display, publicly perform, sublicense, and distribute the
-   Work and such Derivative Works in Source or Object form.
-
-3. Grant of Patent License. Subject to the terms and conditions of
-   this License, each Contributor hereby grants to You a perpetual,
-   worldwide, non-exclusive, no-charge, royalty-free, irrevocable
-   (except as stated in this section) patent license to make, have made,
-   use, offer to sell, sell, import, and otherwise transfer the Work,
-   where such license applies only to those patent claims licensable
-   by such Contributor that are necessarily infringed by their
-   Contribution(s) alone or by combination of their Contribution(s)
-   with the Work to which such Contribution(s) was submitted. If You
-   institute patent litigation against any entity (including a
-   cross-claim or counterclaim in a lawsuit) alleging that the Work
-   or a Contribution incorporated within the Work constitutes direct
-   or contributory patent infringement, then any patent licenses
-   granted to You under this License for that Work shall terminate
-   as of the date such litigation is filed.
-
-4. Redistribution. You may reproduce and distribute copies of the
-   Work or Derivative Works thereof in any medium, with or without
-   modifications, and in Source or Object form, provided that You
-   meet the following conditions:
-
-   (a) You must give any other recipients of the Work or
-       Derivative Works a copy of this License; and
-
-   (b) You must cause any modified files to carry prominent notices
-       stating that You changed the files; and
-
-   (c) You must retain, in the Source form of any Derivative Works
-       that You distribute, all copyright, patent, trademark, and
-       attribution notices from the Source form of the Work,
-       excluding those notices that do not pertain to any part of
-       the Derivative Works; and
-
-   (d) If the Work includes a "NOTICE" text file as part of its
-       distribution, then any Derivative Works that You distribute must
-       include a readable copy of the attribution notices contained
-       within such NOTICE file, excluding those notices that do not
-       pertain to any part of the Derivative Works, in at least one
-       of the following places: within a NOTICE text file distributed
-       as part of the Derivative Works; within the Source form or
-       documentation, if provided along with the Derivative Works; or,
-       within a display generated by the Derivative Works, if and
-       wherever such third-party notices normally appear. The contents
-       of the NOTICE file are for informational purposes only and
-       do not modify the License. You may add Your own attribution
-       notices within Derivative Works that You distribute, alongside
-       or as an addendum to the NOTICE text from the Work, provided
-       that such additional attribution notices cannot be construed
-       as modifying the License.
-
-   You may add Your own copyright statement to Your modifications and
-   may provide additional or different license terms and conditions
-   for use, reproduction, or distribution of Your modifications, or
-   for any such Derivative Works as a whole, provided Your use,
-   reproduction, and distribution of the Work otherwise complies with
-   the conditions stated in this License.
-
-5. Submission of Contributions. Unless You explicitly state otherwise,
-   any Contribution intentionally submitted for inclusion in the Work
-   by You to the Licensor shall be under the terms and conditions of
-   this License, without any additional terms or conditions.
-   Notwithstanding the above, nothing herein shall supersede or modify
-   the terms of any separate license agreement you may have executed
-   with Licensor regarding such Contributions.
-
-6. Trademarks. This License does not grant permission to use the trade
-   names, trademarks, service marks, or product names of the Licensor,
-   except as required for reasonable and customary use in describing the
-   origin of the Work and reproducing the content of the NOTICE file.
-
-7. Disclaimer of Warranty. Unless required by applicable law or
-   agreed to in writing, Licensor provides the Work (and each
-   Contributor provides its Contributions) on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
-   implied, including, without limitation, any warranties or conditions
-   of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
-   PARTICULAR PURPOSE. You are solely responsible for determining the
-   appropriateness of using or redistributing the Work and assume any
-   risks associated with Your exercise of permissions under this License.
-
-8. Limitation of Liability. In no event and under no legal theory,
-   whether in tort (including negligence), contract, or otherwise,
-   unless required by applicable law (such as deliberate and grossly
-   negligent acts) or agreed to in writing, shall any Contributor be
-   liable to You for damages, including any direct, indirect, special,
-   incidental, or consequential damages of any character arising as a
-   result of this License or out of the use or inability to use the
-   Work (including but not limited to damages for loss of goodwill,
-   work stoppage, computer failure or malfunction, or any and all
-   other commercial damages or losses), even if such Contributor
-   has been advised of the possibility of such damages.
-
-9. Accepting Warranty or Additional Liability. While redistributing
-   the Work or Derivative Works thereof, You may choose to offer,
-   and charge a fee for, acceptance of support, warranty, indemnity,
-   or other liability obligations and/or rights consistent with this
-   License. However, in accepting such obligations, You may act only
-   on Your own behalf and on Your sole responsibility, not on behalf
-   of any other Contributor, and only if You agree to indemnify,
-   defend, and hold each Contributor harmless for any liability
-   incurred by, or claims asserted against, such Contributor by reason
-   of your accepting any such warranty or additional liability.
-
-END OF TERMS AND CONDITIONS
-
-APPENDIX: How to apply the Apache License to your work.
-
-   To apply the Apache License to your work, attach the following
-   boilerplate notice, with the fields enclosed by brackets "[]"
-   replaced with your own identifying information. (Don't include
-   the brackets!)  The text should be enclosed in the appropriate
-   comment syntax for the file format. We also recommend that a
-   file or class name and description of purpose be included on the
-   same "printed page" as the copyright notice for easier
-   identification within third-party archives.
-
-Copyright 2024 Michael Wright
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-	http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+    steps:
+      - uses: actions/checkout@v3
+      - name: Check License Header
+        uses: apache/skywalking-eyes@v0.3.0
 
 
 ===== LICENSE-MIT =====
-Copyright (c) 2024 Michael Wright
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to do
+so, subject to the following conditions:
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
+Distributions of all or part of the Software intended to be used by the
+recipients as they would use the unmodified Software, containing modifications
+that substantially alter, remove, or disable functionality of the Software,
+outside of the documented configuration mechanisms provided by the Software,
+shall be modified such that the Original Author's bug reporting email addresses
+and urls are either replaced with the contact information of the parties
+responsible for the changes, or removed entirely.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
+===== examples/dump_neighbour_tables.rs, examples/dump_neighbours.rs, examples/dump_packet_link_bridge_vlan.rs, examples/dump_packet_links.rs, examples/dump_routes.rs, examples/dump_rules.rs, examples/new_rule.rs, src/address/addr_flags.rs, src/address/addr_scope.rs, src/address/attribute.rs, src/address/cache_info.rs, src/address/message.rs, src/address/mod.rs, src/address/tests/ipv4.rs, src/address/tests/ipv6.rs, src/address/tests/mod.rs, src/address_family_fallback.rs, src/address_family_freebsd.rs, src/address_family_linux.rs, src/ip.rs, src/link/af_spec/bridge.rs, src/link/af_spec/in6_addr_gen_mode.rs, src/link/af_spec/inet.rs, src/link/af_spec/inet6.rs, src/link/af_spec/inet6_cache.rs, src/link/af_spec/inet6_devconf.rs, src/link/af_spec/inet6_icmp.rs, src/link/af_spec/inet6_iface_flag.rs, src/link/af_spec/inet6_stats.rs, src/link/af_spec/mod.rs, src/link/af_spec/unspec.rs, src/link/attribute.rs, src/link/buffer_tool.rs, src/link/down_reason.rs, src/link/event.rs, src/link/ext_mask.rs, src/link/header.rs, src/link/link_flag.rs, src/link/link_info/bond.rs, src/link/link_info/bond_port.rs, src/link/link_info/bridge.rs, src/link/link_info/bridge_port.rs, src/link/link_info/geneve.rs, src/link/link_info/gre.rs, src/link/link_info/gre6.rs, src/link/link_info/gre_tap.rs, src/link/link_info/gre_tap6.rs, src/link/link_info/gtp.rs, src/link/link_info/hsr.rs, src/link/link_info/info_data.rs, src/link/link_info/info_port.rs, src/link/link_info/infos.rs, src/link/link_info/ipoib.rs, src/link/link_info/ipvlan.rs, src/link/link_info/mac_vlan.rs, src/link/link_info/macsec.rs, src/link/link_info/mod.rs, src/link/link_info/sit.rs, src/link/link_info/tun.rs, src/link/link_info/veth.rs, src/link/link_info/vlan.rs, src/link/link_info/vrf.rs, src/link/link_info/vti.rs, src/link/link_info/vxlan.rs, src/link/link_info/xfrm.rs, src/link/link_info/xstats.rs, src/link/link_layer_type.rs, src/link/link_mode.rs, src/link/link_state.rs, src/link/map.rs, src/link/message.rs, src/link/mod.rs, src/link/phys_id.rs, src/link/prop_list.rs, src/link/proto_info/bridge.rs, src/link/proto_info/inet6.rs, src/link/proto_info/mod.rs, src/link/sriov/broadcast.rs, src/link/sriov/guid.rs, src/link/sriov/link_state.rs, src/link/sriov/mac.rs, src/link/sriov/mod.rs, src/link/sriov/rate.rs, src/link/sriov/rss_query.rs, src/link/sriov/spoofchk.rs, src/link/sriov/stats.rs, src/link/sriov/trust.rs, src/link/sriov/tx_rate.rs, src/link/sriov/vf_list.rs, src/link/sriov/vf_port.rs, src/link/sriov/vf_vlan.rs, src/link/sriov/vlan.rs, src/link/stats.rs, src/link/stats64.rs, src/link/tests/afspec.rs, src/link/tests/bond.rs, src/link/tests/bridge.rs, src/link/tests/geneve.rs, src/link/tests/hsr.rs, src/link/tests/ipvlan.rs, src/link/tests/ipvtap.rs, src/link/tests/loopback.rs, src/link/tests/macsec.rs, src/link/tests/macvlan.rs, src/link/tests/macvtap.rs, src/link/tests/message.rs, src/link/tests/mod.rs, src/link/tests/prop_list.rs, src/link/tests/sriov.rs, src/link/tests/statistics.rs, src/link/tests/veth.rs, src/link/tests/vlan.rs, src/link/tests/vrf.rs, src/link/tests/vxlan.rs, src/link/tests/xdp.rs, src/link/tests/xfrm.rs, src/link/vlan_protocol.rs, src/link/wireless.rs, src/link/xdp.rs, src/message.rs, src/neighbour/address.rs, src/neighbour/attribute.rs, src/neighbour/cache_info.rs, src/neighbour/flags.rs, src/neighbour/header.rs, src/neighbour/kind.rs, src/neighbour/message.rs, src/neighbour/mod.rs, src/neighbour/state.rs, src/neighbour/tests/bridge.rs, src/neighbour/tests/ip.rs, src/neighbour/tests/mod.rs, src/neighbour_table/attribute.rs, src/neighbour_table/config.rs, src/neighbour_table/header.rs, src/neighbour_table/message.rs, src/neighbour_table/mod.rs, src/neighbour_table/param.rs, src/neighbour_table/stats.rs, src/neighbour_table/tests.rs, src/nsid/attribute.rs, src/nsid/header.rs, src/nsid/message.rs, src/nsid/mod.rs, src/nsid/tests.rs, src/prefix/attribute.rs, src/prefix/cache_info.rs, src/prefix/header.rs, src/prefix/message.rs, src/prefix/mod.rs, src/prefix/tests.rs, src/route/address.rs, src/route/attribute.rs, src/route/cache_info.rs, src/route/flags.rs, src/route/header.rs, src/route/lwtunnel.rs, src/route/message.rs, src/route/metrics.rs, src/route/mfc_stats.rs, src/route/mod.rs, src/route/mpls.rs, src/route/next_hops.rs, src/route/preference.rs, src/route/realm.rs, src/route/seg6.rs, src/route/tests/cache_info.rs, src/route/tests/expires.rs, src/route/tests/ip6_tunnel.rs, src/route/tests/loopback.rs, src/route/tests/mod.rs, src/route/tests/mpls.rs, src/route/tests/realm.rs, src/route/tests/route_flags.rs, src/route/tests/seg6.rs, src/route/tests/uid.rs, src/route/tests/via.rs, src/route/via.rs, src/rule/action.rs, src/rule/attribute.rs, src/rule/flags.rs, src/rule/header.rs, src/rule/message.rs, src/rule/mod.rs, src/rule/port_range.rs, src/rule/tests/fw_mark.rs, src/rule/tests/iif_oif.rs, src/rule/tests/l3mdev.rs, src/rule/tests/mod.rs, src/rule/tests/on_boot_rules.rs, src/rule/tests/sport_dport.rs, src/rule/tests/src_dst.rs, src/rule/uid_range.rs, src/tc/actions/action.rs, src/tc/actions/header.rs, src/tc/actions/message.rs, src/tc/actions/mod.rs, src/tc/actions/nat_flag.rs, src/tc/actions/tests/action.rs, src/tc/actions/tests/header.rs, src/tc/actions/tests/message.rs, src/tc/actions/tests/mirror.rs, src/tc/actions/tests/mod.rs, src/tc/actions/tests/nat.rs, src/tc/actions/tests/tunnel_key.rs, src/tc/actions/tunnel_key.rs, src/tc/attribute.rs, src/tc/filters/cls_u32.rs, src/tc/filters/flower/core.rs, src/tc/filters/flower/mod.rs, src/tc/filters/flower/mpls.rs, src/tc/filters/matchall.rs, src/tc/filters/mod.rs, src/tc/filters/u32_flags.rs, src/tc/header.rs, src/tc/message.rs, src/tc/mod.rs, src/tc/options.rs, src/tc/qdiscs/fq_codel.rs, src/tc/qdiscs/ingress.rs, src/tc/qdiscs/mod.rs, src/tc/stats/basic.rs, src/tc/stats/compat.rs, src/tc/stats/mod.rs, src/tc/stats/queue.rs, src/tc/stats/stats2.rs, src/tc/stats/xstats.rs, src/tc/tests/filter_flower.rs, src/tc/tests/filter_matchall.rs, src/tc/tests/filter_u32.rs, src/tc/tests/mod.rs, src/tc/tests/qdisc_fq_codel.rs, src/tc/tests/qdisc_ingress.rs =====
+// SPDX-License-Identifier: MIT
+
+
+
+===== src/lib.rs =====
+// SPDX-License-Identifier: MIT
+
+//! The `netlink-packet-route` crate is designed to abstract Netlink route
+//! protocol(`rtnetlink`) packet into Rust data types. The goal of this crate is
+//! saving netlink user from reading Kernel Netlink codes.
+//!
+//! This crate grouped Netlink route protocol into these modules:
+//!  * `link`: NIC interface, similar to to `ip link` command.
+//!  * `address`: IP address, similar to `ip address` command.
+//!  * `route`: Route, similar to `ip route` command.
+//!  * `rule`: Route rule, similar to `ip rule` command.
+//!  * `tc`: Traffic control, similar to `tc` command.
+//!  * `neighbour`: Neighbour, similar to `ip neighbour` command.
+//!  * `neighbour_table`: Neighbour table, similar to `ip ntable` command.
+//!  * `nsid`: Namespace, similar to `ip netns` command.
+//!
+//! At the top level of this crate, we also provide:
+//!  * [AddressFamily]
+//!
+//! Normally, you should use [`rtnetlink`][rtnetlink_url] instead of using this
+//! crate directly.
+//!
+//! [rtnetlink_url]: https://docs.rs/rtnetlink
+
+
+
+===== src/route/tests/multipath.rs =====
+// SPDX-License-Identifier: MIT
+
+
+===== src/tc/actions/mirror.rs =====
+// SPDX-License-Identifier: MIT
+
+/// Mirror action
+///
+/// The mirred action allows packet mirroring (copying) or
+/// redirecting (stealing) the packet it receives. Mirroring is what
+/// is sometimes referred to as Switch Port Analyzer (SPAN) and is
+/// commonly used to analyze and/or debug flows.
+
+
+===== src/tc/actions/nat.rs =====
+// SPDX-License-Identifier: MIT
+
+/// Nat action
+///
+/// The nat action maps one IP prefix to another
+
+
+===== src/tests.rs =====
+// SPDX-License-Identifier: MIT
+
+// This file only contains testing parsing RouteNetlinkMessage, not focusing on
+// detailed sub-component parsing. Each component has their own tests moduel.
+
+
+
+===== tools/nl_dump.py =====
+#!/usr/bin/env python3
+
+# SPDX-License-Identifier: MIT
+# Simple tool to dump rtnetlink messages (or part of messages)
+

@@ -1,129 +1,31 @@
-Rust crate: netlink-sys — 0.8.8
-Source: https://static.crates.io/crates/netlink-sys/netlink-sys-0.8.8.crate
+Rust crate: mio — 1.1.1
+Source: https://static.crates.io/crates/mio/mio-1.1.1.crate
 
-===== .github/workflows/license.yml =====
-name: license
+===== LICENSE =====
+Copyright (c) 2014 Carl Lerche and other MIO contributors
 
-on:
-  pull_request:
-    types: [opened, synchronize, reopened]
-  push:
-    branches:
-      - main
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-jobs:
-  check-license:
-    name: Check License
-    runs-on: ubuntu-latest
-    timeout-minutes: 3
-
-    steps:
-      - uses: actions/checkout@v3
-      - name: Check License Header
-        uses: apache/skywalking-eyes@v0.3.0
-
-
-===== LICENSE-MIT =====
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-of the Software, and to permit persons to whom the Software is furnished to do
-so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-Distributions of all or part of the Software intended to be used by the
-recipients as they would use the unmodified Software, containing modifications
-that substantially alter, remove, or disable functionality of the Software,
-outside of the documented configuration mechanisms provided by the Software,
-shall be modified such that the Original Author's bug reporting email addresses
-and urls are either replaced with the contact information of the parties
-responsible for the changes, or removed entirely.
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
 
 
-===== examples/audit_events.rs =====
-// SPDX-License-Identifier: MIT
-
-// Build:
-//
-// ```
-// cd netlink-sys
-// cargo build --example audit_events
-// ```
-//
-// Run *as root*:
-//
-// ```
-// ../target/debug/examples/audit_events
-// ```
-
-
-
-===== examples/audit_events_async_std.rs =====
-// SPDX-License-Identifier: MIT
-
-// Build:
-//
-// ```
-// cd netlink-sys
-// cargo build --example audit_events_async_std --features async_std_socket
-// ```
-//
-// Run *as root*:
-//
-// ```
-// ../target/debug/examples/audit_events_async_std
-// ```
-
-
-
-===== examples/audit_events_tokio.rs =====
-// SPDX-License-Identifier: MIT
-
-// Build:
-//
-// ```
-// cd netlink-sys
-// cargo build --example audit_events_async --features tokio_socket
-// ```
-//
-// Run *as root*:
-//
-// ```
-// ../target/debug/examples/audit_events_async
-// ```
-
-
-
-===== examples/audit_events_tokio_manual_thread_builder.rs =====
-// SPDX-License-Identifier: MIT
-
-/*
- * This example shows the mimimal manual tokio initialization required to be
- * able to use netlink.
- */
-
-
-
-===== src/addr.rs, src/async_socket.rs, src/async_socket_ext.rs, src/lib.rs, src/mio.rs, src/smol.rs, src/socket.rs, src/tokio.rs =====
-// SPDX-License-Identifier: MIT
-
-
-
-===== src/constants.rs =====
-// SPDX-License-Identifier: MIT
-
-//! This module provides a lot of netlink constants for various protocol. As we
-//! add support for the various protocols, these constants will be moved to
-//! their own crate.
+===== src/sys/unix/selector/poll.rs =====
+// This implementation is based on the one in the `polling` crate.
+// Thanks to https://github.com/Kestrer for the original implementation!
+// Permission to use this code has been granted by original author:
+// https://github.com/tokio-rs/mio/pull/1602#issuecomment-1218441031
 

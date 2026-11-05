@@ -1,5 +1,5 @@
-Rust crate: pem-rfc7468 — 0.7.0
-Source: https://static.crates.io/crates/pem-rfc7468/pem-rfc7468-0.7.0.crate
+Rust crate: p384 — 0.13.1
+Source: https://static.crates.io/crates/p384/p384-0.13.1.crate
 
 ===== LICENSE-APACHE =====
                               Apache License
@@ -206,7 +206,7 @@ limitations under the License.
 
 
 ===== LICENSE-MIT =====
-Copyright (c) 2021 The RustCrypto Project Developers
+Copyright (c) 2020-2021 RustCrypto Developers
 
 Permission is hereby granted, free of charge, to any
 person obtaining a copy of this software and associated
@@ -231,3 +231,19 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
 IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
+
+
+===== src/arithmetic/field.rs =====
+//! Field arithmetic modulo p = 2^{384} − 2^{128} − 2^{96} + 2^{32} − 1
+//!
+//! Arithmetic implementations are extracted Rust code from the Coq fiat-crypto
+//! libraries.
+//!
+//! # License
+//!
+//! Copyright (c) 2015-2020 the fiat-crypto authors
+//!
+//! fiat-crypto is distributed under the terms of the MIT License, the
+//! Apache License (Version 2.0), and the BSD 1-Clause License;
+//! users may pick which license to apply.
+

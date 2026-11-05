@@ -22,9 +22,18 @@ The **App Release** workflow runs only when a non-prerelease app release is publ
 a push, pull request, edited release, Linux-base release or manual dispatch. Its release commit
 must belong to `main`. It uses GitHub-hosted macOS runners with the iOS 27 SDK, and the audited
 native runtime attached to that release (`Runfern-native-runtime.tar.gz` plus its `.sha256`).
-Attach runtime and corresponding-source archives before publishing a draft release.
-Also attach every companion file pinned in `Tools/Licenses/release-artifacts.json`;
-the workflow downloads and verifies all of them before importing signing credentials.
+Published releases are immutable, so stage everything on a draft first:
+
+```sh
+python3 Tools/Licenses/prepare.py --utm "$HOME/RunfernBuild/UTM"   # after a version bump; commit the result
+gh release create v<version> --draft --target main --title "Runfern v<version>" --notes "…"
+bash Tools/Build/stage-release.sh v<version>
+```
+
+`stage-release.sh` verifies the runtime and license artifacts locally, then attaches the
+runtime archive and every file pinned in `Tools/Licenses/release-artifacts.json`. Publishing
+the draft starts the workflow, which verifies all of them before importing signing credentials.
+Only variants whose license gate passes are built. The JIT IPA is kept as a workflow artifact.
 
 Release builds are disabled until the repository variable `ENABLE_RELEASE_BUILDS` is `true`.
 Configure these secrets separately in the protected `sideload` and `appstore` environments:
@@ -43,7 +52,7 @@ is required for built-in JIT; ordinary sideloading certificates cannot grant tha
 TestFlight also requires `ENABLE_TESTFLIGHT_UPLOAD=true` and an independently confirmed
 `APP_STORE_LICENSE_CLEARED=true` environment variable. Do not enable the latter merely because
 a build passes: embedded GPL/LGPL components require separate assessment of Apple's distribution
-terms. The workflow does **not** submit an app for public App Store review. That stays manual.
+terms, recorded as a sign-off in `Tools/Licenses/clearance.json`. The workflow does **not** submit an app for public App Store review. That stays manual.
 
 No Apple credentials are committed or attached to release artifacts. Hosted runners install
 them in a temporary keychain and remove them even on failure.

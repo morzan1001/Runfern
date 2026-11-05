@@ -1,5 +1,5 @@
-Rust crate: signature — 2.2.0
-Source: https://static.crates.io/crates/signature/signature-2.2.0.crate
+Rust crate: sha2 — 0.10.9
+Source: https://static.crates.io/crates/sha2/sha2-0.10.9.crate
 
 ===== LICENSE-APACHE =====
                               Apache License
@@ -206,7 +206,9 @@ limitations under the License.
 
 
 ===== LICENSE-MIT =====
-Copyright (c) 2018-2023 RustCrypto Developers
+Copyright (c) 2006-2009 Graydon Hoare
+Copyright (c) 2009-2013 Mozilla Foundation
+Copyright (c) 2016 Artyom Pavlov
 
 Permission is hereby granted, free of charge, to any
 person obtaining a copy of this software and associated

@@ -1,450 +1,231 @@
-Rust crate: async_zip — 0.0.18
-Source: https://static.crates.io/crates/async_zip/async_zip-0.0.18.crate
-
-===== LICENSE =====
-MIT License
-
-Copyright (c) 2021 Harry
-Copyright (c) 2023 Cognite AS
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-
-===== examples/actix_multipart.rs =====
-// Copyright (c) 2022 FL33TW00D (https://github.com/FL33TW00D)
-// Copyright (c) 2021 Harry [Majored] [hello@majored.pw]
-// MIT License (https://github.com/Majored/rs-async-zip/blob/main/LICENSE
-
-
-
-===== examples/cli_compress.rs, src/base/write/compressed_writer.rs, src/base/write/entry_stream.rs, src/base/write/entry_whole.rs, src/spec/compression.rs, src/spec/mod.rs, src/spec/parse.rs, src/spec/version.rs =====
-// Copyright (c) 2021 Harry [Majored] [hello@majored.pw]
-// MIT License (https://github.com/Majored/rs-async-zip/blob/main/LICENSE)
-
-
-
-===== src/base/mod.rs =====
-// Copyright (c) 2023 Harry [Majored] [hello@majored.pw]
-// MIT License (https://github.com/Majored/rs-async-zip/blob/main/LICENSE)
-
-//! A base runtime-agnostic implementation using `futures`'s IO types.
-
-
-
-===== src/base/read/io/combined_record.rs, src/tests/read/zip64/mod.rs =====
-// Copyright (c) 2023 Harry [Majored] [hello@majored.pw]
-// Copyright (c) 2023 Cognite AS
-// MIT License (https://github.com/Majored/rs-async-zip/blob/main/LICENSE)
-
-
-
-===== src/base/read/io/compressed.rs, src/base/read/io/entry.rs, src/base/read/io/hashed.rs, src/base/read/io/mod.rs, src/base/read/io/owned.rs, src/base/write/io/mod.rs, src/base/write/io/offset.rs, src/entry/builder.rs, src/entry/mod.rs, src/file/builder.rs, src/file/mod.rs, src/spec/attribute.rs, src/spec/consts.rs, src/tests/mod.rs, src/tests/read/compression/mod.rs, src/tests/read/locator/mod.rs, src/tests/read/mod.rs, src/tests/spec/date.rs, src/tests/spec/mod.rs, src/tests/write/mod.rs, src/tests/write/offset/mod.rs =====
-// Copyright (c) 2022 Harry [Majored] [hello@majored.pw]
-// MIT License (https://github.com/Majored/rs-async-zip/blob/main/LICENSE)
-
-
-
-===== src/base/read/io/locator.rs =====
-// Copyright (c) 2022 Harry [Majored] [hello@majored.pw]
-// MIT License (https://github.com/Majored/rs-async-zip/blob/main/LICENSE)
-
-//! <https://github.com/Majored/rs-async-zip/blob/main/SPECIFICATION.md#4316>
-//!
-//! As with other ZIP libraries, we face the predicament that the end of central directory record may contain a
-//! variable-length file comment. As a result, we cannot just make the assumption that the start of this record is
-//! 18 bytes (the length of the EOCDR) offset from the end of the data - we must locate it ourselves.
-//!
-//! The `zip-rs` crate handles this by reading in reverse from the end of the data. This involves seeking backwards
-//! by a single byte each iteration and reading 4 bytes into a u32. Whether this is performant/acceptable within a
-//! a non-async context, I'm unsure, but it isn't desirable within an async context. Especially since we cannot just
-//! place a [`BufReader`] infront of the upstream reader (as its internal buffer is invalidated on each seek).
-//!
-//! Reading in reverse is still desirable as the use of file comments is limited and they're unlikely to be large.
-//!
-//! The below method is one that compromises on these two contention points. Please submit an issue or PR if you know
-//! of a better algorithm for this (and have tested/verified its performance).
-
-
-
-===== src/base/read/mem.rs =====
-// Copyright (c) 2022 Harry [Majored] [hello@majored.pw]
-// MIT License (https://github.com/Majored/rs-async-zip/blob/main/LICENSE)
-
-//! A concurrent ZIP reader which acts over an owned vector of bytes.
-//!
-//! Concurrency is achieved as a result of:
-//! - Wrapping the provided vector of bytes within an [`Arc`] to allow shared ownership.
-//! - Wrapping this [`Arc`] around a [`Cursor`] when reading (as the [`Arc`] can deref and coerce into a `&[u8]`).
-//!
-//! ### Usage
-//! Unlike the [`seek`] module, we no longer hold a mutable reference to any inner reader which in turn, allows the
-//! construction of concurrent [`ZipEntryReader`]s. Though, note that each individual [`ZipEntryReader`] cannot be sent
-//! between thread boundaries due to the masked lifetime requirement. Therefore, the overarching [`ZipFileReader`]
-//! should be cloned and moved into those contexts when needed.
-//!
-//! ### Concurrent Example
-//! ```no_run
-//! # use async_zip::base::read::mem::ZipFileReader;
-//! # use async_zip::error::Result;
-//! # use futures_lite::io::AsyncReadExt;
-//! #
-//! async fn run() -> Result<()> {
-//!     let reader = ZipFileReader::new(Vec::new()).await?;
-//!     let result = tokio::join!(read(&reader, 0), read(&reader, 1));
-//!
-//!     let data_0 = result.0?;
-//!     let data_1 = result.1?;
-//!
-//!     // Use data within current scope.
-//!
-//!     Ok(())
-//! }
-//!
-//! async fn read(reader: &ZipFileReader, index: usize) -> Result<Vec<u8>> {
-//!     let mut entry = reader.reader_without_entry(index).await?;
-//!     let mut data = Vec::new();
-//!     entry.read_to_end(&mut data).await?;
-//!     Ok(data)
-//! }
-//! ```
-//!
-//! ### Parallel Example
-//! ```no_run
-//! # use async_zip::base::read::mem::ZipFileReader;
-//! # use async_zip::error::Result;
-//! # use futures_lite::io::AsyncReadExt;
-//! #
-//! async fn run() -> Result<()> {
-//!     let reader = ZipFileReader::new(Vec::new()).await?;
-//!     
-//!     let handle_0 = tokio::spawn(read(reader.clone(), 0));
-//!     let handle_1 = tokio::spawn(read(reader.clone(), 1));
-//!
-//!     let data_0 = handle_0.await.expect("thread panicked")?;
-//!     let data_1 = handle_1.await.expect("thread panicked")?;
-//!
-//!     // Use data within current scope.
-//!
-//!     Ok(())
-//! }
-//!
-//! async fn read(reader: ZipFileReader, index: usize) -> Result<Vec<u8>> {
-//!     let mut entry = reader.reader_without_entry(index).await?;
-//!     let mut data = Vec::new();
-//!     entry.read_to_end(&mut data).await?;
-//!     Ok(data)
-//! }
-//! ```
-
-
-
-===== src/base/read/mod.rs =====
-// Copyright (c) 2022-2023 Harry [Majored] [hello@majored.pw]
-// MIT License (https://github.com/Majored/rs-async-zip/blob/main/LICENSE)
-
-//! A module which supports reading ZIP files.
-
-
-
-===== src/base/read/seek.rs =====
-// Copyright (c) 2022 Harry [Majored] [hello@majored.pw]
-// MIT License (https://github.com/Majored/rs-async-zip/blob/main/LICENSE)
-
-//! A ZIP reader which acts over a seekable source.
-//!
-//! ### Example
-//! ```no_run
-//! # use async_zip::base::read::seek::ZipFileReader;
-//! # use async_zip::error::Result;
-//! # use futures_lite::io::AsyncReadExt;
-//! # use tokio::fs::File;
-//! # use tokio_util::compat::TokioAsyncReadCompatExt;
-//! # use tokio::io::BufReader;
-//! #
-//! async fn run() -> Result<()> {
-//!     let mut data = BufReader::new(File::open("./foo.zip").await?);
-//!     let mut reader = ZipFileReader::new(data.compat()).await?;
-//!
-//!     let mut data = Vec::new();
-//!     let mut entry = reader.reader_without_entry(0).await?;
-//!     entry.read_to_end(&mut data).await?;
-//!
-//!     // Use data within current scope.
-//!
-//!     Ok(())
-//! }
-//! ```
-
-
-
-===== src/base/read/stream.rs =====
-// Copyright (c) 2023 Harry [Majored] [hello@majored.pw]
-// MIT License (https://github.com/Majored/rs-async-zip/blob/main/LICENSE)
-
-//! A ZIP reader which acts over a non-seekable source.
-//!
-//! # API Design
-//! As opposed to other readers provided by this crate, it's important that the data of an entry is fully read before
-//! the proceeding entry is read. This is as a result of not being able to seek forwards or backwards, so we must end
-//! up at the start of the next entry.
-//!
-//! **We encode this invariant within Rust's type system so that it can be enforced at compile time.**
-//!
-//! This requires that any transition methods between these encoded types consume the reader and provide a new owned
-//! reader back. This is certainly something to keep in mind when working with this reader, but idiomatic code can
-//! still be produced nevertheless.
-//!
-//! # Considerations
-//! As the central directory of a ZIP archive is stored at the end of it, a non-seekable reader doesn't have access
-//! to it. We have to rely on information provided within the local file header which may not be accurate or complete.
-//! This results in:
-//! - The inability to read ZIP entries using the combination of a data descriptor and the Stored compression method.
-//! - No file comment being available (defaults to an empty string).
-//! - No internal or external file attributes being available (defaults to 0).
-//! - The extra field data potentially being inconsistent with what's stored in the central directory.
-//! - None of the following being available when the entry was written with a data descriptor (defaults to 0):
-//!     - CRC
-//!     - compressed size
-//!     - uncompressed size
-//!
-//! # Example
-//! ```no_run
-//! # use futures_lite::io::Cursor;
-//! # use async_zip::error::Result;
-//! # use async_zip::base::read::stream::ZipFileReader;
-//! #
-//! # async fn run() -> Result<()> {
-//! let mut zip = ZipFileReader::new(Cursor::new([0; 0]));
-//!     
-//! // Print the name of every file in a ZIP archive.
-//! while let Some(entry) = zip.next_with_entry().await? {
-//!     println!("File: {}", entry.reader().entry().filename().as_str().unwrap());
-//!     zip = entry.skip().await?;
-//! }
-//! #
-//! #     Ok(())
-//! # }
-//! ```
-
-
-
-===== src/base/write/mod.rs =====
-// Copyright (c) 2021-2022 Harry [Majored] [hello@majored.pw]
-// MIT License (https://github.com/Majored/rs-async-zip/blob/main/LICENSE)
-
-//! A module which supports writing ZIP files.
-//!
-//! # Example
-//! ### Whole data (u8 slice)
-//! ```no_run
-//! # #[cfg(feature = "deflate")]
-//! # {
-//! # use async_zip::{Compression, ZipEntryBuilder, base::write::ZipFileWriter};
-//! # use async_zip::error::ZipError;
-//! #
-//! # async fn run() -> Result<(), ZipError> {
-//! let mut writer = ZipFileWriter::new(Vec::<u8>::new());
-//!
-//! let data = b"This is an example file.";
-//! let opts = ZipEntryBuilder::new(String::from("foo.txt").into(), Compression::Deflate);
-//!
-//! writer.write_entry_whole(opts, data).await?;
-//! writer.close().await?;
-//! #   Ok(())
-//! # }
-//! # }
-//! ```
-//! ### Stream data (unknown size & data)
-//! ```no_run
-//! # #[cfg(feature = "deflate")]
-//! # {
-//! # use async_zip::{Compression, ZipEntryBuilder, base::write::ZipFileWriter};
-//! # use std::io::Cursor;
-//! # use async_zip::error::ZipError;
-//! # use futures_lite::io::AsyncWriteExt;
-//! # use tokio_util::compat::TokioAsyncWriteCompatExt;
-//! #
-//! # async fn run() -> Result<(), ZipError> {
-//! let mut writer = ZipFileWriter::new(Vec::<u8>::new());
-//!
-//! let data = b"This is an example file.";
-//! let opts = ZipEntryBuilder::new(String::from("bar.txt").into(), Compression::Deflate);
-//!
-//! let mut entry_writer = writer.write_entry_stream(opts).await?;
-//! entry_writer.write_all(data).await.unwrap();
-//!
-//! entry_writer.close().await?;
-//! writer.close().await?;
-//! #   Ok(())
-//! # }
-//! # }
-//! ```
-
-
-
-===== src/date/builder.rs =====
-// Copyright (c) 2024 Harry [Majored] [hello@majored.pw]
-// MIT License (https://github.com/Majored/rs-async-zip/blob/main/LICENSE)
-
-
-
-===== src/date/mod.rs =====
-// Copyright (c) 2021-2024 Harry [Majored] [hello@majored.pw]
-// MIT License (https://github.com/Majored/rs-async-zip/blob/main/LICENSE)
-
-
-
-===== src/error.rs =====
-// Copyright (c) 2021 Harry [Majored] [hello@majored.pw]
-// MIT License (https://github.com/Majored/rs-async-zip/blob/main/LICENSE)
-
-//! A module which holds relevant error reporting structures/types.
-
-
-
-===== src/lib.rs =====
-// Copyright (c) 2021-2023 Harry [Majored] [hello@majored.pw]
-// MIT License (https://github.com/Majored/rs-async-zip/blob/main/LICENSE)
-
-// Document all features on docs.rs
-
-
-===== src/spec/extra_field.rs, src/tests/write/zip64/mod.rs =====
-// Copyright Cognite AS, 2023
-
-
-
-===== src/spec/header.rs =====
-// Copyright (c) 2021 Harry [Majored] [hello@majored.pw]
-// MIT License (https://github.com/Majored/rs-async-zip/blob/main/LICENSE)
-
-// https://github.com/Majored/rs-async-zip/blob/main/SPECIFICATION.md#437
-
-
-===== src/string.rs, src/utils.rs, tests/common/mod.rs, tests/compress_test.rs, tests/decompress_test.rs =====
-// Copyright (c) 2023 Harry [Majored] [hello@majored.pw]
-// MIT License (https://github.com/Majored/rs-async-zip/blob/main/LICENSE)
-
-
-
-===== src/tests/combined/mod.rs =====
-// Copyright (c) 2022 Harry [Majored] [hello@majored.pw]
-// MIT License (https://github.com/Majored/rs-async-zip/blob/main/LICENSE)
-
-
-===== src/tokio/mod.rs =====
-// Copyright (c) 2023 Harry [Majored] [hello@majored.pw]
-// MIT License (https://github.com/Majored/rs-async-zip/blob/main/LICENSE)
-
-//! A set of [`tokio`]-specific type aliases and features.
-//!
-//! # Usage
-//! With the `tokio` feature enabled, types from the [`base`] implementation will implement additional constructors
-//! for use with [`tokio`]. These constructors internally implement conversion between the required async IO traits.
-//! They are defined as:
-//! - [`base::read::seek::ZipFileReader::with_tokio()`]
-//! - [`base::read::stream::ZipFileReader::with_tokio()`]
-//! - [`base::write::ZipFileWriter::with_tokio()`]
-//!
-//! As a result of Rust's type inference, we are able to reuse the [`base`] implementation's types with considerable
-//! ease. There only exists one caveat with their use; the types returned by these constructors contain a wrapping
-//! compatibility type provided by an external crate. These compatibility types cannot be named unless you also pull in
-//! the [`tokio_util`] dependency manually. This is why we've provided type aliases within this module so that they can
-//! be named without needing to pull in a separate dependency.
-
-
-
-===== src/tokio/read/fs.rs =====
-// Copyright (c) 2022 Harry [Majored] [hello@majored.pw]
-// MIT License (https://github.com/Majored/rs-async-zip/blob/main/LICENSE)
-
-//! A concurrent ZIP reader which acts over a file system path.
-//!
-//! Concurrency is achieved as a result of:
-//! - Wrapping the provided path within an [`Arc`] to allow shared ownership.
-//! - Constructing a new [`File`] from the path when reading.
-//!
-//! ### Usage
-//! Unlike the [`seek`] module, we no longer hold a mutable reference to any inner reader which in turn, allows the
-//! construction of concurrent [`ZipEntryReader`]s. Though, note that each individual [`ZipEntryReader`] cannot be sent
-//! between thread boundaries due to the masked lifetime requirement. Therefore, the overarching [`ZipFileReader`]
-//! should be cloned and moved into those contexts when needed.
-//!
-//! ### Concurrent Example
-//! ```no_run
-//! # use async_zip::tokio::read::fs::ZipFileReader;
-//! # use async_zip::error::Result;
-//! # use futures_lite::io::AsyncReadExt;
-//! #
-//! async fn run() -> Result<()> {
-//!     let reader = ZipFileReader::new("./foo.zip").await?;
-//!     let result = tokio::join!(read(&reader, 0), read(&reader, 1));
-//!
-//!     let data_0 = result.0?;
-//!     let data_1 = result.1?;
-//!
-//!     // Use data within current scope.
-//!
-//!     Ok(())
-//! }
-//!
-//! async fn read(reader: &ZipFileReader, index: usize) -> Result<Vec<u8>> {
-//!     let mut entry = reader.reader_without_entry(index).await?;
-//!     let mut data = Vec::new();
-//!     entry.read_to_end(&mut data).await?;
-//!     Ok(data)
-//! }
-//! ```
-//!
-//! ### Parallel Example
-//! ```no_run
-//! # use async_zip::tokio::read::fs::ZipFileReader;
-//! # use async_zip::error::Result;
-//! # use futures_lite::io::AsyncReadExt;
-//! #
-//! async fn run() -> Result<()> {
-//!     let reader = ZipFileReader::new("./foo.zip").await?;
-//!     
-//!     let handle_0 = tokio::spawn(read(reader.clone(), 0));
-//!     let handle_1 = tokio::spawn(read(reader.clone(), 1));
-//!
-//!     let data_0 = handle_0.await.expect("thread panicked")?;
-//!     let data_1 = handle_1.await.expect("thread panicked")?;
-//!
-//!     // Use data within current scope.
-//!
-//!     Ok(())
-//! }
-//!
-//! async fn read(reader: ZipFileReader, index: usize) -> Result<Vec<u8>> {
-//!     let mut entry = reader.reader_without_entry(index).await?;
-//!     let mut data = Vec::new();
-//!     entry.read_to_end(&mut data).await?;
-//!     Ok(data)
-//! }
-//! ```
-
-
-
-===== src/tokio/read/mod.rs =====
-// Copyright (c) 2023 Harry [Majored] [hello@majored.pw]
-// MIT License (https://github.com/Majored/rs-async-zip/blob/main/LICENSE)
-
-//! A module which supports reading ZIP files.
-
+Rust crate: async-task — 4.7.1
+Source: https://static.crates.io/crates/async-task/async-task-4.7.1.crate
+
+===== LICENSE-APACHE =====
+                              Apache License
+                        Version 2.0, January 2004
+                     http://www.apache.org/licenses/
+
+TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+
+1. Definitions.
+
+   "License" shall mean the terms and conditions for use, reproduction,
+   and distribution as defined by Sections 1 through 9 of this document.
+
+   "Licensor" shall mean the copyright owner or entity authorized by
+   the copyright owner that is granting the License.
+
+   "Legal Entity" shall mean the union of the acting entity and all
+   other entities that control, are controlled by, or are under common
+   control with that entity. For the purposes of this definition,
+   "control" means (i) the power, direct or indirect, to cause the
+   direction or management of such entity, whether by contract or
+   otherwise, or (ii) ownership of fifty percent (50%) or more of the
+   outstanding shares, or (iii) beneficial ownership of such entity.
+
+   "You" (or "Your") shall mean an individual or Legal Entity
+   exercising permissions granted by this License.
+
+   "Source" form shall mean the preferred form for making modifications,
+   including but not limited to software source code, documentation
+   source, and configuration files.
+
+   "Object" form shall mean any form resulting from mechanical
+   transformation or translation of a Source form, including but
+   not limited to compiled object code, generated documentation,
+   and conversions to other media types.
+
+   "Work" shall mean the work of authorship, whether in Source or
+   Object form, made available under the License, as indicated by a
+   copyright notice that is included in or attached to the work
+   (an example is provided in the Appendix below).
+
+   "Derivative Works" shall mean any work, whether in Source or Object
+   form, that is based on (or derived from) the Work and for which the
+   editorial revisions, annotations, elaborations, or other modifications
+   represent, as a whole, an original work of authorship. For the purposes
+   of this License, Derivative Works shall not include works that remain
+   separable from, or merely link (or bind by name) to the interfaces of,
+   the Work and Derivative Works thereof.
+
+   "Contribution" shall mean any work of authorship, including
+   the original version of the Work and any modifications or additions
+   to that Work or Derivative Works thereof, that is intentionally
+   submitted to Licensor for inclusion in the Work by the copyright owner
+   or by an individual or Legal Entity authorized to submit on behalf of
+   the copyright owner. For the purposes of this definition, "submitted"
+   means any form of electronic, verbal, or written communication sent
+   to the Licensor or its representatives, including but not limited to
+   communication on electronic mailing lists, source code control systems,
+   and issue tracking systems that are managed by, or on behalf of, the
+   Licensor for the purpose of discussing and improving the Work, but
+   excluding communication that is conspicuously marked or otherwise
+   designated in writing by the copyright owner as "Not a Contribution."
+
+   "Contributor" shall mean Licensor and any individual or Legal Entity
+   on behalf of whom a Contribution has been received by Licensor and
+   subsequently incorporated within the Work.
+
+2. Grant of Copyright License. Subject to the terms and conditions of
+   this License, each Contributor hereby grants to You a perpetual,
+   worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+   copyright license to reproduce, prepare Derivative Works of,
+   publicly display, publicly perform, sublicense, and distribute the
+   Work and such Derivative Works in Source or Object form.
+
+3. Grant of Patent License. Subject to the terms and conditions of
+   this License, each Contributor hereby grants to You a perpetual,
+   worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+   (except as stated in this section) patent license to make, have made,
+   use, offer to sell, sell, import, and otherwise transfer the Work,
+   where such license applies only to those patent claims licensable
+   by such Contributor that are necessarily infringed by their
+   Contribution(s) alone or by combination of their Contribution(s)
+   with the Work to which such Contribution(s) was submitted. If You
+   institute patent litigation against any entity (including a
+   cross-claim or counterclaim in a lawsuit) alleging that the Work
+   or a Contribution incorporated within the Work constitutes direct
+   or contributory patent infringement, then any patent licenses
+   granted to You under this License for that Work shall terminate
+   as of the date such litigation is filed.
+
+4. Redistribution. You may reproduce and distribute copies of the
+   Work or Derivative Works thereof in any medium, with or without
+   modifications, and in Source or Object form, provided that You
+   meet the following conditions:
+
+   (a) You must give any other recipients of the Work or
+       Derivative Works a copy of this License; and
+
+   (b) You must cause any modified files to carry prominent notices
+       stating that You changed the files; and
+
+   (c) You must retain, in the Source form of any Derivative Works
+       that You distribute, all copyright, patent, trademark, and
+       attribution notices from the Source form of the Work,
+       excluding those notices that do not pertain to any part of
+       the Derivative Works; and
+
+   (d) If the Work includes a "NOTICE" text file as part of its
+       distribution, then any Derivative Works that You distribute must
+       include a readable copy of the attribution notices contained
+       within such NOTICE file, excluding those notices that do not
+       pertain to any part of the Derivative Works, in at least one
+       of the following places: within a NOTICE text file distributed
+       as part of the Derivative Works; within the Source form or
+       documentation, if provided along with the Derivative Works; or,
+       within a display generated by the Derivative Works, if and
+       wherever such third-party notices normally appear. The contents
+       of the NOTICE file are for informational purposes only and
+       do not modify the License. You may add Your own attribution
+       notices within Derivative Works that You distribute, alongside
+       or as an addendum to the NOTICE text from the Work, provided
+       that such additional attribution notices cannot be construed
+       as modifying the License.
+
+   You may add Your own copyright statement to Your modifications and
+   may provide additional or different license terms and conditions
+   for use, reproduction, or distribution of Your modifications, or
+   for any such Derivative Works as a whole, provided Your use,
+   reproduction, and distribution of the Work otherwise complies with
+   the conditions stated in this License.
+
+5. Submission of Contributions. Unless You explicitly state otherwise,
+   any Contribution intentionally submitted for inclusion in the Work
+   by You to the Licensor shall be under the terms and conditions of
+   this License, without any additional terms or conditions.
+   Notwithstanding the above, nothing herein shall supersede or modify
+   the terms of any separate license agreement you may have executed
+   with Licensor regarding such Contributions.
+
+6. Trademarks. This License does not grant permission to use the trade
+   names, trademarks, service marks, or product names of the Licensor,
+   except as required for reasonable and customary use in describing the
+   origin of the Work and reproducing the content of the NOTICE file.
+
+7. Disclaimer of Warranty. Unless required by applicable law or
+   agreed to in writing, Licensor provides the Work (and each
+   Contributor provides its Contributions) on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+   implied, including, without limitation, any warranties or conditions
+   of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
+   PARTICULAR PURPOSE. You are solely responsible for determining the
+   appropriateness of using or redistributing the Work and assume any
+   risks associated with Your exercise of permissions under this License.
+
+8. Limitation of Liability. In no event and under no legal theory,
+   whether in tort (including negligence), contract, or otherwise,
+   unless required by applicable law (such as deliberate and grossly
+   negligent acts) or agreed to in writing, shall any Contributor be
+   liable to You for damages, including any direct, indirect, special,
+   incidental, or consequential damages of any character arising as a
+   result of this License or out of the use or inability to use the
+   Work (including but not limited to damages for loss of goodwill,
+   work stoppage, computer failure or malfunction, or any and all
+   other commercial damages or losses), even if such Contributor
+   has been advised of the possibility of such damages.
+
+9. Accepting Warranty or Additional Liability. While redistributing
+   the Work or Derivative Works thereof, You may choose to offer,
+   and charge a fee for, acceptance of support, warranty, indemnity,
+   or other liability obligations and/or rights consistent with this
+   License. However, in accepting such obligations, You may act only
+   on Your own behalf and on Your sole responsibility, not on behalf
+   of any other Contributor, and only if You agree to indemnify,
+   defend, and hold each Contributor harmless for any liability
+   incurred by, or claims asserted against, such Contributor by reason
+   of your accepting any such warranty or additional liability.
+
+END OF TERMS AND CONDITIONS
+
+APPENDIX: How to apply the Apache License to your work.
+
+   To apply the Apache License to your work, attach the following
+   boilerplate notice, with the fields enclosed by brackets "[]"
+   replaced with your own identifying information. (Don't include
+   the brackets!)  The text should be enclosed in the appropriate
+   comment syntax for the file format. We also recommend that a
+   file or class name and description of purpose be included on the
+   same "printed page" as the copyright notice for easier
+   identification within third-party archives.
+
+Copyright [yyyy] [name of copyright owner]
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+	http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+
+===== LICENSE-MIT =====
+Permission is hereby granted, free of charge, to any
+person obtaining a copy of this software and associated
+documentation files (the "Software"), to deal in the
+Software without restriction, including without
+limitation the rights to use, copy, modify, merge,
+publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software
+is furnished to do so, subject to the following
+conditions:
+
+The above copyright notice and this permission notice
+shall be included in all copies or substantial portions
+of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
+ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
+TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
+SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
+IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.

@@ -1,5 +1,5 @@
-Rust crate: futures-util — 0.3.32
-Source: https://static.crates.io/crates/futures-util/futures-util-0.3.32.crate
+Rust crate: futures-io — 0.3.32
+Source: https://static.crates.io/crates/futures-io/futures-io-0.3.32.crate
 
 ===== LICENSE-APACHE =====
                               Apache License

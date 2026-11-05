@@ -1,5 +1,5 @@
-Rust crate: base64 — 0.22.1
-Source: https://static.crates.io/crates/base64/base64-0.22.1.crate
+Rust crate: base64 — 0.21.7
+Source: https://static.crates.io/crates/base64/base64-0.21.7.crate
 
 ===== LICENSE-APACHE =====
                               Apache License

@@ -1,5 +1,5 @@
-Rust crate: polyval — 0.6.2
-Source: https://static.crates.io/crates/polyval/polyval-0.6.2.crate
+Rust crate: pkcs8 — 0.10.2
+Source: https://static.crates.io/crates/pkcs8/pkcs8-0.10.2.crate
 
 ===== LICENSE-APACHE =====
                               Apache License
@@ -206,7 +206,7 @@ limitations under the License.
 
 
 ===== LICENSE-MIT =====
-Copyright (c) 2019-2023 RustCrypto Developers
+Copyright (c) 2020-2023 The RustCrypto Project Developers
 
 Permission is hereby granted, free of charge, to any
 person obtaining a copy of this software and associated
@@ -231,43 +231,3 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
 IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
-
-
-===== src/backend/soft32.rs =====
-//! Constant-time software implementation of POLYVAL for 32-bit architectures
-//! Adapted from BearSSL's `ghash_ctmul32.c`:
-//!
-//! <https://bearssl.org/gitweb/?p=BearSSL;a=blob;f=src/hash/ghash_ctmul32.c;hb=4b6046412>
-//!
-//! Copyright (c) 2016 Thomas Pornin <pornin@bolet.org>
-//!
-//! This implementation uses 32-bit multiplications, and only the low
-//! 32 bits for each multiplication result. This is meant primarily for
-//! the ARM Cortex M0 and M0+, whose multiplication opcode does not yield
-//! the upper 32 bits; but it might also be useful on architectures where
-//! access to the upper 32 bits requires use of specific registers that
-//! create contention (e.g. on i386, "mul" necessarily outputs the result
-//! in edx:eax, while "imul" can use any registers but is limited to the
-//! low 32 bits).
-//!
-//! The implementation trick that is used here is bit-reversing (bit 0
-//! is swapped with bit 31, bit 1 with bit 30, and so on). In GF(2)[X],
-//! for all values x and y, we have:
-//!
-//! ```text
-//! rev32(x) * rev32(y) = rev64(x * y)
-//! ```
-//!
-//! In other words, if we bit-reverse (over 32 bits) the operands, then we
-//! bit-reverse (over 64 bits) the result.
-
-
-
-===== src/backend/soft64.rs =====
-//! Constant-time software implementation of POLYVAL for 64-bit architectures.
-//! Adapted from BearSSL's `ghash_ctmul64.c`:
-//!
-//! <https://bearssl.org/gitweb/?p=BearSSL;a=blob;f=src/hash/ghash_ctmul64.c;hb=4b6046412>
-//!
-//! Copyright (c) 2016 Thomas Pornin <pornin@bolet.org>
-

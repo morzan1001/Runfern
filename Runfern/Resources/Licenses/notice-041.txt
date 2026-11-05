@@ -1,5 +1,5 @@
-Rust crate: block-padding — 0.3.3
-Source: https://static.crates.io/crates/block-padding/block-padding-0.3.3.crate
+Rust crate: block-buffer — 0.10.4
+Source: https://static.crates.io/crates/block-buffer/block-buffer-0.10.4.crate
 
 ===== LICENSE-APACHE =====
                               Apache License
