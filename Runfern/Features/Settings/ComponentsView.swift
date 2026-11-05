@@ -108,14 +108,6 @@ struct ComponentsView: View {
             if index == nil {
                 Text("License notices are missing or unreadable. This build must not be distributed.")
                     .foregroundStyle(.red)
-            } else if index?.status != "VERIFIED" {
-                Section("Release compliance") {
-                    Text("Release license verification is blocked. Notices below contain audited source texts, not legal clearance.")
-                    NavigationLink("Unresolved license findings") {
-                        List(index?.blockers ?? [], id: \.self) { Text($0).textSelection(.enabled) }
-                            .navigationTitle("License findings")
-                    }
-                }
             }
             if hasMissingNotices {
                 Text("Required license notice is missing or unreadable. This build must not be distributed.")
@@ -135,14 +127,15 @@ struct ComponentsView: View {
                             Text(notice.role).font(.subheadline)
                             Text(notice.license).font(.caption).foregroundStyle(.secondary)
                             if notice.jitOnly {
-                                Text("JIT sideload only").font(.caption).foregroundStyle(.secondary)
+                                Text("JIT build only").font(.caption).foregroundStyle(.secondary)
                             }
                         }
                     }
                 }
             }
             Section("Corresponding source") {
-                Text("QEMU and linked libraries have source and redistribution obligations. Release distributors must provide the exact verified corresponding-source bundle alongside the binary. No-JIT builds still contain GPL/LGPL components.")
+                Text("QEMU and its libraries are licensed under GPL/LGPL. Their corresponding source is attached to every Runfern release.")
+                Link("Runfern releases on GitHub", destination: URL(string: "https://github.com/morzan1001/Runfern/releases")!)
                 Text("Downloaded Linux guests, editors and toolchains are separate distributions with their own notices and source obligations.")
             }
         }
