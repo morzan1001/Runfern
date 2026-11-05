@@ -4,7 +4,7 @@ import Synchronization
 import Testing
 @testable import Runfern
 
-/// Verifies signed catalog handling (Plan 4.2, IMG01/IMG02).
+/// Verifies signed catalog handling.
 @Suite struct CatalogStoreTests {
     let key = Curve25519.Signing.PrivateKey()
     var verifier: CatalogVerifier { CatalogVerifier(publicKeyBase64: key.publicKey.rawRepresentation.base64EncodedString()) }

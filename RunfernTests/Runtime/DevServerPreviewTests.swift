@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import Runfern
 
-/// Verifies session-bound development server previews (IDE09).
+/// Verifies session-bound development server previews.
 @MainActor
 @Suite struct DevServerPreviewTests {
     private func runningProject() async throws -> (RuntimeCoordinator, ProjectStore, Project) {

@@ -59,7 +59,7 @@ nonisolated enum Catalog {
         )
     }
 
-    /// Recipe components the catalog no longer offers (IMG02/NEW07).
+    /// Recipe components the catalog no longer offers.
     static func missingComponents(of environment: DevEnvironment) -> [String] {
         var missing: [String] = []
         if let image = baseImage(id: environment.baseImageId) {
@@ -75,7 +75,7 @@ nonisolated enum Catalog {
         return missing
     }
 
-    /// Files of the starter templates. Existing files are never overwritten (NEW02).
+    /// Files of the starter templates. Existing files are never overwritten.
     static func templateFiles(for source: ProjectSource) -> [String: String] {
         switch source {
         case .empty, .existingFolder:

@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Name and description of a project (PRJ04), edited in a sheet instead of inline fields.
+/// Name and description of a project, edited in a sheet instead of inline fields.
 struct EditProjectView: View {
     @Environment(ProjectStore.self) private var store
     @Environment(\.dismiss) private var dismiss

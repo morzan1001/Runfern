@@ -1,7 +1,7 @@
 import Foundation
 
 /// Downloads the prebuilt toolchain archives and VS Code extensions an environment needs, verifies
-/// them, and keeps them in a folder that Linux mounts read-only (Plan 4.2). Linux then only unpacks:
+/// them, and keeps them in a folder that Linux mounts read-only. Linux then only unpacks:
 /// no package manager and no network access are needed inside the guest.
 ///
 /// Files are shared between environments and named after their content, so a download happens once.
@@ -24,7 +24,7 @@ final class PackageLibrary {
     /// Mount tag of the package folder in the guest.
     nonisolated static let mountTag = "packages"
 
-    /// Mirrors the global setting “Large downloads over Wi-Fi only” (OFF05).
+    /// Mirrors the global setting “Large downloads over Wi-Fi only”.
     var allowsExpensiveNetwork = false {
         didSet {
             session.finishTasksAndInvalidate()

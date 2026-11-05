@@ -1,6 +1,6 @@
 import Foundation
 
-/// Storage checks and reporting (DAT01/DAT02).
+/// Storage checks and reporting.
 nonisolated enum DiskUsage {
     enum SpaceError: LocalizedError {
         case insufficient(needed: Int64, available: Int64)

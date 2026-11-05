@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import Runfern
 
-/// Verifies image bundles, overlays, and the QEMU command line (Plan 4.1, 4.2, ADR05).
+/// Verifies image bundles, overlays, and the QEMU command line.
 @Suite struct ImageBundleTests {
     let root: URL
 

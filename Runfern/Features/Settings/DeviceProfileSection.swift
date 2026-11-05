@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Shows what this iPad offers for Linux environments (Plan 2.1, RUN07).
+/// Shows what this iPad offers for Linux environments.
 struct DeviceProfileSection: View {
     let profile: DeviceProfile
 

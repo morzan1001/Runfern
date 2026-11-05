@@ -1,6 +1,6 @@
 import Foundation
 
-/// Support report that is only created on the person's request (SET02, SET04).
+/// Support report that is only created on the person's request.
 /// Contains technical states and redacted events; no project names, paths, or source code.
 nonisolated enum SupportReport {
     struct Context: Sendable {

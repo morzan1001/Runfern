@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Creates an independent copy of a project (PRJ07).
+/// Creates an independent copy of a project.
 struct DuplicateProjectView: View {
     @Environment(ProjectStore.self) private var store
     @Environment(Provisioner.self) private var provisioner

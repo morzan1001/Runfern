@@ -1,4 +1,4 @@
-// Signs catalog files with Ed25519 so the app can verify their origin (Plan 4.2).
+// Signs catalog files with Ed25519 so the app can verify their origin.
 // sign-catalog.sh builds and runs it for Catalog/catalog.json on a Mac; verify-catalog.sh uses
 // `verify` on a Mac without OpenSSL 3.
 //

@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Builds a minimal QEMU (aarch64-softmmu, threaded TCG interpreter, no JIT) for iOS and the
-# iOS simulator as frameworks that Runfern loads at runtime (Plan 4.1, ADR01).
+# iOS simulator as frameworks that Runfern loads at runtime.
 #
 # The heavy lifting reuses UTM's proven cross-compilation script; this wrapper only trims it
 # to what Runfern needs: no display, audio, USB, SPICE, or GPU stacks.

@@ -7,6 +7,7 @@ import subprocess
 import tarfile
 from pathlib import Path
 from macho import fingerprint
+from version import SOURCE_ARCHIVE, VERSION
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "build/licenses"
@@ -38,7 +39,7 @@ def main():
     args = parser.parse_args()
     output = args.artifacts
     index = json.loads((RES / "license-index.json").read_text())
-    require(index["format"] == 1 and index["release"] == "0.0.1", "Unexpected license manifest")
+    require(index["format"] == 1 and index["release"] == VERSION, "Unexpected license manifest")
     require(index["notices"], "Empty notice manifest")
     if args.require_clearance:
         require(index["status"] == "VERIFIED" and not index["blockers"],
@@ -81,7 +82,7 @@ def main():
     artifact_manifest = json.loads((ROOT / "Tools/Licenses/release-artifacts.json").read_text())
     require(artifact_manifest["format"] == 1 and artifact_manifest["release"] == index["release"]
             and artifact_manifest["status"] == index["status"], "Source artifact manifest release mismatch")
-    require("Runfern-0.0.1-source-inputs.tar.gz" in artifact_manifest["sha256"], "Source artifact not pinned")
+    require(SOURCE_ARCHIVE in artifact_manifest["sha256"], "Source artifact not pinned")
     for name, expected in artifact_manifest["sha256"].items():
         require(name == Path(name).name, "Unsafe artifact filename")
         require((output / name).is_file() and sha((output / name).read_bytes()) == expected,
@@ -92,7 +93,7 @@ def main():
         require((output / name).is_file() and sha((output / name).read_bytes()) == expected,
                 f"Artifact checksum mismatch: {name}")
     inputs = json.loads((output / "source-inputs.json").read_text())
-    with tarfile.open(output / "Runfern-0.0.1-source-inputs.tar.gz") as archive:
+    with tarfile.open(output / SOURCE_ARCHIVE) as archive:
         members = archive.getmembers()
         require(len(members) == len(inputs) + 1, "Missing/extra source archive members")
         for member in members:

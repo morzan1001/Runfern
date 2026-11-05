@@ -1,6 +1,6 @@
 import Foundation
 
-/// Imports a project package created by `ProjectExporter` (NEW05, DAT05 V1).
+/// Imports a project package created by `ProjectExporter`.
 /// Everything is extracted and verified in a private staging folder before a project is registered.
 nonisolated enum ProjectImporter {
     struct Preview: Sendable {

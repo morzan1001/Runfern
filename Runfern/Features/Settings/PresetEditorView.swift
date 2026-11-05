@@ -89,7 +89,7 @@ struct PresetEditorView: View {
                 }
             }
             .onChange(of: preset.baseImageId) {
-                // Only combinations listed in the catalog are offered (IMG03).
+                // Only combinations listed in the catalog are offered.
                 let supported = base?.supportedToolchains ?? []
                 preset.toolchainIds.removeAll { !supported.contains($0) }
             }

@@ -1,6 +1,6 @@
 import Foundation
 
-/// The embedded QEMU and the environment currently running on it (ADR04).
+/// The embedded QEMU and the environment currently running on it.
 ///
 /// QEMU can be loaded only once per app process, so it stays alive for the whole session. Stopping
 /// an environment powers Linux off and parks QEMU; starting another environment swaps the system
@@ -70,7 +70,7 @@ actor QEMUMachines {
         try await body(try await boot(configuration))
     }
 
-    /// Forwards a guest port to a new loopback port for the preview (IDE09). Repeated requests reuse it.
+    /// Forwards a guest port to a new loopback port for the preview. Repeated requests reuse it.
     func forward(_ guestPort: Int, environmentID: UUID) async throws -> Int {
         guard let machine = running(environmentID) else { throw GuestAgentClient.AgentError.disconnected }
         if let hostPort = forwards[guestPort] { return hostPort }

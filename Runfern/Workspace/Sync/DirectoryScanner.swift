@@ -15,7 +15,7 @@ nonisolated enum DirectoryScanner {
         var records: [String: FileRecord] = [:]
         var unsupported: [String] = []
         /// Files that exist but whose content is not on the device yet (evicted cloud files).
-        /// They must never be treated as deleted or changed (FIL05, R04).
+        /// They must never be treated as deleted or changed.
         var pending: Set<String> = []
     }
 
@@ -25,7 +25,7 @@ nonisolated enum DirectoryScanner {
     }
 
     /// Reads the complete inventory. A read error aborts so that deletions are never inferred
-    /// from an incomplete directory listing (Plan 4.5).
+    /// from an incomplete directory listing.
     static func scan(_ root: URL, cache: [String: FileRecord],
                      requestDownload: (URL) -> Void = DirectoryScanner.requestDownload) throws -> Result {
         let fm = FileManager.default

@@ -1,6 +1,6 @@
 import Foundation
 
-// Wire format between the app and the GuestAgent inside the Linux guest (Plan 4.1).
+// Wire format between the app and the GuestAgent inside the Linux guest.
 // Every frame is one JSON object followed by a newline. The host sends requests;
 // the guest answers each request exactly once and may emit events at any time.
 
@@ -28,7 +28,7 @@ nonisolated enum AgentCommand: Codable, Equatable, Sendable {
     case healthCheck
     /// Starts OpenVSCode Server bound to the guest-local port; the host forwards it.
     case startIDE(port: Int)
-    /// Makes a development server in the guest reachable for the preview (IDE09). Never published to the network.
+    /// Makes a development server in the guest reachable for the preview. Never published to the network.
     case forwardPort(guestPort: Int)
     /// Flushes file systems and powers the guest off cleanly.
     case shutdown

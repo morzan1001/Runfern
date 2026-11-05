@@ -1,7 +1,7 @@
 import Network
 import Observation
 
-/// Network status for connection-dependent actions (OFF03). Local work never depends on it.
+/// Network status for connection-dependent actions. Local work never depends on it.
 @Observable
 final class Connectivity {
     private(set) var isOnline = true

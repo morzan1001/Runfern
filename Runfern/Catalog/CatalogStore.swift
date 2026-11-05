@@ -3,7 +3,7 @@ import Foundation
 import Observation
 import Synchronization
 
-/// Verifies catalog documents against the publisher's Ed25519 key (Plan 4.2).
+/// Verifies catalog documents against the publisher's Ed25519 key.
 nonisolated struct CatalogVerifier: Sendable {
     /// Public key of the Runfern catalog publisher. The private key never ships with the app.
     static let publisherKey = "SzSGomipAmxhFBSIPmMYmiyKrJ/K9X3/uG+lurxn5HY="
@@ -49,7 +49,7 @@ nonisolated struct CatalogVerifier: Sendable {
 /// Loaded lazily on first access: a verified newer cached catalog wins over the bundled one.
 nonisolated let activeCatalog = Mutex<CatalogDocument>(CatalogStore.loadInitialDocument())
 
-/// Manages the active catalog: bundled baseline, verified cache, and updates (Plan 4.2, OFF05).
+/// Manages the active catalog: bundled baseline, verified cache, and updates.
 /// Checks for a newer catalog by itself at launch, on returning to the app, and when the
 /// connection comes back, at most every `automaticCheckInterval`; Settings can check at once.
 @Observable
@@ -89,7 +89,7 @@ final class CatalogStore {
     }
 
     /// Installs a signed catalog if it is valid and newer than the active one.
-    /// Existing environments keep their exact base version regardless (IMG02).
+    /// Existing environments keep their exact base version regardless.
     func install(data: Data, signature: Data) throws {
         let document = try verifier.verifiedDocument(data: data, signature: signature)
         let current = activeCatalog.withLock { $0.catalogVersion }

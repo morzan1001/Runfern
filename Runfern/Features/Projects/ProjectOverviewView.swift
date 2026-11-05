@@ -1,7 +1,7 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
-/// Entry point of the app: the project overview (PRJ01, PRJ02, PRJ05, RUN04).
+/// Entry point of the app: the project overview.
 struct ProjectOverviewView: View {
     /// Raw values are persisted in user defaults and must stay stable.
     enum SortOrder: String, CaseIterable {

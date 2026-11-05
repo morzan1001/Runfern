@@ -2,10 +2,10 @@ import Darwin
 import Foundation
 import Synchronization
 
-/// Runs the embedded QEMU (Plan 4.1, ADR01).
+/// Runs the embedded QEMU.
 ///
 /// iPadOS allows no child processes, so QEMU is loaded as a framework and runs on its own thread
-/// inside the app, the way UTM SE does. Only one instance runs at a time (ADR04).
+/// inside the app, the way UTM SE does. Only one instance runs at a time.
 ///
 /// QEMU keeps global state that it never resets, dyld cannot unload images with thread-local
 /// variables, and iPadOS only loads code from the signed app bundle. QEMU can therefore run once

@@ -6,7 +6,7 @@ import subprocess
 import tarfile
 import zipfile
 
-from prepare import ROOT, RES, OUT, digest, write_tar
+from prepare import ROOT, RES, OUT, SOURCE_ARCHIVE, VERSION, digest, write_tar
 from macho import fingerprint
 
 
@@ -17,7 +17,7 @@ def main():
             raise ValueError(f"Existing source artifact changed: {name}")
     old_inputs = json.loads((OUT / "source-inputs.json").read_text())
     entries = {}
-    with tarfile.open(OUT / "Runfern-0.0.1-source-inputs.tar.gz", mode="r|gz") as archive:
+    with tarfile.open(OUT / SOURCE_ARCHIVE, mode="r|gz") as archive:
         for member in archive:
             if not member.isfile():
                 raise ValueError("Unexpected source archive member")
@@ -73,7 +73,7 @@ def main():
         for path in sorted((ROOT / directory).rglob("*"))
         if path.is_file() and path.name != ".DS_Store"}
     (OUT / "provenance.json").write_text(json.dumps(provenance, indent=2) + "\n")
-    evidence = {"format": 1, "release": "0.0.1", "status": "BLOCKED",
+    evidence = {"format": 1, "release": VERSION, "status": "BLOCKED",
                 "notices": {n["file"]: n["sha256"] for n in index["notices"]},
                 "provenance": provenance}
     (RES / "license-evidence.json").write_text(json.dumps(evidence, indent=2) + "\n")
@@ -87,11 +87,11 @@ def main():
     (OUT / "source-inputs.json").write_text(json.dumps(
         {name: digest(data) for name, data in sorted(entries.items())}, indent=2) + "\n")
     entries["source-inputs.json"] = (OUT / "source-inputs.json").read_bytes()
-    write_tar(OUT / "Runfern-0.0.1-source-inputs.tar.gz", entries)
-    names = ["Runfern-0.0.1-source-inputs.tar.gz", "blockers.json", "provenance.json", "source-inputs.json"]
+    write_tar(OUT / SOURCE_ARCHIVE, entries)
+    names = [SOURCE_ARCHIVE, "blockers.json", "provenance.json", "source-inputs.json"]
     (OUT / "SHA256SUMS").write_text("".join(
         f"{digest((OUT / name).read_bytes())}  {name}\n" for name in names))
-    artifacts = {"format": 1, "release": "0.0.1", "status": "BLOCKED",
+    artifacts = {"format": 1, "release": VERSION, "status": "BLOCKED",
                  "sha256": {name: digest((OUT / name).read_bytes()) for name in names + ["SHA256SUMS"]}}
     (ROOT / "Tools/Licenses/release-artifacts.json").write_text(json.dumps(artifacts, indent=2) + "\n")
     print("Sealed existing verified source inputs; all unresolved license findings retained.")

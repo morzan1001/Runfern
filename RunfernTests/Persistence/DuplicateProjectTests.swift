@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import Runfern
 
-/// Verifies independent project copies (PRJ07).
+/// Verifies independent project copies.
 @MainActor
 @Suite struct DuplicateProjectTests {
     @Test(arguments: [true, false])

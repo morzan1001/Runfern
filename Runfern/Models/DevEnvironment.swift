@@ -1,6 +1,6 @@
 import Foundation
 
-/// State of an environment (Plan 4.6). The transient VM session is modeled separately.
+/// State of an environment. The transient VM session is modeled separately.
 nonisolated enum RuntimeState: String, Codable, Sendable {
     case provisioning   // setup is running or was interrupted
     case ready          // ready to start
@@ -36,7 +36,7 @@ nonisolated enum RuntimeState: String, Codable, Sendable {
     }
 }
 
-/// Setup steps in a fixed order. Every step is repeatable (NEW06).
+/// Setup steps in a fixed order. Every step is repeatable.
 nonisolated enum ProvisioningStep: String, Codable, CaseIterable, Sendable {
     case checkStorage
     case fetchBase
@@ -62,7 +62,7 @@ nonisolated struct DevEnvironment: Identifiable, Codable, Sendable {
     let id: UUID
     let baseImageId: String
     let baseCatalogVersion: Int
-    /// Installed toolchain profiles; more can be added later (IMG07).
+    /// Installed toolchain profiles; more can be added later.
     var toolchainIds: [String]
     var state: RuntimeState
     /// Setup steps already completed (raw values of `ProvisioningStep`).
@@ -163,7 +163,7 @@ nonisolated enum EditorExtension {
     }
 }
 
-/// Verified resource presets for the VM (RUN07). Free-form values are intentionally not offered.
+/// Verified resource presets for the VM. Free-form values are intentionally not offered.
 nonisolated enum ResourceProfile: String, Codable, CaseIterable, Sendable {
     case light
     case standard
@@ -193,14 +193,14 @@ nonisolated enum ResourceProfile: String, Codable, CaseIterable, Sendable {
         }
     }
 
-    /// The VM may use at most half of the device memory so iPadOS and the app keep enough headroom (R02).
+    /// The VM may use at most half of the device memory so iPadOS and the app keep enough headroom.
     func isSupported(physicalMemory: UInt64 = ProcessInfo.processInfo.physicalMemory,
                      processorCount: Int = ProcessInfo.processInfo.activeProcessorCount) -> Bool {
         UInt64(memoryMB) * 1024 * 1024 <= physicalMemory / 2 && cpuCount <= processorCount
     }
 }
 
-/// Human-readable environment recipe (NEW07). Deliberately contains no credentials.
+/// Human-readable environment recipe. Deliberately contains no credentials.
 nonisolated struct EnvironmentRecipe: Codable, Sendable {
     struct Base: Codable, Sendable {
         let id: String

@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import Runfern
 
-/// Verifies the host side of the GuestAgent protocol (Plan 4.1, 4.8).
+/// Verifies the host side of the GuestAgent protocol.
 @Suite struct GuestAgentTests {
     private func connectedAgent(latency: Duration = .milliseconds(1)) async -> (GuestAgentClient, InMemoryAgentTransport) {
         let (host, guest) = InMemoryAgentTransport.pair()

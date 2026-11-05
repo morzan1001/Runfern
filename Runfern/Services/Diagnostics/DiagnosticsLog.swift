@@ -13,8 +13,8 @@ nonisolated struct DiagnosticEntry: Codable, Hashable, Identifiable, Sendable {
     let message: String
 }
 
-/// Local, size-limited diagnostic journal (SET02). Nothing leaves the device unless the
-/// person explicitly shares a support report (SET04).
+/// Local, size-limited diagnostic journal. Nothing leaves the device unless the
+/// person explicitly shares a support report.
 nonisolated final class DiagnosticsLog: Sendable {
     static let shared = DiagnosticsLog(fileURL: AppPaths.diagnostics)
 

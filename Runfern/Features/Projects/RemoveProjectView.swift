@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Controlled removal (PRJ06, Plan 2.6): shows exactly what is deleted and what is kept.
+/// Controlled removal: shows exactly what is deleted and what is kept.
 struct RemoveProjectView: View {
     @Environment(ProjectStore.self) private var store
     @Environment(SyncCenter.self) private var sync

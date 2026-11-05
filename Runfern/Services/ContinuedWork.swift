@@ -1,7 +1,7 @@
 import BackgroundTasks
 import Foundation
 
-/// Lets explicitly started, finite work continue when the app moves to the background (R08, Plan 4.6).
+/// Lets explicitly started, finite work continue when the app moves to the background.
 /// iPadOS shows progress in a Live Activity and may still stop the work at any time, so every caller
 /// must be resumable. Runfern never promises unlimited background runtime.
 @MainActor

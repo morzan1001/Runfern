@@ -1,7 +1,7 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
-/// Project details (PRJ03/PRJ04) with setup, start, sync, conflicts, and export.
+/// Project details with setup, start, sync, conflicts, and export.
 struct ProjectDetailView: View {
     @Environment(ProjectStore.self) private var store
     @Environment(RuntimeCoordinator.self) private var runtime
@@ -289,7 +289,7 @@ struct ProjectDetailView: View {
         }
     }
 
-    /// Adding tools (IMG07) and choosing a resource profile (RUN07); both need a stopped environment.
+    /// Adding tools and choosing a resource profile; both need a stopped environment.
     @ViewBuilder
     private func environmentOptions(_ env: DevEnvironment, image: BaseImage?) -> some View {
         let isBusy = runtime.activeProjectID == project.id || provisioner.isRunning(project)

@@ -1,6 +1,6 @@
 import Foundation
 
-/// Capabilities of this iPad relevant for local Linux environments (Plan 2.1, D01).
+/// Capabilities of this iPad relevant for local Linux environments.
 /// The exact minimum device class is decided after the on-device measurements (P1); until then
 /// Runfern targets iPads with an M-series chip, which have at least 8 GB of memory and 8 cores.
 nonisolated struct DeviceProfile: Sendable {

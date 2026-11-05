@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Storage use by shared bases, environments, and working copies (DAT01).
+/// Storage use by shared bases, environments, and working copies.
 struct StorageOverviewView: View {
     nonisolated struct Usage {
         var images: Int64 = 0
@@ -90,7 +90,7 @@ struct StorageOverviewView: View {
         }.value
     }
 
-    /// Cleanup with safeguards (DAT07): nothing referenced and no pending project changes.
+    /// Cleanup with safeguards: nothing referenced and no pending project changes.
     /// What to remove is listed on main (three small directories, cheap), so a project created
     /// meanwhile in another window is never touched. Measuring and deleting run detached (A10).
     private func cleanUp() {

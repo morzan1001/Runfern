@@ -1,6 +1,6 @@
 import Foundation
 
-/// Exports project files and the environment recipe into a verifiable archive (DAT05, Plan 2.6).
+/// Exports project files and the environment recipe into a verifiable archive.
 /// App-managed credentials are never included; the app cannot detect secrets inside project files themselves.
 nonisolated enum ProjectExporter {
     struct Preview: Sendable {
