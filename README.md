@@ -12,11 +12,15 @@
 </p>
 
 <p align="center">
-  <img src="Design/Screenshots/new-project.png" width="30%" alt="Project setup with Linux base, tools and editor extensions">
+  <img src="Design/Screenshots/editor.png" width="72%" alt="OpenVSCode Server with Python code, tests and a Debian terminal">
+</p>
+
+<p align="center">
+  <img src="Design/Screenshots/overview.png" width="24%" alt="Project overview with the Linux environment">
   &nbsp;
-  <img src="Design/Screenshots/project.png" width="30%" alt="A project's Linux environment and installed tools">
+  <img src="Design/Screenshots/software.png" width="24%" alt="Installed languages and editor extensions">
   &nbsp;
-  <img src="Design/Screenshots/editor.png" width="30%" alt="OpenVSCode Server with Python code and a Debian terminal">
+  <img src="Design/Screenshots/linux-bases.png" width="24%" alt="Linux bases from the signed catalog">
 </p>
 
 Runfern runs an ARM64 Linux VM locally through QEMU and opens OpenVSCode Server in the app.
