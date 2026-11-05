@@ -47,7 +47,7 @@ starts Runfern with `-jitMethod externalDebugger`, because the Built-In method u
 the debugger its own helper attached:
 
 ```sh
-Tools/QEMU/run-jit-test.sh <device-udid> /tmp/jit detach -- -qemu-boot-test debian-12-arm64-v4
+Tools/QEMU/run-jit-test.sh <device-udid> /tmp/jit detach -- -qemu-boot-test debian-13-arm64
 Tools/QEMU/run-jit-test.sh <device-udid> /tmp/e2e detach -- -e2e-test
 ```
 

@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import Runfern
 
-/// Verifies adding tools later (IMG07) and resource profiles (RUN07).
+/// Verifies adding tools later and resource profiles.
 @MainActor
 @Suite struct EnvironmentOptionsTests {
     private func makeProject() throws -> (ProjectStore, Project) {

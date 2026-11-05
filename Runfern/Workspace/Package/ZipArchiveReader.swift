@@ -1,7 +1,7 @@
 import Compression
 import Foundation
 
-/// Minimal, defensive ZIP reader for project packages (NEW05).
+/// Minimal, defensive ZIP reader for project packages.
 /// Supports stored and deflated entries; rejects encryption, ZIP64, symbolic links,
 /// and any path that could escape the destination ("zip slip").
 nonisolated struct ZipArchiveReader {

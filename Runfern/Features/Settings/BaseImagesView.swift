@@ -2,7 +2,7 @@ import SwiftUI
 
 /// The Linux bases this iPad can use: published in the signed catalog or already installed. They
 /// download by themselves when a project needs one; here they can be fetched ahead for offline
-/// setup (OFF04) or removed when no project uses them.
+/// setup or removed when no project uses them.
 struct BaseImagesView: View {
     @Environment(ImageLibrary.self) private var images
     @Environment(CatalogStore.self) private var catalog

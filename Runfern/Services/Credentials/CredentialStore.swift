@@ -10,7 +10,7 @@ nonisolated struct Credential: Identifiable, Codable, Hashable, Sendable {
     var updatedAt: Date
 }
 
-/// Manages Git credentials in the device keychain (SET05, Plan 4.8).
+/// Manages Git credentials in the device keychain.
 /// Items are device-only and never part of recipes, exports, or diagnostics.
 @Observable
 final class CredentialStore {

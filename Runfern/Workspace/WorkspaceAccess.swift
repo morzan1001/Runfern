@@ -1,6 +1,6 @@
 import Foundation
 
-/// Security-scoped access to folders chosen by the user (Plan 4.4, FIL01–FIL03).
+/// Security-scoped access to folders chosen by the user.
 nonisolated enum WorkspaceAccess {
     enum AccessError: LocalizedError {
         case notAFolder

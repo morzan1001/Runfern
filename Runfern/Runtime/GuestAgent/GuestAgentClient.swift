@@ -1,6 +1,6 @@
 import Foundation
 
-/// Host side of the GuestAgent protocol (Plan 4.1). Correlates replies to requests,
+/// Host side of the GuestAgent protocol. Correlates replies to requests,
 /// enforces timeouts, and fails all pending requests when the guest disconnects.
 actor GuestAgentClient {
     enum AgentError: LocalizedError, Equatable {

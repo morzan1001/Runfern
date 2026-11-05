@@ -1,6 +1,6 @@
 import Foundation
 
-/// Initial content of a new project (NEW02/NEW03).
+/// Initial content of a new project.
 nonisolated enum ProjectSource: String, Codable, CaseIterable, Sendable {
     case empty
     case pythonStarter

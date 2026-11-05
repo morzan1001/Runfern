@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Simple editor on the local working copy. It does not replace OpenVSCode Server; it makes the storage
-/// contract verifiable: edit → saved locally → synced with the folder (DAT03, ADR09).
+/// contract verifiable: edit → saved locally → synced with the folder.
 struct WorkspaceEditorView: View {
     struct FileNode: Identifiable, Hashable {
         let id: String          // relative path
@@ -73,7 +73,7 @@ struct WorkspaceEditorView: View {
                 }
             }
             .refreshable { await syncNow() }
-            // Files dropped from other apps are copied into the project; nothing is overwritten (UX03).
+            // Files dropped from other apps are copied into the project; nothing is overwritten.
             .dropDestination(for: URL.self) { urls, _ in
                 importDroppedItems(urls)
                 return !urls.isEmpty
@@ -104,7 +104,7 @@ struct WorkspaceEditorView: View {
             if !isDirty { load(selection) } else { detectExternalChange() }
         }
         .task(id: text) {
-            // Continuous saving shortly after the last keystroke (DAT03).
+            // Continuous saving shortly after the last keystroke.
             guard isDirty else { return }
             try? await Task.sleep(for: .seconds(1.5))
             guard !Task.isCancelled else { return }

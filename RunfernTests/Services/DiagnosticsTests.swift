@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import Runfern
 
-/// Verifies that diagnostics never keep secrets (SET02, SET04, test scenario T16).
+/// Verifies that diagnostics never keep secrets.
 @Suite struct DiagnosticsTests {
     @Test(arguments: [
         ("Authorization: Bearer abcdefghijklmnop123", "abcdefghijklmnop123"),

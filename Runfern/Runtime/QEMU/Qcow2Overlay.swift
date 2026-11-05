@@ -1,6 +1,6 @@
 import Foundation
 
-/// Creates empty qcow2 v3 overlays that use an immutable base image as their backing file (ADR05).
+/// Creates empty qcow2 v3 overlays that use an immutable base image as their backing file.
 ///
 /// Writing the few header structures directly avoids shipping `qemu-img`. The layout matches what
 /// `qemu-img create -f qcow2 -b <base> -F qcow2` produces: header, refcount table, one refcount

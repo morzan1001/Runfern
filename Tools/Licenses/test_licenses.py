@@ -59,7 +59,7 @@ class LicenseCollectorTests(unittest.TestCase):
             verify.require(False, "missing source")
 
     def test_clearance_preflight_rejects_unresolved_findings(self):
-        index = {"format": 1, "release": "0.0.1", "status": "BLOCKED",
+        index = {"format": 1, "release": verify.VERSION, "status": "BLOCKED",
                  "blockers": ["Missing corresponding source"], "notices": [{}]}
         (self.work / "license-index.json").write_text(json.dumps(index))
         with patch.object(verify, "RES", self.work), patch("sys.argv", [
@@ -70,9 +70,9 @@ class LicenseCollectorTests(unittest.TestCase):
     def test_cleared_preflight_allows_further_checks_without_claiming_release_approval(self):
         text = "Copyright Example\n" + "Permission is hereby granted.\n" * 4
         notice = {"file": "notice-example.txt", "sha256": verify.sha(text.encode())}
-        index = {"format": 1, "release": "0.0.1", "status": "VERIFIED",
+        index = {"format": 1, "release": verify.VERSION, "status": "VERIFIED",
                  "blockers": [], "notices": [notice]}
-        evidence = {"format": 1, "release": "0.0.1", "status": "VERIFIED",
+        evidence = {"format": 1, "release": verify.VERSION, "status": "VERIFIED",
                     "notices": {notice["file"]: notice["sha256"]}}
         (self.work / notice["file"]).write_text(text)
         (self.work / "license-index.json").write_text(json.dumps(index))

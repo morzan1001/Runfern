@@ -1,7 +1,7 @@
 import Foundation
 import Observation
 
-/// Manages shared, immutable base images (Plan 4.2, OFF02, IMG02).
+/// Manages shared, immutable base images.
 /// Downloads can be resumed; an image counts as available only after its checksum has been verified.
 @Observable
 final class ImageLibrary {
@@ -41,7 +41,7 @@ final class ImageLibrary {
         }
     }
 
-    /// Mirrors the global setting “Large downloads over Wi-Fi only” (OFF05).
+    /// Mirrors the global setting “Large downloads over Wi-Fi only”.
     var allowsExpensiveNetwork = false
 
     /// The simulated runtime downloads nothing, so it can offer every base the catalog lists.

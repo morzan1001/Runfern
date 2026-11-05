@@ -1,7 +1,7 @@
 import SwiftUI
 import UIKit
 
-/// Local diagnostic journal and a support report that is only created on request (SET02, SET04).
+/// Local diagnostic journal and a support report that is only created on request.
 struct DiagnosticsView: View {
     @Environment(ProjectStore.self) private var store
     @Environment(CatalogStore.self) private var catalog

@@ -30,7 +30,7 @@ nonisolated struct QEMUSockets: Sendable {
     }
 }
 
-/// Builds QEMU's command line for a Runfern environment (Plan 4.1).
+/// Builds QEMU's command line for a Runfern environment.
 ///
 /// The guest gets only virtio devices: system disk, network with user-mode NAT, the agent's
 /// serial port, the working copies and the read-only package folder over 9p, and an entropy source.

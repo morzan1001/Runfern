@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// A separate window for one project (UX05). Closing it never stops the environment.
+/// A separate window for one project. Closing it never stops the environment.
 struct ProjectWindow: View {
     static let id = "project"
 

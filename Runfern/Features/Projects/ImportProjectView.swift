@@ -1,7 +1,7 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
-/// Imports an exported project package after showing its content (NEW05). The overview picks the
+/// Imports an exported project package after showing its content. The overview picks the
 /// package first, so the sheet opens with something to check.
 struct ImportProjectView: View {
     @Environment(ProjectStore.self) private var store

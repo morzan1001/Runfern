@@ -70,7 +70,7 @@ nonisolated struct SyncState: Codable, Sendable {
     /// Evicted cloud files waiting for download. Optional so older saved states still decode.
     var pendingDownloads: [String]?
     var lastCompletedAt: Date?
-    /// Set while steps are being applied. Remains set after an interruption (DAT04).
+    /// Set while steps are being applied. Remains set after an interruption.
     var applyInProgress = false
 
     static func load(from url: URL) -> SyncState {

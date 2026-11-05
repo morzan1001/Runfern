@@ -1,7 +1,7 @@
 import Foundation
 import Observation
 
-/// Sets up environments step by step (Plan 2.2, 4.7, NEW06).
+/// Sets up environments step by step.
 /// Each step is recorded persistently once it succeeds; resuming skips completed steps.
 /// A project counts as ready only after the health check has passed.
 @Observable
@@ -11,7 +11,7 @@ final class Provisioner {
     private(set) var progress: [UUID: Double] = [:]
     private(set) var stepStartedAt: [UUID: Date] = [:]
     private var tasks: [UUID: Task<Void, Never>] = [:]
-    /// Setups waiting for an earlier one: only one environment can use the VM at a time (ADR04).
+    /// Setups waiting for an earlier one: only one environment can use the VM at a time.
     private(set) var waiting: Set<UUID> = []
     /// Finishes once every setup started so far has finished.
     private var queueTail: Task<Void, Error>?
@@ -55,7 +55,7 @@ final class Provisioner {
                 waiting.remove(project.id)
             }
             if !Task.isCancelled {
-                // Setup may take minutes; iPadOS can continue it in the background with visible progress (R08).
+                // Setup may take minutes; iPadOS can continue it in the background with visible progress.
                 try? await ContinuedWork.shared.run(title: String(localized: "Setting up “\(project.name)”"),
                                                     subtitle: ProvisioningStep.allCases[0].title) { handle in
                     await self.run(project, progress: handle)

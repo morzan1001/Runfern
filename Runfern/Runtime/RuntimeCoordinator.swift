@@ -10,11 +10,11 @@ struct Session: Identifiable {
     let generation: Int
     var endpoint: IDEEndpoint?
     var isConnected = true
-    /// Guest port → local host port for development server previews (IDE09). Dies with the session.
+    /// Guest port → local host port for development server previews. Dies with the session.
     var previewPorts: [Int: Int] = [:]
 }
 
-/// Owns exactly one active environment and serializes start, switch, and stop (ADR04).
+/// Owns exactly one active environment and serializes start, switch, and stop.
 @Observable
 final class RuntimeCoordinator {
     private(set) var session: Session?
@@ -26,7 +26,7 @@ final class RuntimeCoordinator {
     private(set) var lastError: String?
     /// True while `reconnect()` runs, so the editor shows progress and no second attempt starts.
     private(set) var isReconnecting = false
-    /// The IDE view that shows the editor; its single web view can be in one window only (UX05).
+    /// The IDE view that shows the editor; its single web view can be in one window only.
     var editorOwner: UUID?
 
     var activeProjectID: UUID? { session?.projectID }
@@ -53,7 +53,7 @@ final class RuntimeCoordinator {
                              baseBuildID: environment.baseBuildID)
     }
 
-    /// Opens a project. Another active environment is checkpointed and stopped cleanly first (RUN03).
+    /// Opens a project. Another active environment is checkpointed and stopped cleanly first.
     func open(_ project: Project) async {
         guard !isBusy else { return }
         if activeProjectID == project.id, endpoint != nil { return }
@@ -106,7 +106,7 @@ final class RuntimeCoordinator {
         _ = await stopActive(activeProject)
     }
 
-    /// Stops the active environment on request (RUN05).
+    /// Stops the active environment on request.
     func stopActiveProject() async {
         guard !isBusy, let id = activeProjectID, let project = store.project(id: id) else { return }
         isBusy = true
@@ -126,7 +126,7 @@ final class RuntimeCoordinator {
         }
     }
 
-    /// Makes a development server of the active session reachable for the preview (IDE09).
+    /// Makes a development server of the active session reachable for the preview.
     /// Ports are forwarded on request only and are never published to the local network.
     func preview(port: Int) async throws -> URL {
         guard (1024...65_535).contains(port), port != 8080 else { throw PreviewError.invalidPort }
@@ -138,7 +138,7 @@ final class RuntimeCoordinator {
         return URL(string: "http://127.0.0.1:\(hostPort)")!
     }
 
-    /// Bounded reconnect after the editor connection was lost. Never creates a second VM (RUN05).
+    /// Bounded reconnect after the editor connection was lost. Never creates a second VM.
     func reconnect() async {
         guard !isReconnecting, let environmentID = session?.environmentID, session?.endpoint != nil, !isBusy else { return }
         isReconnecting = true

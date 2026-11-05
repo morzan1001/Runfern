@@ -14,6 +14,7 @@ import urllib.request
 import zipfile
 from pathlib import Path
 from macho import fingerprint
+from version import SOURCE_ARCHIVE, VERSION
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "build/licenses"
@@ -497,14 +498,14 @@ def main():
     blockers.append("GPL/LGPL distribution terms for combined Runfern/QEMU and any Apple/TestFlight/"
                     "App Store restrictions require explicit legal compatibility review; sign-only "
                     "and no-JIT do not remove QEMU's GPL or LGPL obligations. No clearance inferred.")
-    add("Runfern", "0.0.1", "MIT", "Application and guest agent/extension",
-        {"LICENSE": (ROOT / "LICENSE").read_bytes()}, "Runfern repository LICENSE (release 0.0.1)")
+    add("Runfern", VERSION, "MIT", "Application and guest agent/extension",
+        {"LICENSE": (ROOT / "LICENSE").read_bytes()}, f"Runfern repository LICENSE (release {VERSION})")
     # Avoid leaving obsolete notice files when a dependency set shrinks.
     names = {n["file"] for n in notices}
     for old in RES.glob("notice-*.txt"):
         if old.name not in names:
             old.unlink()
-    index = {"format": 1, "release": "0.0.1", "notices": notices,
+    index = {"format": 1, "release": VERSION, "notices": notices,
              "status": "BLOCKED", "blockers": sorted(set(blockers))}
     provenance["runtimeFiles"] = {
         path.relative_to(ROOT).as_posix(): digest(path.read_bytes())
@@ -514,7 +515,7 @@ def main():
     (RES / "license-index.json").write_text(json.dumps(index, indent=2, ensure_ascii=False) + "\n")
     (OUT / "provenance.json").write_text(json.dumps(provenance, indent=2) + "\n")
     (OUT / "blockers.json").write_text(json.dumps(index["blockers"], indent=2) + "\n")
-    evidence = {"format": 1, "release": "0.0.1", "status": "BLOCKED",
+    evidence = {"format": 1, "release": VERSION, "status": "BLOCKED",
                 "notices": {notice["file"]: notice["sha256"] for notice in notices},
                 "provenance": provenance}
     (RES / "license-evidence.json").write_text(json.dumps(evidence, indent=2) + "\n")
@@ -525,12 +526,12 @@ def main():
     (OUT / "source-inputs.json").write_text(json.dumps(
         {name: digest(data) for name, data in sorted(source_entries.items())}, indent=2) + "\n")
     source_entries["source-inputs.json"] = (OUT / "source-inputs.json").read_bytes()
-    write_tar(OUT / "Runfern-0.0.1-source-inputs.tar.gz", source_entries)
-    artifact_names = ["Runfern-0.0.1-source-inputs.tar.gz", "blockers.json",
+    write_tar(OUT / SOURCE_ARCHIVE, source_entries)
+    artifact_names = [SOURCE_ARCHIVE, "blockers.json",
                       "provenance.json", "source-inputs.json"]
     (OUT / "SHA256SUMS").write_text("".join(
         f"{digest((OUT / name).read_bytes())}  {name}\n" for name in artifact_names))
-    artifacts = {"format": 1, "release": "0.0.1", "status": "BLOCKED",
+    artifacts = {"format": 1, "release": VERSION, "status": "BLOCKED",
                  "sha256": {name: digest((OUT / name).read_bytes())
                             for name in artifact_names + ["SHA256SUMS"]}}
     (Path(__file__).parent / "release-artifacts.json").write_text(json.dumps(artifacts, indent=2) + "\n")

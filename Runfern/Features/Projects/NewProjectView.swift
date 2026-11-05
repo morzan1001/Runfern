@@ -1,7 +1,7 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
-/// Guided project creation (NEW01–NEW03): name, location, environment (or a preset), summary.
+/// Guided project creation: name, location, environment (or a preset), summary.
 struct NewProjectView: View {
     @Environment(ProjectStore.self) private var store
     @Environment(Provisioner.self) private var provisioner
@@ -67,7 +67,7 @@ struct NewProjectView: View {
         availableCapacity.map { $0 < totalDownload(status) + DiskUsage.reserve } ?? false
     }
 
-    /// Missing or contradictory input disables “Create” (NEW01); each reason sits in the footer of
+    /// Missing or contradictory input disables “Create”; each reason sits in the footer of
     /// the section that causes it (A7). An empty name only disables “Create”.
     private func canCreate(_ status: ImageLibrary.Status) -> Bool {
         !isUnavailable && !lacksStorage(status) && !trimmedName.isEmpty && !(storageMode == .localFolder && binding == nil)
@@ -200,7 +200,7 @@ struct NewProjectView: View {
                 editorSettings = preset.editorSettings
             }
             .onChange(of: baseImageId) {
-                // Remove unsupported combinations before they can be created (IMG03).
+                // Remove unsupported combinations before they can be created.
                 let supported = baseImage?.supportedToolchains ?? []
                 software.toolchainIds.removeAll { !supported.contains($0) }
             }

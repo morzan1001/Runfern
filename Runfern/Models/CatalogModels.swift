@@ -1,6 +1,6 @@
 import Foundation
 
-/// Origin of a published image, including its integrity check (Plan 4.2).
+/// Origin of a published image, including its integrity check.
 nonisolated struct ImageSource: Codable, Hashable, Sendable {
     let url: URL
     let sha256: String
@@ -86,7 +86,7 @@ nonisolated struct ToolchainPackage: Codable, Hashable, Sendable {
     let stripComponents: Int
 }
 
-/// Signed catalog of base images and toolchain profiles (Plan 4.2).
+/// Signed catalog of base images and toolchain profiles.
 nonisolated struct CatalogDocument: Codable, Sendable {
     var format: Int
     /// Increases with every publication; older documents never replace newer ones.

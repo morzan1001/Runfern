@@ -1,6 +1,6 @@
 import Foundation
 
-/// Removes secrets and personal data from diagnostic text (SET02, SET04, T16).
+/// Removes secrets and personal data from diagnostic text.
 /// Applied when an entry is written and again when a support report is built.
 nonisolated enum Redactor {
     private static let rules: [(pattern: String, replacement: String)] = [

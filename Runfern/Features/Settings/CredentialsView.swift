@@ -1,7 +1,7 @@
 import SwiftUI
 import UIKit
 
-/// Lists, adds, replaces, and removes Git credentials (SET05).
+/// Lists, adds, replaces, and removes Git credentials.
 struct CredentialsView: View {
     @Environment(CredentialStore.self) private var store
     @State private var editing: CredentialDraft?

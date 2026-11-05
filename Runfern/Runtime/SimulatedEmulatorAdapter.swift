@@ -71,7 +71,7 @@ nonisolated struct SimulatedEmulatorAdapter: EmulatorAdapter {
     }
 }
 
-/// Running simulated guests, keyed by environment. At most one is booted by the coordinator (ADR04);
+/// Running simulated guests, keyed by environment. At most one is booted by the coordinator;
 /// provisioning may boot a transient one that is shut down again afterwards.
 actor SimulatedMachines {
     struct Machine {

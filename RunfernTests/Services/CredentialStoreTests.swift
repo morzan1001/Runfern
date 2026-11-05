@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import Runfern
 
-/// Verifies keychain-backed credential management (SET05).
+/// Verifies keychain-backed credential management.
 @Suite struct CredentialStoreTests {
     /// Each test uses its own keychain service so real entries are never touched.
     private func makeStore() -> CredentialStore {

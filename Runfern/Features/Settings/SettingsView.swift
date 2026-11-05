@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Global settings (SET01, OFF05), storage overview (DAT01, DAT07), and help (SET03).
+/// Global settings, storage overview, and help.
 /// Project configuration lives in the project detail view, IDE settings in the IDE itself.
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss

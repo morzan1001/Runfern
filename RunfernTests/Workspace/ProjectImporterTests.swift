@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import Runfern
 
-/// Verifies package import, including the export → import round trip (NEW05, DAT05 V1, T15).
+/// Verifies package import, including the export → import round trip.
 @Suite struct ProjectImporterTests {
     private func makeWorkingCopy() throws -> URL {
         let root = URL.temporaryDirectory.appending(path: "ImportSource-\(UUID().uuidString)")

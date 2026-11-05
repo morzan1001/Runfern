@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import Runfern
 
-/// Verifies the storage contract of the sync engine (Plan 4.5, test scenarios T05, T07, T08).
+/// Verifies the storage contract of the sync engine.
 @Suite struct WorkspaceSyncTests {
     let base = URL.temporaryDirectory.appending(path: "RunfernTests-\(UUID().uuidString)")
     var local: URL { base.appending(path: "local") }

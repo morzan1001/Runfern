@@ -1,6 +1,6 @@
 import Foundation
 
-/// The real runtime: an embedded QEMU without JIT running the catalog's Linux images (Plan 4.1).
+/// The real runtime: an embedded QEMU without JIT running the catalog's Linux images.
 ///
 /// The GuestAgent protocol is the same as with the simulated runtime; only the transport differs
 /// (virtio-serial instead of memory). The editor is reached through a port forwarded to 127.0.0.1.
@@ -90,7 +90,7 @@ nonisolated struct QEMUEmulatorAdapter: EmulatorAdapter {
         components.host = "127.0.0.1"
         components.port = machine.hostIDEPort
         components.path = "/"
-        // The editor only accepts connections that present the session's token (Plan 4.8).
+        // The editor only accepts connections that present the session's token.
         components.queryItems = [URLQueryItem(name: "tkn", value: machine.sessionToken),
                                  URLQueryItem(name: "folder", value: "/workspace")]
         return IDEEndpoint(url: components.url!, sessionToken: machine.sessionToken)

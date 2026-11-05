@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Preview of a development server running in the active environment (IDE09).
+/// Preview of a development server running in the active environment.
 /// Only ports the person forwards explicitly are reachable, and only from this device.
 struct DevServerPreviewView: View {
     @Environment(RuntimeCoordinator.self) private var runtime

@@ -2,7 +2,7 @@ import Foundation
 import Observation
 
 /// Drives the sync runs of all projects and exposes their state to the UI.
-/// Runs for the same binding are serialized; there are never two competing writers (Plan 4.4).
+/// Runs for the same binding are serialized; there are never two competing writers.
 @Observable
 final class SyncCenter {
     struct Status {
@@ -15,11 +15,11 @@ final class SyncCenter {
 
         var phase: Phase = .idle
         var lastSyncedAt: Date?
-        /// Locally saved changes that have not reached the selected folder yet (ADR09).
+        /// Locally saved changes that have not reached the selected folder yet.
         var pendingLocalChanges = 0
         var conflicts: [SyncConflict] = []
         var unsupported: [String] = []
-        /// Cloud files that exist in the folder but are still downloading (FIL05).
+        /// Cloud files that exist in the folder but are still downloading.
         var pendingDownloads = 0
         var failures: [String] = []
         /// An earlier run was interrupted and continues with the next sync.

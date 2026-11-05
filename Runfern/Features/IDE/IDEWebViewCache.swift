@@ -2,7 +2,7 @@ import UIKit
 import WebKit
 
 /// Keeps the editor's web view alive for the whole session, so leaving the editor and coming back
-/// restores it exactly as it was instead of loading a new VS Code (RUN04).
+/// restores it exactly as it was instead of loading a new VS Code.
 ///
 /// Each project gets its own persistent website data store: VS Code keeps layout, open editors,
 /// and backups of unsaved changes there across restarts. Nothing is shared between projects.
@@ -146,7 +146,7 @@ final class IDEWebViewCache {
         }
     }
 
-    /// Deletes the editor state of a removed project (PRJ06).
+    /// Deletes the editor state of a removed project.
     func removeData(for projectID: UUID) async {
         // WebKit's static data store functions crash when no web view was created in this process
         // yet (its main run loop isn't set up), for example when no editor was opened since launch.

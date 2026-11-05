@@ -2,7 +2,7 @@ import Foundation
 import Observation
 
 /// Persistent inventory of projects, environments, and folder bindings.
-/// Every change is written atomically right away (DAT03).
+/// Every change is written atomically right away.
 @Observable
 final class ProjectStore {
     enum StoreError: LocalizedError {
@@ -22,7 +22,7 @@ final class ProjectStore {
 
     private(set) var snapshot = StoreSnapshot()
     private(set) var lastSaveError: String?
-    /// Environments marked as needing repair at launch after an unclean exit (DAT04).
+    /// Environments marked as needing repair at launch after an unclean exit.
     private(set) var recoveredEnvironmentIDs: Set<UUID> = []
     /// Launch and activation can ask at the same time; one check at a time is enough.
     @ObservationIgnored private var isRefreshingAccess = false
@@ -130,7 +130,7 @@ final class ProjectStore {
         save()
     }
 
-    /// Reassigns a project to a folder after access was revoked or the folder moved (FIL03).
+    /// Reassigns a project to a folder after access was revoked or the folder moved.
     func reassignFolder(of project: Project, to fresh: WorkspaceBinding) throws {
         guard let i = snapshot.bindings.firstIndex(where: { $0.id == project.workspaceBindingId }) else { return }
         if let owner = owner(ofWorkspace: fresh.workspaceIdentity), owner.id != project.id {
@@ -205,13 +205,13 @@ final class ProjectStore {
         }
     }
 
-    /// Changes the VM resources; validated presets only (RUN07). Takes effect on the next start.
+    /// Changes the VM resources; validated presets only. Takes effect on the next start.
     func setResources(_ profile: ResourceProfile, for project: Project) {
         guard profile.isSupported() else { return }
         update(project.environmentId) { $0.resources = profile }
     }
 
-    /// Resets only the Linux environment; project files and working copy are kept (Plan 4.7).
+    /// Resets only the Linux environment; project files and working copy are kept.
     func resetEnvironment(of project: Project) {
         // Renamed into the trash, so setup can recreate the directory at once.
         AppPaths.discard([AppPaths.environment(project.environmentId)])
@@ -223,7 +223,7 @@ final class ProjectStore {
         }
     }
 
-    /// Creates an independent copy with new identities (PRJ07, Plan 4.7). The copy's files live in Runfern;
+    /// Creates an independent copy with new identities. The copy's files live in Runfern;
     /// a reference to the same external folder would not be an independent copy. With `includeSystemState`
     /// the environment overlay is copied too, otherwise the copy is set up fresh from the recipe.
     /// The files are copied off the main thread: a large working copy or a folder on another volume
@@ -285,7 +285,7 @@ final class ProjectStore {
     }
 
     /// Removes the entry, environment, and app-managed working copy. The selected folder in Files
-    /// is never touched; shared base images remain until cleanup (PRJ06).
+    /// is never touched; shared base images remain until cleanup.
     func remove(_ project: Project) {
         snapshot.projects.removeAll { $0.id == project.id }
         snapshot.environments.removeAll { $0.id == project.environmentId }
@@ -294,7 +294,7 @@ final class ProjectStore {
         AppPaths.discard([AppPaths.environment(project.environmentId), AppPaths.workspaceRoot(project.workspaceBindingId)])
     }
 
-    /// Checks folder access off the main thread; bookmarks are refreshed when needed (FIL02/FIL03).
+    /// Checks folder access off the main thread; bookmarks are refreshed when needed.
     /// Resolving bookmarks talks to file providers and can block, so it never runs on main.
     func refreshAccess() async {
         guard !isRefreshingAccess else { return }
@@ -346,7 +346,7 @@ final class ProjectStore {
             return
         }
         snapshot = decoded
-        // After an unclean exit no process is alive anymore: running states count as needing repair (DAT04).
+        // After an unclean exit no process is alive anymore: running states count as needing repair.
         for i in snapshot.environments.indices {
             switch snapshot.environments[i].state {
             case .starting, .running, .stopping, .provisioning:

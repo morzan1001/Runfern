@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Export of source code and environment recipe (DAT05). Shows scope and exclusions up front.
+/// Export of source code and environment recipe. Shows scope and exclusions up front.
 struct ExportView: View {
     @Environment(ProjectStore.self) private var store
     @Environment(\.dismiss) private var dismiss

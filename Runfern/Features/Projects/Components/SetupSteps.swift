@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Setup progress inside the status card: overall progress and the steps as a checklist, with
-/// the reason a run stopped shown at the step that failed (Plan 2.2, NEW06).
+/// the reason a run stopped shown at the step that failed.
 struct SetupSteps: View {
     let environment: DevEnvironment
     let currentStep: ProvisioningStep?

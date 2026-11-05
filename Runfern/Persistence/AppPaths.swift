@@ -1,6 +1,6 @@
 import Foundation
 
-/// Location of all app-managed data. Project data and system data are kept apart (ADR06, Plan 4.3).
+/// Location of all app-managed data. Project data and system data are kept apart.
 ///
 ///     Runfern/
 ///       store.json                 projects, environments, bindings
@@ -32,7 +32,7 @@ nonisolated enum AppPaths {
     static var trash: URL { root.appending(path: "Trash", directoryHint: .isDirectory) }
 
     /// Every published version of a base lives in its own directory: overlays reference their exact
-    /// base, so a newer version must never replace the files of an older one (ADR05).
+    /// base, so a newer version must never replace the files of an older one.
     static func image(_ id: String, version: Int) -> URL {
         images.appending(path: imageDirectoryName(id, version: version), directoryHint: .isDirectory)
     }

@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import Runfern
 
-/// Verifies that continued work behaves like plain foreground work when iPadOS doesn't run it (R08).
+/// Verifies that continued work behaves like plain foreground work when iPadOS doesn't run it.
 @MainActor
 @Suite struct ContinuedWorkTests {
     struct Failure: Error, Equatable {}

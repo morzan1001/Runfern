@@ -8,7 +8,7 @@ func isCancelledNavigation(_ error: Error) -> Bool {
         || (error.domain == "WebKitErrorDomain" && error.code == 102)
 }
 
-/// Restricted web view: only allows navigation to the local endpoint of the active session (Plan 4.8).
+/// Restricted web view: only allows navigation to the local endpoint of the active session.
 struct LocalWebView: UIViewRepresentable {
     let endpoint: IDEEndpoint
     /// Each change reloads the page.

@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// First launch (Plan 2.1, SET03): local operation, storage needs, and the difference between project and environment.
+/// First launch: local operation, storage needs, and the difference between project and environment.
 /// Permissions are only requested once a storage location is chosen.
 struct OnboardingView: View {
     @Environment(ProjectStore.self) private var store

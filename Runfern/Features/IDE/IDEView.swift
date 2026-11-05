@@ -8,7 +8,7 @@ struct IDEView: View {
     @Environment(ProjectStore.self) private var store
     @State private var showingPreview = false
     /// Identifies this presentation. The editor has a single web view, so only the window that owns it
-    /// (`RuntimeCoordinator.editorOwner`) shows VS Code (UX05).
+    /// (`RuntimeCoordinator.editorOwner`) shows VS Code.
     @State private var token = UUID()
     let project: Project
     let close: () -> Void
@@ -120,7 +120,7 @@ struct IDEView: View {
         return String(localized: "Runfern is trying to restore the connection…")
     }
 
-    /// Going back to the overview does not stop the environment, and the editor stays as it is (RUN04).
+    /// Going back to the overview does not stop the environment, and the editor stays as it is.
     private var actions: EditorActions {
         EditorActions(showOverview: close, showPreview: { showingPreview = true })
     }

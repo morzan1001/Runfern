@@ -3,7 +3,7 @@ import UIKit
 import WebKit
 
 /// Hosts the session's cached editor web view (see `IDEWebViewCache`). Only the local endpoint of
-/// the active session may be loaded (Plan 4.8).
+/// the active session may be loaded.
 struct IDEWebView: UIViewRepresentable {
     let endpoint: IDEEndpoint
     let projectID: UUID

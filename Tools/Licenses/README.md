@@ -1,4 +1,4 @@
-# Runfern 0.0.1 release-license evidence
+# Runfern release-license evidence
 
 **Release is blocked.** This is an evidence collector and integrity gate, not a legal
 opinion, license exception, written source offer, or App Store compatibility claim.
@@ -97,7 +97,7 @@ Do not ship an artifact solely because checksum verification passes.
   notice/binary hashes, usable on clean CI.
 * `Tools/Licenses/release-artifacts.json`: committed hashes of the locally prepared
   corresponding-source input outputs. It contains no binary or third-party source tree.
-* `build/licenses/Runfern-0.0.1-source-inputs.tar.gz`: deterministic **source-input**
+* `build/licenses/Runfern-<version>-source-inputs.tar.gz`: deterministic **source-input**
   bundle, not yet certified complete corresponding source. It contains original
   source archives for all three QEMU builds, file-level local overrides, public UTM
   source (including patches and build scripts), Runfern QEMU/JIT build scripts,

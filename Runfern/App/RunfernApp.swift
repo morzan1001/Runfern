@@ -57,12 +57,12 @@ import UIKit
             EditorCommands()
             AppCommands()
         }
-        // Additional windows show single projects; all windows share one runtime, so one VM at most (UX05).
+        // Additional windows show single projects; all windows share one runtime, so one VM at most.
         WindowGroup("Project", id: ProjectWindow.id, for: UUID.self) { $projectID in
             withServices(ProjectWindow(projectID: projectID))
         }
         .onChange(of: scenePhase) { _, phase in
-            // When returning, re-check access and pull in external changes for the active session (Plan 2.5).
+            // When returning, re-check access and pull in external changes for the active session.
             // The access check runs first, off the main thread, then the sync.
             guard phase == .active else { return }
             Task { await catalog.checkIfDue(isOnline: connectivity.isOnline) }
@@ -97,7 +97,7 @@ import UIKit
             .task(id: connectivity.isOnline) { await catalog.checkIfDue(isOnline: connectivity.isOnline) }
     }
 
-    /// Large downloads follow the global “Wi-Fi only” setting (OFF05).
+    /// Large downloads follow the global “Wi-Fi only” setting.
     private func applyNetworkPolicy() {
         images.allowsExpensiveNetwork = !downloadsOnlyOnWiFi
         packages.allowsExpensiveNetwork = !downloadsOnlyOnWiFi

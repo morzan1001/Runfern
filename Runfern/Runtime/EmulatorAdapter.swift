@@ -6,7 +6,6 @@ nonisolated struct IDEEndpoint: Sendable {
     let sessionToken: String
 }
 
-/// Resources of a VM. Fixed, verified defaults; customization follows with RUN07.
 /// Where the project files that Linux sees at `/workspace` come from.
 nonisolated enum WorkspaceSource: Sendable {
     /// The project's working copy inside `AppPaths.workspaces`.
@@ -27,14 +26,14 @@ nonisolated struct MachineConfiguration: Sendable {
     var baseBuildID: String?
 }
 
-/// Encapsulates the concrete emulator including its guest agent (Plan 4.1). The UI knows no QEMU details.
+/// Encapsulates the concrete emulator including its guest agent. The UI knows no QEMU details.
 ///
 /// `QEMUEmulatorAdapter` embeds QEMU in interpreter mode (TCG without JIT), creates the overlay with the
 /// base image as its backing file, and talks to the GuestAgent over a virtio-serial channel.
 protocol EmulatorAdapter: Sendable {
     /// `true` while no real runtime is integrated. No images are required in that case.
     var isSimulated: Bool { get }
-    /// Creates the writable overlay on top of the immutable base in `image` (ADR05).
+    /// Creates the writable overlay on top of the immutable base in `image`.
     func createSystemDisk(image: URL, overlay: URL) async throws
     /// Runs the versioned toolchain recipes inside the guest. Must be repeatable.
     func installToolchains(_ toolchains: [ToolchainProfile], configuration: MachineConfiguration) async throws
@@ -48,9 +47,9 @@ protocol EmulatorAdapter: Sendable {
     func verify(configuration: MachineConfiguration) async throws
     /// Starts the environment and returns the endpoint only after the full readiness check.
     func start(configuration: MachineConfiguration) async throws -> IDEEndpoint
-    /// Forwards a guest port to a local host port for the preview (IDE09) and returns the host port.
+    /// Forwards a guest port to a local host port for the preview and returns the host port.
     func forwardPort(_ guestPort: Int, environmentID: UUID) async throws -> Int
-    /// Checks whether the running session still responds (RUN05).
+    /// Checks whether the running session still responds.
     func isResponsive(environmentID: UUID) async -> Bool
     /// Shuts the environment down cleanly and releases resources and ports.
     func stop(environmentID: UUID) async throws

@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import Runfern
 
-/// Verifies the device class check (Plan 2.1, D01).
+/// Verifies the device class check.
 @Suite struct DeviceProfileTests {
     private func profile(memoryGB: UInt64, cores: Int) -> DeviceProfile {
         DeviceProfile(modelIdentifier: "iPad", physicalMemory: memoryGB * 1024 * 1024 * 1024,

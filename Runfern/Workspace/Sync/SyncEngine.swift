@@ -1,6 +1,6 @@
 import Foundation
 
-// Sync between the local working copy and the selected folder in Files (Plan 4.3–4.5, FIL04/FIL06).
+// Sync between the local working copy and the selected folder in Files.
 //
 // It is a three-way comparison: for every path the common baseline, the local working copy, and the
 // external folder are compared. Only a one-sided change is transferred; different changes on both
