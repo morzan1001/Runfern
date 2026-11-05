@@ -1,5 +1,5 @@
-Rust crate: web-sys — 0.3.91
-Source: https://static.crates.io/crates/web-sys/web-sys-0.3.91.crate
+Rust crate: wasm-bindgen — 0.2.114
+Source: https://static.crates.io/crates/wasm-bindgen/wasm-bindgen-0.2.114.crate
 
 ===== LICENSE-APACHE =====
                               Apache License

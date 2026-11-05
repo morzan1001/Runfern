@@ -1,5 +1,5 @@
-Rust crate: chacha20 — 0.10.0
-Source: https://static.crates.io/crates/chacha20/chacha20-0.10.0.crate
+Rust crate: cc — 1.2.57
+Source: https://static.crates.io/crates/cc/cc-1.2.57.crate
 
 ===== LICENSE-APACHE =====
                               Apache License
@@ -196,7 +196,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-   http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -206,7 +206,7 @@ limitations under the License.
 
 
 ===== LICENSE-MIT =====
-Copyright (c) 2019-2026 The RustCrypto Project Developers
+Copyright (c) 2014 Alex Crichton
 
 Permission is hereby granted, free of charge, to any
 person obtaining a copy of this software and associated

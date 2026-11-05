@@ -16,6 +16,8 @@ jobs:
     if: startsWith(github.event.release.tag_name, 'v') && !github.event.release.prerelease
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    outputs:
+      variants: ${{ steps.variants.outputs.variants }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -29,8 +31,22 @@ jobs:
           git merge-base --is-ancestor HEAD origin/main
           bash Tools/Build/check-version.sh "$RELEASE_TAG"
           Tools/Catalog/verify-catalog.sh
-      - name: Require license clearance before any release build
-        run: python3 Tools/Licenses/verify.py --notices-only --require-clearance
+      - name: Select the license-cleared variants
+        id: variants
+        env:
+          UPLOAD_ENABLED: ${{ vars.ENABLE_TESTFLIGHT_UPLOAD }}
+        run: |
+          variants=()
+          if python3 Tools/Licenses/verify.py --notices-only --require-clearance --flavor jit; then
+            variants+=(jit)
+          fi
+          if [ "$UPLOAD_ENABLED" = true ] \
+            && python3 Tools/Licenses/verify.py --notices-only --require-clearance --flavor no-jit; then
+            variants+=(appstore)
+          fi
+          [ "${#variants[@]}" -gt 0 ] || { echo "::error::No release variant has license clearance."; exit 1; }
+          json=$(printf '"%s",' "${variants[@]}")
+          echo "variants=[${json%,}]" >> "$GITHUB_OUTPUT"
 
   build:
     needs: validate
@@ -38,18 +54,19 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: ${{ vars.ENABLE_TESTFLIGHT_UPLOAD == 'true' && fromJSON('["jit","appstore"]') || fromJSON('["jit"]') }}
+        variant: ${{ fromJSON(needs.validate.outputs.variants) }}
     runs-on: macos-26
     environment: ${{ matrix.variant == 'appstore' && 'appstore' || 'sideload' }}
     timeout-minutes: 90
     permissions:
-      contents: write
+      contents: read
     env:
       GH_TOKEN: ${{ github.token }}
       RUNFERN_RELEASE_TAG: ${{ github.event.release.tag_name }}
       ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
       ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
       VARIANT: ${{ matrix.variant }}
+      LICENSE_FLAVOR: ${{ matrix.variant == 'jit' && 'jit' || 'no-jit' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -100,7 +117,7 @@ jobs:
             gh release download "$RUNFERN_RELEASE_TAG" --repo "$GITHUB_REPOSITORY" \
               --pattern "$name" --dir build/licenses
           done < "$RUNNER_TEMP/license-artifacts"
-          python3 Tools/Licenses/verify.py --release
+          python3 Tools/Licenses/verify.py --release --flavor "$LICENSE_FLAVOR"
       - name: Install signing credentials
         env:
           CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE_P12 }}
@@ -126,11 +143,18 @@ jobs:
         run: |
           Tools/Build/build.sh "$VARIANT" "build/$VARIANT"
           bash Tools/Build/check-version.sh "$RUNFERN_RELEASE_TAG"
-      - name: Publish the JIT IPA
+      - name: Package the JIT IPA
         if: matrix.variant == 'jit'
-        run: |
-          bash Tools/Build/package-sideload.sh build/jit/Runfern.xcarchive "build/Runfern-$RUNFERN_RELEASE_TAG-jit.ipa"
-          gh release upload "$RUNFERN_RELEASE_TAG" "build/Runfern-$RUNFERN_RELEASE_TAG-jit.ipa" --repo "$GITHUB_REPOSITORY"
+        run: bash Tools/Build/package-sideload.sh build/jit/Runfern.xcarchive "build/Runfern-$RUNFERN_RELEASE_TAG-jit.ipa"
+      # Published releases are immutable, so the IPA is kept as a run artifact for review and download.
+      - name: Keep the JIT IPA
+        if: matrix.variant == 'jit'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: Runfern-${{ github.event.release.tag_name }}-jit
+          path: build/Runfern-${{ github.event.release.tag_name }}-jit.ipa
+          if-no-files-found: error
+          retention-days: 30
       - name: Upload the interpreter build to TestFlight
         if: matrix.variant == 'appstore'
         run: |

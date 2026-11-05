@@ -1,7 +1,7 @@
-Rust crate: core-foundation — 0.10.1
-Source: https://static.crates.io/crates/core-foundation/core-foundation-0.10.1.crate
+Rust crate: compression-codecs — 0.4.37
+Source: https://static.crates.io/crates/compression-codecs/compression-codecs-0.4.37.crate
 
-===== LICENSE-APACHE =====
+===== UPSTREAM/9d848a02f13f3a56542e4123be8947a8da06097e/LICENSE-APACHE =====
                               Apache License
                         Version 2.0, January 2004
                      http://www.apache.org/licenses/
@@ -205,251 +205,25 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 
-===== LICENSE-MIT =====
-Copyright (c) 2012-2013 Mozilla Foundation
-
-Permission is hereby granted, free of charge, to any
-person obtaining a copy of this software and associated
-documentation files (the "Software"), to deal in the
-Software without restriction, including without
-limitation the rights to use, copy, modify, merge,
-publish, distribute, sublicense, and/or sell copies of
-the Software, and to permit persons to whom the Software
-is furnished to do so, subject to the following
-conditions:
-
-The above copyright notice and this permission notice
-shall be included in all copies or substantial portions
-of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
-ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
-TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
-PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
-SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
-IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-DEALINGS IN THE SOFTWARE.
-
-
-===== src/array.rs =====
-// Copyright 2013 The Servo Project Developers. See the COPYRIGHT
-// file at the top-level directory of this distribution.
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
-//! Heterogeneous immutable arrays.
-
-
-
-===== src/attributed_string.rs, src/base.rs, src/filedescriptor.rs, src/lib.rs, src/runloop.rs =====
-// Copyright 2013 The Servo Project Developers. See the COPYRIGHT
-// file at the top-level directory of this distribution.
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
-
-
-===== src/boolean.rs =====
-// Copyright 2013 The Servo Project Developers. See the COPYRIGHT
-// file at the top-level directory of this distribution.
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
-//! A Boolean type.
-
-
-
-===== src/bundle.rs =====
-// Copyright 2013 The Servo Project Developers. See the COPYRIGHT
-// file at the top-level directory of this distribution.
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
-//! Core Foundation Bundle Type
-
-
-
-===== src/characterset.rs =====
-// Copyright 2019 The Servo Project Developers. See the COPYRIGHT
-// file at the top-level directory of this distribution.
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
-//! A set of Unicode compliant characters.
-
-
-
-===== src/data.rs =====
-// Copyright 2013 The Servo Project Developers. See the COPYRIGHT
-// file at the top-level directory of this distribution.
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
-//! Core Foundation byte buffers.
-
-
-
-===== src/date.rs =====
-// Copyright 2013 The Servo Project Developers. See the COPYRIGHT
-// file at the top-level directory of this distribution.
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
-//! Core Foundation date objects.
-
-
-
-===== src/dictionary.rs =====
-// Copyright 2013 The Servo Project Developers. See the COPYRIGHT
-// file at the top-level directory of this distribution.
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
-//! Dictionaries of key-value pairs.
-
-
-
-===== src/error.rs =====
-// Copyright 2016 The Servo Project Developers. See the COPYRIGHT
-// file at the top-level directory of this distribution.
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
-//! Core Foundation errors.
-
-
-
-===== src/number.rs =====
-// Copyright 2013 The Servo Project Developers. See the COPYRIGHT
-// file at the top-level directory of this distribution.
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
-//! Immutable numbers.
-
-
-
-===== src/propertylist.rs =====
-// Copyright 2013 The Servo Project Developers. See the COPYRIGHT
-// file at the top-level directory of this distribution.
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
-//! Core Foundation property lists
-
-
-
-===== src/set.rs =====
-// Copyright 2013 The Servo Project Developers. See the COPYRIGHT
-// file at the top-level directory of this distribution.
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
-//! An immutable bag of elements.
-
-
-
-===== src/string.rs =====
-// Copyright 2013 The Servo Project Developers. See the COPYRIGHT
-// file at the top-level directory of this distribution.
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
-//! Immutable strings.
-
-
-
-===== src/timezone.rs =====
-// Copyright 2013 The Servo Project Developers. See the COPYRIGHT
-// file at the top-level directory of this distribution.
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
-//! Core Foundation time zone objects.
-
-
-
-===== src/url.rs =====
-// Copyright 2013 The Servo Project Developers. See the COPYRIGHT
-// file at the top-level directory of this distribution.
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
-//! A URL type for Core Foundation.
-
-
-
-===== src/uuid.rs =====
-// Copyright 2013 The Servo Project Developers. See the COPYRIGHT
-// file at the top-level directory of this distribution.
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
-//! Core Foundation UUID objects.
-
+===== UPSTREAM/9d848a02f13f3a56542e4123be8947a8da06097e/LICENSE-MIT =====
+The MIT License (MIT)
+
+Copyright (c) 2018 the rustasync developers
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

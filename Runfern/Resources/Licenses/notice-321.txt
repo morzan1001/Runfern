@@ -1,5 +1,5 @@
-Rust crate: windows-strings — 0.5.1
-Source: https://static.crates.io/crates/windows-strings/windows-strings-0.5.1.crate
+Rust crate: windows-future — 0.2.1
+Source: https://static.crates.io/crates/windows-future/windows-future-0.2.1.crate
 
 ===== license-apache-2.0 =====
                                  Apache License

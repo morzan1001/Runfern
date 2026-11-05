@@ -1,5 +1,5 @@
-Rust crate: windows-sys — 0.59.0
-Source: https://static.crates.io/crates/windows-sys/windows-sys-0.59.0.crate
+Rust crate: windows-interface — 0.59.3
+Source: https://static.crates.io/crates/windows-interface/windows-interface-0.59.3.crate
 
 ===== license-apache-2.0 =====
                                  Apache License

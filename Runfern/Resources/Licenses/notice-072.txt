@@ -1,5 +1,5 @@
-Rust crate: crypto-bigint — 0.5.5
-Source: https://static.crates.io/crates/crypto-bigint/crypto-bigint-0.5.5.crate
+Rust crate: cpufeatures — 0.2.17
+Source: https://static.crates.io/crates/cpufeatures/cpufeatures-0.2.17.crate
 
 ===== LICENSE-APACHE =====
                               Apache License
@@ -206,7 +206,7 @@ limitations under the License.
 
 
 ===== LICENSE-MIT =====
-Copyright (c) 2021 The RustCrypto Project Developers
+Copyright (c) 2020-2025 The RustCrypto Project Developers
 
 Permission is hereby granted, free of charge, to any
 person obtaining a copy of this software and associated

@@ -1,5 +1,5 @@
-Rust crate: windows-strings — 0.4.2
-Source: https://static.crates.io/crates/windows-strings/windows-strings-0.4.2.crate
+Rust crate: windows-core — 0.62.2
+Source: https://static.crates.io/crates/windows-core/windows-core-0.62.2.crate
 
 ===== license-apache-2.0 =====
                                  Apache License

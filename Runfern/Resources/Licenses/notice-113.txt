@@ -1,5 +1,5 @@
-Rust crate: futures-task — 0.3.32
-Source: https://static.crates.io/crates/futures-task/futures-task-0.3.32.crate
+Rust crate: futures-executor — 0.3.32
+Source: https://static.crates.io/crates/futures-executor/futures-executor-0.3.32.crate
 
 ===== LICENSE-APACHE =====
                               Apache License

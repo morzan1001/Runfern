@@ -1,5 +1,5 @@
-Rust crate: windows_i686_gnullvm — 0.53.1
-Source: https://static.crates.io/crates/windows_i686_gnullvm/windows_i686_gnullvm-0.53.1.crate
+Rust crate: windows-targets — 0.53.5
+Source: https://static.crates.io/crates/windows-targets/windows-targets-0.53.5.crate
 
 ===== license-apache-2.0 =====
                                  Apache License

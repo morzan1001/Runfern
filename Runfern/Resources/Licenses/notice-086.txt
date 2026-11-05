@@ -1,5 +1,5 @@
-Rust crate: elliptic-curve — 0.13.8
-Source: https://static.crates.io/crates/elliptic-curve/elliptic-curve-0.13.8.crate
+Rust crate: digest — 0.10.7
+Source: https://static.crates.io/crates/digest/digest-0.10.7.crate
 
 ===== LICENSE-APACHE =====
                               Apache License
@@ -206,7 +206,7 @@ limitations under the License.
 
 
 ===== LICENSE-MIT =====
-Copyright (c) 2020-2022 RustCrypto Developers
+Copyright (c) 2017 Artyom Pavlov
 
 Permission is hereby granted, free of charge, to any
 person obtaining a copy of this software and associated

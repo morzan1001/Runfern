@@ -1,5 +1,5 @@
-Rust crate: windows-targets — 0.52.6
-Source: https://static.crates.io/crates/windows-targets/windows-targets-0.52.6.crate
+Rust crate: windows-numerics — 0.2.0
+Source: https://static.crates.io/crates/windows-numerics/windows-numerics-0.2.0.crate
 
 ===== license-apache-2.0 =====
                                  Apache License

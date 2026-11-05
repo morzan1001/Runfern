@@ -1,5 +1,5 @@
-Rust crate: wasm-bindgen-macro-support — 0.2.114
-Source: https://static.crates.io/crates/wasm-bindgen-macro-support/wasm-bindgen-macro-support-0.2.114.crate
+Rust crate: vcpkg — 0.2.15
+Source: https://static.crates.io/crates/vcpkg/vcpkg-0.2.15.crate
 
 ===== LICENSE-APACHE =====
                               Apache License
@@ -205,8 +205,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 
+
 ===== LICENSE-MIT =====
-Copyright (c) 2014 Alex Crichton
+Copyright (c) 2017 Jim McGrath
 
 Permission is hereby granted, free of charge, to any
 person obtaining a copy of this software and associated
@@ -231,3 +232,4 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
 IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
+

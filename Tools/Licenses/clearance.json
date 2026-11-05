@@ -1,0 +1,55 @@
+{
+  "format": 1,
+  "description": "Maintainer sign-offs for open license findings, per build variant. Entries must match findings in Runfern/Resources/Licenses/license-index.json exactly; any new or changed finding blocks the release again.",
+  "flavors": {
+    "no-jit": [
+      {
+        "reason": "Not shipped in the no-JIT (App Store) build: these findings concern the StikJIT/idevice runtime, which verify.py --flavor no-jit forbids in the app bundle.",
+        "blockers": [
+          "Rust crate: jkcli: no exact legal text in supplied source",
+          "Rust crate: ns-keyed-archive: no exact legal text in supplied source",
+          "Rust crate: plist-macro: no exact legal text in supplied source",
+          "StikJIT 2.0.1 embeds idevice/libidevice_ffi.a and tvOS variant; upstream does not pin their source commit, Cargo.lock, or features. idevice v0.1.68 notices are NOT proof of these embedded libraries' provenance.",
+          "idevice release static-library feature/link map not supplied: all 359 locked registry packages retained conservatively; binary correspondence not demonstrated."
+        ]
+      },
+      {
+        "reason": "Not part of the app bundle: guest images, toolchains and editor extensions are downloaded separately from the signed catalog; their sources and notices are published with the catalog-v1 release.",
+        "blockers": [
+          "Editor extensions (including ms-python.python): exact downloaded VSIX versions, license/third-party notices and redistribution terms are not inventoried.",
+          "Guest images: no installed dpkg/rpm inventory with exact versions, copyright/license texts, or corresponding source packages for kernels and GPL software; latest cloud/editor URLs in build_image.py are not reproducible release pins.",
+          "Guest toolchain bun: exact redistributed archive notices, bundled dependencies and corresponding source not yet verified (1 pinned packages).",
+          "Guest toolchain deno: exact redistributed archive notices, bundled dependencies and corresponding source not yet verified (1 pinned packages).",
+          "Guest toolchain dotnet: exact redistributed archive notices, bundled dependencies and corresponding source not yet verified (1 pinned packages).",
+          "Guest toolchain go: exact redistributed archive notices, bundled dependencies and corresponding source not yet verified (1 pinned packages).",
+          "Guest toolchain java-21: exact redistributed archive notices, bundled dependencies and corresponding source not yet verified (2 pinned packages).",
+          "Guest toolchain java-25: exact redistributed archive notices, bundled dependencies and corresponding source not yet verified (2 pinned packages).",
+          "Guest toolchain java-27: exact redistributed archive notices, bundled dependencies and corresponding source not yet verified (2 pinned packages).",
+          "Guest toolchain nodejs-24: exact redistributed archive notices, bundled dependencies and corresponding source not yet verified (1 pinned packages).",
+          "Guest toolchain nodejs-26: exact redistributed archive notices, bundled dependencies and corresponding source not yet verified (1 pinned packages).",
+          "Guest toolchain python-3: exact redistributed archive notices, bundled dependencies and corresponding source not yet verified (1 pinned packages).",
+          "Guest toolchain rust: exact redistributed archive notices, bundled dependencies and corresponding source not yet verified (5 pinned packages).",
+          "Guest toolchain swift-debian-12: exact redistributed archive notices, bundled dependencies and corresponding source not yet verified (1 pinned packages).",
+          "Guest toolchain swift-debian-13: exact redistributed archive notices, bundled dependencies and corresponding source not yet verified (1 pinned packages).",
+          "Guest toolchain swift-fedora-44: exact redistributed archive notices, bundled dependencies and corresponding source not yet verified (1 pinned packages).",
+          "Guest toolchain swift-ubuntu-24.04: exact redistributed archive notices, bundled dependencies and corresponding source not yet verified (1 pinned packages).",
+          "Guest toolchain swift-ubuntu-26.04: exact redistributed archive notices, bundled dependencies and corresponding source not yet verified (1 pinned packages).",
+          "Guest toolchain zig: exact redistributed archive notices, bundled dependencies and corresponding source not yet verified (1 pinned packages)."
+        ]
+      },
+      {
+        "reason": "Accepted by the maintainer: QEMU is distributed under GPL-2.0 with complete corresponding source published with every app release.",
+        "blockers": [
+          "GPL/LGPL distribution terms for combined Runfern/QEMU and any Apple/TestFlight/App Store restrictions require explicit legal compatibility review; sign-only and no-JIT do not remove QEMU's GPL or LGPL obligations. No clearance inferred."
+        ]
+      },
+      {
+        "reason": "Accepted by the maintainer: the QEMU frameworks are matched to the published source inputs by Mach-O UUID; the source-inputs archive is attached to every app release.",
+        "blockers": [
+          "QEMU build trees have no compile-time source hash/build attestation. Matching vendor/sysroot Mach-O UUIDs establish copied build products, not proof that current source trees exactly correspond to those binaries. Rebuild from the recorded source inputs with source/build attestation before release."
+        ]
+      }
+    ],
+    "jit": []
+  }
+}

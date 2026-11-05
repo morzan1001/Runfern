@@ -1,5 +1,5 @@
-Rust crate: scopeguard — 1.2.0
-Source: https://static.crates.io/crates/scopeguard/scopeguard-1.2.0.crate
+Rust crate: rustls-pki-types — 1.14.0
+Source: https://static.crates.io/crates/rustls-pki-types/rustls-pki-types-1.14.0.crate
 
 ===== LICENSE-APACHE =====
                               Apache License
@@ -190,7 +190,7 @@ APPENDIX: How to apply the Apache License to your work.
    same "printed page" as the copyright notice for easier
    identification within third-party archives.
 
-Copyright [yyyy] [name of copyright owner]
+Copyright 2023 Dirkjan Ochtman
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -206,7 +206,7 @@ limitations under the License.
 
 
 ===== LICENSE-MIT =====
-Copyright (c) 2016-2019 Ulrik Sverdrup "bluss" and scopeguard developers
+Copyright (c) 2023 Dirkjan Ochtman <dirkjan@ochtman.nl>
 
 Permission is hereby granted, free of charge, to any
 person obtaining a copy of this software and associated

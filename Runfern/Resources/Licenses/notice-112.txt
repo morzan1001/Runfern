@@ -1,5 +1,5 @@
-Rust crate: futures-sink — 0.3.32
-Source: https://static.crates.io/crates/futures-sink/futures-sink-0.3.32.crate
+Rust crate: futures-core — 0.3.32
+Source: https://static.crates.io/crates/futures-core/futures-core-0.3.32.crate
 
 ===== LICENSE-APACHE =====
                               Apache License

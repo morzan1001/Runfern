@@ -1,10 +1,25 @@
-Rust crate: regex-automata — 0.4.14
-Source: https://static.crates.io/crates/regex-automata/regex-automata-0.4.14.crate
+Rust crate: rand_chacha — 0.9.0
+Source: https://static.crates.io/crates/rand_chacha/rand_chacha-0.9.0.crate
+
+===== COPYRIGHT =====
+Copyrights in the Rand project are retained by their contributors. No
+copyright assignment is required to contribute to the Rand project.
+
+For full authorship information, see the version control history.
+
+Except as otherwise noted (below and/or in individual files), Rand is
+licensed under the Apache License, Version 2.0 <LICENSE-APACHE> or
+<http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+<LICENSE-MIT> or <http://opensource.org/licenses/MIT>, at your option.
+
+The Rand project includes code from the Rust project
+published under these same licenses.
+
 
 ===== LICENSE-APACHE =====
                               Apache License
                         Version 2.0, January 2004
-                     http://www.apache.org/licenses/
+                     https://www.apache.org/licenses/
 
 TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
 
@@ -179,33 +194,9 @@ TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
 
 END OF TERMS AND CONDITIONS
 
-APPENDIX: How to apply the Apache License to your work.
-
-   To apply the Apache License to your work, attach the following
-   boilerplate notice, with the fields enclosed by brackets "[]"
-   replaced with your own identifying information. (Don't include
-   the brackets!)  The text should be enclosed in the appropriate
-   comment syntax for the file format. We also recommend that a
-   file or class name and description of purpose be included on the
-   same "printed page" as the copyright notice for easier
-   identification within third-party archives.
-
-Copyright [yyyy] [name of copyright owner]
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-	http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
 
 ===== LICENSE-MIT =====
+Copyright 2018 Developers of the Rand project
 Copyright (c) 2014 The Rust Project Developers
 
 Permission is hereby granted, free of charge, to any
@@ -231,3 +222,115 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
 IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
+
+
+===== src/chacha.rs =====
+// Copyright 2018 Developers of the Rand project.
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+
+//! The ChaCha random number generator.
+
+
+
+===== src/guts.rs =====
+// Copyright 2019 The CryptoCorrosion Contributors
+// Copyright 2020 Developers of the Rand project.
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+
+//! The ChaCha random number generator.
+
+
+
+===== src/lib.rs =====
+// Copyright 2018 Developers of the Rand project.
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+
+//! The ChaCha random number generators.
+//!
+//! These are native Rust implementations of RNGs derived from the
+//! [ChaCha stream ciphers] by D J Bernstein.
+//!
+//! ## Generators
+//!
+//! This crate provides 8-, 12- and 20-round variants of generators via a "core"
+//! implementation (of [`BlockRngCore`]), each with an associated "RNG" type
+//! (implementing [`RngCore`]).
+//!
+//! These generators are all deterministic and portable (see [Reproducibility]
+//! in the book), with testing against reference vectors.
+//!
+//! ## Cryptographic (secure) usage
+//!
+//! Where secure unpredictable generators are required, it is suggested to use
+//! [`ChaCha12Rng`] or [`ChaCha20Rng`] and to seed via
+//! [`SeedableRng::from_os_rng`].
+//!
+//! See also the [Security] chapter in the rand book. The crate is provided
+//! "as is", without any form of guarantee, and without a security audit.
+//!
+//! ## Seeding (construction)
+//!
+//! Generators implement the [`SeedableRng`] trait. Any method may be used,
+//! but note that `seed_from_u64` is not suitable for usage where security is
+//! important. Some suggestions:
+//!
+//! 1.  With a fresh seed, **direct from the OS** (implies a syscall):
+//!     ```
+//!     # use {rand_core::SeedableRng, rand_chacha::ChaCha12Rng};
+//!     let rng = ChaCha12Rng::from_os_rng();
+//!     # let _: ChaCha12Rng = rng;
+//!     ```
+//! 2.  **From a master generator.** This could be [`rand::rng`]
+//!     (effectively a fresh seed without the need for a syscall on each usage)
+//!     or a deterministic generator such as [`ChaCha20Rng`].
+//!     Beware that should a weak master generator be used, correlations may be
+//!     detectable between the outputs of its child generators.
+//!     ```ignore
+//!     let rng = ChaCha12Rng::from_rng(&mut rand::rng());
+//!     ```
+//!
+//! See also [Seeding RNGs] in the book.
+//!
+//! ## Generation
+//!
+//! Generators implement [`RngCore`], whose methods may be used directly to
+//! generate unbounded integer or byte values.
+//! ```
+//! use rand_core::{SeedableRng, RngCore};
+//! use rand_chacha::ChaCha12Rng;
+//!
+//! let mut rng = ChaCha12Rng::from_seed(Default::default());
+//! let x = rng.next_u64();
+//! assert_eq!(x, 0x53f955076a9af49b);
+//! ```
+//!
+//! It is often more convenient to use the [`rand::Rng`] trait, which provides
+//! further functionality. See also the [Random Values] chapter in the book.
+//!
+//! [ChaCha stream ciphers]: https://cr.yp.to/chacha.html
+//! [Reproducibility]: https://rust-random.github.io/book/crate-reprod.html
+//! [Seeding RNGs]: https://rust-random.github.io/book/guide-seeding.html
+//! [Security]: https://rust-random.github.io/book/guide-rngs.html#security
+//! [Random Values]: https://rust-random.github.io/book/guide-values.html
+//! [`BlockRngCore`]: rand_core::block::BlockRngCore
+//! [`RngCore`]: rand_core::RngCore
+//! [`SeedableRng`]: rand_core::SeedableRng
+//! [`SeedableRng::from_os_rng`]: rand_core::SeedableRng::from_os_rng
+//! [`rand::rng`]: https://docs.rs/rand/latest/rand/fn.rng.html
+//! [`rand::Rng`]: https://docs.rs/rand/latest/rand/trait.Rng.html
+

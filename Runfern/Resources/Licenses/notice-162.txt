@@ -1,10 +1,10 @@
-Rust crate: nix — 0.30.1
-Source: https://static.crates.io/crates/nix/nix-0.30.1.crate
+Rust crate: netconfig-rs — 0.1.6
+Source: https://static.crates.io/crates/netconfig-rs/netconfig-rs-0.1.6.crate
 
 ===== LICENSE =====
-The MIT License (MIT)
+MIT License
 
-Copyright (c) 2015 Carl Lerche + nix-rust Authors
+Copyright (c) 2022 Alexander Shishenko
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -13,34 +13,13 @@ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
-
-
-===== src/sys/fanotify.rs =====
-//! Monitoring API for filesystem events.
-//!
-//! Fanotify is a Linux-only API to monitor filesystems events.
-//!
-//! Additional capabilities compared to the `inotify` API include the ability to
-//! monitor all of the objects in a mounted filesystem, the ability to make
-//! access permission decisions, and the possibility to read or modify files
-//! before access by other applications.
-//!
-//! For more documentation, please read
-//! [fanotify(7)](https://man7.org/linux/man-pages/man7/fanotify.7.html).
-
-
-
-===== test/test_kmod/hello_mod/hello.c =====
-/*
- *  SPDX-License-Identifier: GPL-2.0+ or MIT
- */
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

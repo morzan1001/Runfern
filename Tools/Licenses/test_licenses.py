@@ -67,6 +67,19 @@ class LicenseCollectorTests(unittest.TestCase):
         ]), self.assertRaisesRegex(ValueError, "RELEASE BLOCKED"):
             verify.main()
 
+    def test_sign_off_applies_only_to_its_variant_and_exact_findings(self):
+        clearance = self.work / "clearance.json"
+        clearance.write_text(json.dumps({"format": 1, "flavors": {"no-jit": [
+            {"reason": "Accepted by the maintainer", "blockers": ["QEMU license review"]}]}}))
+        findings = ["QEMU license review"]
+        self.assertEqual(verify.unresolved(findings, "no-jit", clearance), [])
+        self.assertEqual(verify.unresolved(findings, "jit", clearance), findings)
+        self.assertEqual(verify.unresolved(["QEMU license review (changed)"], "no-jit", clearance),
+                         ["QEMU license review (changed)"])
+        clearance.write_text(json.dumps({"format": 1, "flavors": {"no-jit": [{"blockers": findings}]}}))
+        with self.assertRaisesRegex(ValueError, "reason"):
+            verify.unresolved(findings, "no-jit", clearance)
+
     def test_cleared_preflight_allows_further_checks_without_claiming_release_approval(self):
         text = "Copyright Example\n" + "Permission is hereby granted.\n" * 4
         notice = {"file": "notice-example.txt", "sha256": verify.sha(text.encode())}

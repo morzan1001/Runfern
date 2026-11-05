@@ -1,5 +1,5 @@
-Rust crate: event-listener — 5.4.1
-Source: https://static.crates.io/crates/event-listener/event-listener-5.4.1.crate
+Rust crate: elliptic-curve — 0.13.8
+Source: https://static.crates.io/crates/elliptic-curve/elliptic-curve-0.13.8.crate
 
 ===== LICENSE-APACHE =====
                               Apache License
@@ -196,7 +196,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-	http://www.apache.org/licenses/LICENSE-2.0
+   http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -206,6 +206,8 @@ limitations under the License.
 
 
 ===== LICENSE-MIT =====
+Copyright (c) 2020-2022 RustCrypto Developers
+
 Permission is hereby granted, free of charge, to any
 person obtaining a copy of this software and associated
 documentation files (the "Software"), to deal in the

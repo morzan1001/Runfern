@@ -1,5 +1,5 @@
-Rust crate: thread_local — 1.1.9
-Source: https://static.crates.io/crates/thread_local/thread_local-1.1.9.crate
+Rust crate: syn — 2.0.117
+Source: https://static.crates.io/crates/syn/syn-2.0.117.crate
 
 ===== LICENSE-APACHE =====
                               Apache License
@@ -179,35 +179,8 @@ TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
 
 END OF TERMS AND CONDITIONS
 
-APPENDIX: How to apply the Apache License to your work.
-
-   To apply the Apache License to your work, attach the following
-   boilerplate notice, with the fields enclosed by brackets "[]"
-   replaced with your own identifying information. (Don't include
-   the brackets!)  The text should be enclosed in the appropriate
-   comment syntax for the file format. We also recommend that a
-   file or class name and description of purpose be included on the
-   same "printed page" as the copyright notice for easier
-   identification within third-party archives.
-
-Copyright [yyyy] [name of copyright owner]
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-	http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
 
 ===== LICENSE-MIT =====
-Copyright (c) 2016 The Rust Project Developers
-
 Permission is hereby granted, free of charge, to any
 person obtaining a copy of this software and associated
 documentation files (the "Software"), to deal in the
@@ -231,81 +204,3 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
 IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
-
-
-===== src/lib.rs =====
-// Copyright 2017 Amanieu d'Antras
-//
-// Licensed under the Apache License, Version 2.0, <LICENSE-APACHE or
-// http://apache.org/licenses/LICENSE-2.0> or the MIT license <LICENSE-MIT or
-// http://opensource.org/licenses/MIT>, at your option. This file may not be
-// copied, modified, or distributed except according to those terms.
-
-//! Per-object thread-local storage
-//!
-//! This library provides the `ThreadLocal` type which allows a separate copy of
-//! an object to be used for each thread. This allows for per-object
-//! thread-local storage, unlike the standard library's `thread_local!` macro
-//! which only allows static thread-local storage.
-//!
-//! Per-thread objects are not destroyed when a thread exits. Instead, objects
-//! are only destroyed when the `ThreadLocal` containing them is destroyed.
-//!
-//! You can also iterate over the thread-local values of all thread in a
-//! `ThreadLocal` object using the `iter_mut` and `into_iter` methods. This can
-//! only be done if you have mutable access to the `ThreadLocal` object, which
-//! guarantees that you are the only thread currently accessing it.
-//!
-//! Note that since thread IDs are recycled when a thread exits, it is possible
-//! for one thread to retrieve the object of another thread. Since this can only
-//! occur after a thread has exited this does not lead to any race conditions.
-//!
-//! # Examples
-//!
-//! Basic usage of `ThreadLocal`:
-//!
-//! ```rust
-//! use thread_local::ThreadLocal;
-//! let tls: ThreadLocal<u32> = ThreadLocal::new();
-//! assert_eq!(tls.get(), None);
-//! assert_eq!(tls.get_or(|| 5), &5);
-//! assert_eq!(tls.get(), Some(&5));
-//! ```
-//!
-//! Combining thread-local values into a single result:
-//!
-//! ```rust
-//! use thread_local::ThreadLocal;
-//! use std::sync::Arc;
-//! use std::cell::Cell;
-//! use std::thread;
-//!
-//! let tls = Arc::new(ThreadLocal::new());
-//!
-//! // Create a bunch of threads to do stuff
-//! for _ in 0..5 {
-//!     let tls2 = tls.clone();
-//!     thread::spawn(move || {
-//!         // Increment a counter to count some event...
-//!         let cell = tls2.get_or(|| Cell::new(0));
-//!         cell.set(cell.get() + 1);
-//!     }).join().unwrap();
-//! }
-//!
-//! // Once all threads are done, collect the counter values and return the
-//! // sum of all thread-local counter values.
-//! let tls = Arc::try_unwrap(tls).unwrap();
-//! let total = tls.into_iter().fold(0, |x, y| x + y.get());
-//! assert_eq!(total, 5);
-//! ```
-
-
-
-===== src/thread_id.rs, src/unreachable.rs =====
-// Copyright 2017 Amanieu d'Antras
-//
-// Licensed under the Apache License, Version 2.0, <LICENSE-APACHE or
-// http://apache.org/licenses/LICENSE-2.0> or the MIT license <LICENSE-MIT or
-// http://opensource.org/licenses/MIT>, at your option. This file may not be
-// copied, modified, or distributed except according to those terms.
-

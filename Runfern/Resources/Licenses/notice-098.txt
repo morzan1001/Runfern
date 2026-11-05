@@ -1,5 +1,5 @@
-Rust crate: flate2 — 1.1.9
-Source: https://static.crates.io/crates/flate2/flate2-1.1.9.crate
+Rust crate: fastrand — 2.3.0
+Source: https://static.crates.io/crates/fastrand/fastrand-2.3.0.crate
 
 ===== LICENSE-APACHE =====
                               Apache License
@@ -206,8 +206,6 @@ limitations under the License.
 
 
 ===== LICENSE-MIT =====
-Copyright (c) 2014-2026 Alex Crichton
-
 Permission is hereby granted, free of charge, to any
 person obtaining a copy of this software and associated
 documentation files (the "Software"), to deal in the
@@ -231,16 +229,3 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
 IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
-
-
-===== src/bufreader.rs =====
-// Copyright 2013 The Rust Project Developers. See the COPYRIGHT
-// file at the top-level directory of this distribution and at
-// <https://github.com/rust-lang/rust/blob/HEAD/COPYRIGHT>.
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-

@@ -1,5 +1,5 @@
-Rust crate: cipher — 0.4.4
-Source: https://static.crates.io/crates/cipher/cipher-0.4.4.crate
+Rust crate: chacha20 — 0.9.1
+Source: https://static.crates.io/crates/chacha20/chacha20-0.9.1.crate
 
 ===== LICENSE-APACHE =====
                               Apache License
@@ -206,7 +206,7 @@ limitations under the License.
 
 
 ===== LICENSE-MIT =====
-Copyright (c) 2016-2020 RustCrypto Developers
+Copyright (c) 2019-2023 The RustCrypto Project Developers
 
 Permission is hereby granted, free of charge, to any
 person obtaining a copy of this software and associated

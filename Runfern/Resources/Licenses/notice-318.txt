@@ -1,5 +1,5 @@
-Rust crate: windows-result — 0.3.4
-Source: https://static.crates.io/crates/windows-result/windows-result-0.3.4.crate
+Rust crate: windows-collections — 0.2.0
+Source: https://static.crates.io/crates/windows-collections/windows-collections-0.2.0.crate
 
 ===== license-apache-2.0 =====
                                  Apache License
