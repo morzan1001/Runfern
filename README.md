@@ -27,11 +27,12 @@ Runfern runs an ARM64 Linux VM locally through QEMU and opens OpenVSCode Server 
 
 ## Getting started
 
-Requires iPadOS 27 or later. [v0.0.1](https://github.com/morzan1001/Runfern/releases/tag/v0.0.1)
-is a preview: the JIT build is an unsigned IPA that you re-sign for your device. Built-in JIT
-needs Developer Mode, pairing and Network Extension signing; ordinary sideload signing may need
-an external JIT method. The App Store build (interpreter, no JIT) follows once the native
-dependency license review is complete.
+Requires iPadOS 27 or later. Runfern comes in two builds:
+
+- **App Store:** interpreter only, no JIT or extra setup needed. Currently in TestFlight.
+- **JIT:** an unsigned IPA from the [latest release](https://github.com/morzan1001/Runfern/releases/latest)
+  that you re-sign for your device. Built-in JIT needs Developer Mode, pairing and Network
+  Extension signing; ordinary sideload signing may need an external JIT method.
 
 Linux bases and tools are downloaded on first use from
 [catalog v1](https://github.com/morzan1001/Runfern/releases/tag/catalog-v1), including their

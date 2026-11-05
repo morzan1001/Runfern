@@ -1,10 +1,10 @@
 # Runfern release-license evidence
 
-**Release is blocked.** This is an evidence collector and integrity gate, not a legal
-opinion, license exception, written source offer, or App Store compatibility claim.
-No-JIT/sign-only builds still embed QEMU (GPLv2) and LGPL libraries. Apple signing,
-TestFlight and App Store distribution restrictions need explicit compatibility review
-before any upload. The JIT flavor is a separate sideload distribution.
+This is an evidence collector and integrity gate, not a legal opinion. The App Store
+(no-JIT) build is released: its open findings are signed off by the maintainer in
+`clearance.json`, including the GPL/LGPL terms of the embedded QEMU and libraries.
+The JIT build is a separate sideload distribution; CI does not build it until its
+findings are resolved or signed off.
 
 ## Reproduce locally
 
@@ -53,8 +53,8 @@ Findings that the maintainer accepts for one variant are listed in `clearance.js
 `flavors.no-jit` or `flavors.jit`, each group with its reason. Entries must match the
 finding texts in `license-index.json` exactly, so any new or changed finding blocks the
 release again. `--require-clearance` and `--release` apply the sign-offs for `--flavor`
-(default `no-jit`). The App Store build currently has all findings signed off; the JIT
-build has none and stays blocked.
+(default `no-jit`). All current findings are signed off for the App Store
+build; the JIT build has no sign-offs yet.
 
 ```sh
 python3 Tools/Licenses/verify.py --runtime-root build/native-runtime --artifacts build/licenses
@@ -85,13 +85,13 @@ are not incorrectly compared with re-signed framework bytes.
 No-JIT forbids JIT frameworks/helper; JIT expects both QEMU engines
 and StikJIT. These identity checks do not prove compile-time source correspondence
 or create license clearance. Exit status is zero only for the requested integrity
-level; `--release` requires no unresolved findings. Do not upload to TestFlight while
-the gate fails. Keep privately signed archives separate from public re-signable IPA
+level; `--release` requires every finding to be resolved or signed off for the flavor.
+Do not upload to TestFlight while the gate fails. Keep privately signed archives separate from public re-signable IPA
 packaging; no license exception is inferred from removing signatures/profiles.
 
-It intentionally fails while findings remain in `build/licenses/blockers.json`.
-Never clear findings or change the manifest to `VERIFIED` without obtaining and
-implementing the missing evidence. The collector always marks its output blocked.
+It fails while `build/licenses/blockers.json` lists findings that `clearance.json`
+does not sign off. Never change the manifest to `VERIFIED` without obtaining and
+implementing the missing evidence; record accepted findings as sign-offs instead.
 Do not ship an artifact solely because checksum verification passes.
 
 ## Outputs and provenance

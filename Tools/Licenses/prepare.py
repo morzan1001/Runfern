@@ -536,7 +536,8 @@ def main():
                             for name in artifact_names + ["SHA256SUMS"]}}
     (Path(__file__).parent / "release-artifacts.json").write_text(json.dumps(artifacts, indent=2) + "\n")
     print(f"{len(notices)} exact notice resources; source inputs: {OUT}")
-    print(f"RELEASE BLOCKED: {len(index['blockers'])} unresolved findings. See blockers.json.")
+    print(f"{len(index['blockers'])} open findings in blockers.json; "
+          "release builds need them resolved or signed off in clearance.json.")
 
 
 if __name__ == "__main__":

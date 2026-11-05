@@ -94,6 +94,6 @@ cat > "$TARGET/source-provenance.json" <<EOF
   }
 }
 EOF
-echo "Release licensing remains blocked until Tools/Licenses/verify.py --release --app PATH succeeds."
+echo "JIT releases need Tools/Licenses/verify.py --release --flavor jit --app PATH to pass."
 echo "Installed into $TARGET:"
 du -sh "$TARGET"/*.xcframework
