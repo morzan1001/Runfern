@@ -12,6 +12,10 @@
 </p>
 
 <p align="center">
+  <a href="https://apps.apple.com/app/id6826803228"><img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" height="48" alt="Download on the App Store"></a>
+</p>
+
+<p align="center">
   <img src="Design/Screenshots/editor.png" width="72%" alt="OpenVSCode Server with Python code, tests and a Debian terminal">
 </p>
 
@@ -33,7 +37,7 @@ Runfern runs an ARM64 Linux VM locally through QEMU and opens OpenVSCode Server 
 
 Requires iPadOS 27 or later. Runfern comes in two builds:
 
-- **App Store:** interpreter only, no JIT or extra setup needed. Currently in TestFlight.
+- **[App Store](https://apps.apple.com/app/id6826803228):** interpreter only, no JIT or extra setup needed.
 - **JIT:** an unsigned IPA from the [latest release](https://github.com/morzan1001/Runfern/releases/latest)
   that you re-sign for your device. Built-in JIT needs Developer Mode, pairing and Network
   Extension signing; ordinary sideload signing may need an external JIT method.
